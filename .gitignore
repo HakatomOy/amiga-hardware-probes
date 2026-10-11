@@ -1,0 +1,5 @@
+/build/
+/.tools/
+/captures/
+__pycache__/
+*.pyc
