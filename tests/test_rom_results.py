@@ -1,6 +1,6 @@
 import importlib.util,struct,unittest
 from pathlib import Path
-import build_rom,rom_results
+import build_rom,rom_results,compare_phase
 
 class RomFormatTests(unittest.TestCase):
     def packet(self):
@@ -32,6 +32,30 @@ class RomFormatTests(unittest.TestCase):
             path=Path(directory)/'fault.bin';path.write_bytes(capsule)
             with self.assertRaises(RuntimeError): rom_results.extract(path,Path(directory)/'out')
             self.assertTrue((Path(directory)/'out/fault.json').exists())
+
+    def test_phase_validator_rejects_wrong_latency_and_rerouting(self):
+        def packet(irq_beam=0x6065, irq_level=1):
+            h=bytearray(64);h[:8]=b'A5RBCP01'
+            struct.pack_into('>HHIII',h,8,1,40,2,144,0)
+            struct.pack_into('>4H',h,56,0xa000,0xffff,1,1)
+            stop=[0]*20;stop[0]=5;stop[10]=92;stop[17]=100;stop[18]=92
+            phase=[0]*20;phase[0]=10;phase[1]=3;phase[2]=5
+            phase[12]=irq_beam;phase[13]=irq_level;phase[17]=0x40cf
+            data=h+struct.pack('>40H',*(stop+phase))
+            struct.pack_into('>I',data,20,(-sum(struct.unpack('>36I',data)))&0xffffffff)
+            return bytes(data)
+        self.assertEqual(compare_phase.check(packet())['phase_matches'],1)
+        self.assertEqual(compare_phase.check(packet())['stop_matches'],1)
+        self.assertEqual(compare_phase.check(packet(0x6066))['phase_matches'],0)
+        self.assertEqual(compare_phase.check(packet(irq_level=6))['phase_matches'],0)
+
+    def test_focused_trial_coverage(self):
+        rows=build_rom.trials(focused=True)
+        self.assertEqual(len(rows),576)
+        self.assertEqual(len(set(rows)),576)
+        self.assertEqual(sum(r[0]==5 for r in rows),320)
+        self.assertEqual(sum(r[0]==10 for r in rows),256)
+        self.assertEqual({r[2] for r in rows if r[0]==10},{5,6})
 
     def test_trial_coverage_and_ram_bound(self):
         rows=build_rom.trials();self.assertEqual(len(rows),6240)

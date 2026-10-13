@@ -143,3 +143,43 @@ Beam values require horizontal-wrap care; a naive subtraction at horizontal
 software observations, not direct IRQ/IPL pin traces or proof of every internal
 latency. Controlled CNT-pin experiments and running LOAD's complete internal
 pipeline are not inferred from these PHI2 tests.
+
+## Focused STOP and CPU phase suite
+
+`build_rom.py --focused` builds 576 trials using the same transport and packet
+layout. Kind 5 starts a continuous CIA timer, records its low counter in `aux`,
+clears START, sweeps zero through seven NOPs, then records stopped counter values.
+The difference modulo 256 includes the intervening CIA accesses: the A500
+measured eight decrements, versus six in the original emulator, independently
+of the post-STOP NOP delay. Both counters remain stopped after that drain.
+
+Kind 10 variants 5 and 6 hold Copper WAIT fixed at line 96, horizontal 64.
+They log VHPOSR in `aux`, execute a zero-to-fifteen NOP sweep, and STOP. Variant
+6 also executes EXG immediately before STOP. The exception handler retains its
+original first-instruction VHPOSR read. Chip and slow RAM code run separately.
+`aux` replaces the usual event count in these variants. The entry beam is read
+before the sweep, not at the STOP opcode; NOPs preserve the two-CCK parity and
+EXG flips it. Convert the logged beam to `line * 227 + horizontal` for parity.
+
+The first focused capture is `captures/rom-amiga500-phase1`, source fingerprint
+`7fff56bf3bec9efb42c129679b4033c6203650809bd825b5e3c6432e2ac045c9`.
+All 320 STOP trials measured eight decrements. Across all 256 CPU-phase trials,
+variant 5 measured 37 CCK for odd entry parity and 38 for even; variant 6 reversed
+this exactly. Copperline's corrected run `rom-copperline-phase-fixed1` satisfies
+the same rule in all 256 trials and measures eight decrements in all 320 STOP
+trials. Absolute trial distributions can differ when preceding timing changes
+alter the entry phase; compare the phase rule rather than the trial index.
+
+A separate capture `rom-amiga500-iack-reroute` changes only ROM word `$FFFFF2`
+from `$0019` to `$001e`. All 256 level-1 Copper interrupts execute the existing
+vector-30 handler, which records level 6. Its `experiment_patch.json` records
+the modified ROM hash; this is acknowledge-path evidence, not a baseline timing
+capture. The source hash describes the base source and does not encode that
+external binary patch. Kickstart was restored after measurement.
+
+Run `python compare_phase.py captures/rom-amiga500-phase1/results.bin` (or the
+matched emulator packet) to validate the phase rule and stopped counters.
+The validator rejects wrong latency, wrong IRQ handler and counter mismatches;
+it excludes horizontal-wrap ambiguity and requires both focused trial kinds.
+An exact source snapshot for this first focused build is archived beside its
+physical results because later builder refactoring changes the source ID.

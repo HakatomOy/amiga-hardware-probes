@@ -4,7 +4,10 @@ import argparse, hashlib, json, subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 
-def trials():
+def trials(focused=False):
+    if focused:
+        rows=[(5,t,0,p,d,r) for t in range(4) for p in range(5) for d in range(8) for r in range(2)]
+        return rows + [(10,3,k,p,m*4,r) for k in (5,6) for p in range(16) for m in range(2) for r in range(4)]
     rows=[]
     for target in range(4):
         for variant in range(2):
@@ -38,8 +41,8 @@ def trials():
                             rows.append((10,source,kernel,phase,dma+memory*4,repeat))
     return rows
 
-def build(assembler,wsl=False):
-    rows=trials()
+def build(assembler,wsl=False,focused=False):
+    rows=trials(focused)
     build=ROOT/'build/rom'; build.mkdir(parents=True,exist_ok=True)
     sources=sorted([ROOT/'build_rom.py',*list((ROOT/'src/rom').glob('*')),*list((ROOT/'vendor/rbcp').glob('*'))])
     h=hashlib.sha256()
@@ -82,5 +85,5 @@ def build(assembler,wsl=False):
     return manifest
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true')
-    a=p.parse_args(); build(a.vasm,a.wsl)
+    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); p.add_argument('--focused',action='store_true')
+    a=p.parse_args(); build(a.vasm,a.wsl,a.focused)

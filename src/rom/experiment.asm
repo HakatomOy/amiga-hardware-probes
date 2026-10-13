@@ -96,7 +96,12 @@ main:
         clr.w EVLEVEL2(a5)
         cmpi.w #10,(a4)
         beq .interrupt
+        cmpi.w #5,(a4)
+        beq .stop_only
         bsr timer_trial
+        bra.s .recorded
+.stop_only:
+        bsr stop_only_trial
         bra.s .recorded
 .interrupt:
         bsr interrupt_trial
@@ -190,6 +195,29 @@ delay:
         nop
         endr
 delay_end: rts
+; STOP-only: freeze a running continuous timer, sweep delay before reading.
+; aux is the last running counter snapshot; counter/second_counter are stopped reads.
+stop_only_trial:
+        bsr select_target
+        move.w LOREG,d2
+        move.w HIREG,d3
+        move.w CONTROL,d4
+        move.b #200,0(a0,d2.w)
+        clr.b 0(a0,d3.w)
+        move.b #$11,0(a0,d4.w)
+        bsr sync_beam
+        bsr read_reference
+        move.w d0,14(a4)
+        move.w 6(a6),12(a4)
+        move.w 8(a4),d0
+        lea post_end(pc),a2
+        add.w d0,d0
+        suba.w d0,a2
+        moveq #0,d0
+        move.b 0(a0,d2.w),d0
+        move.w d0,34(a4)
+        clr.b 0(a0,d4.w)
+        jmp (a2)
 timer_trial:
         bsr select_target
         move.w LOREG,d2
@@ -370,6 +398,10 @@ interrupt_trial:
         lea copper_list(pc),a0
         move.w 6(a4),d0
         add.w d0,d0
+        cmpi.w #5,4(a4)
+        bcs.s .wait_phase
+        moveq #0,d0
+.wait_phase:
         ori.w #$6041,d0
         move.w d0,(a0)
         move.l a0,$80(a6)
@@ -425,6 +457,10 @@ interrupt_trial:
         sub.l RUNBASE,d0
         move.l d0,28(a4)
         move.w EVCOUNT(a5),34(a4)
+        cmpi.w #5,4(a4)
+        bcs.s .normal_aux
+        move.w 20(a5),34(a4)
+.normal_aux:
         move.w EVBEAM2(a5),36(a4)
         move.w EVLEVEL2(a5),38(a4)
         tst.w DONE(a5)
@@ -432,7 +468,7 @@ interrupt_trial:
         move.w #1,32(a4)
 .ok:    rts
 kernel_offsets:
-        dc.w k_stop-kernels,k_nop-kernels,k_load-kernels,k_store-kernels,k_div-kernels
+        dc.w k_stop-kernels,k_nop-kernels,k_load-kernels,k_store-kernels,k_div-kernels,k_phase-kernels,k_exg-kernels
 kernels:
 k_stop: stop #$2000
         tst.w DONE(a5)
@@ -458,6 +494,39 @@ k_div:  move.w #$2000,sr
         divu.w #$1234,d0
         tst.w DONE(a5)
         beq.s .loop
+        rts
+; Both kernels execute a RAM beam read then a phase sweep before STOP.
+; EXG adds six CPU clocks (three CCK), unlike a NOP's four (two CCK).
+k_phase:
+        move.w 6(a6),20(a5)
+        move.w 6(a4),d0
+        lea phase_end-k_phase(a0),a1
+        add.w d0,d0
+        suba.w d0,a1
+        jmp (a1)
+        rept 16
+        nop
+        endr
+phase_end:
+        stop #$2000
+        tst.w DONE(a5)
+        beq.s phase_end
+        rts
+k_exg:
+        move.w 6(a6),20(a5)
+        move.w 6(a4),d0
+        lea exg_end-k_exg(a0),a1
+        add.w d0,d0
+        suba.w d0,a1
+        jmp (a1)
+        rept 16
+        nop
+        endr
+exg_end:
+        exg d0,d1
+        stop #$2000
+        tst.w DONE(a5)
+        beq.s exg_end
         rts
 kernels_end:
 irq1:   move.w 6(a6),EVBEAM2(a5)
