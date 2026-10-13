@@ -55,7 +55,7 @@ Use the pinned assembler revision for identical binaries across machines.
    under a new name, such as `IRQ-A500-RUN1.adf`.
 2. Make that image writable: disable FlashFloppy write protection and ensure
    the USB storage/image is writable. Select it in DF0, then reset the A500.
-3. During collection the screen is blue. Normal runs take roughly 20–40 seconds
+3. During collection the screen is blue. Normal runs take roughly 20â€“40 seconds
    including loading and disk I/O. Disk writes happen only after collection.
 4. Amber means writing; purple means reading the results back. A green screen
    saying **RESULTS SAVED AND VERIFIED** means the bytes were read back correctly.
@@ -73,8 +73,8 @@ overlap the boot loader or program.
 The intended target is an original-speed 68000 A500 with at least 512 KB chip
 RAM, Kickstart 1.3, and PAL or NTSC video. CPU models indicated as 68010 or later
 in Exec AttnFlags are rejected. Disable accelerators/turbo modes even if they
-report themselves as a 68000. Actual hardware/FlashFloppy execution still needs
-your first run; emulator verification is not hardware validation.
+report themselves as a 68000. Real A500 captures have been collected; emulator verification alone is not
+hardware validation.
 
 Record the A500 board revision, Agnus/Denise/CIA markings where known, PAL/NTSC,
 memory expansions, Kickstart, and FlashFloppy version in your capture label.
@@ -140,3 +140,13 @@ References: [FlashFloppy ADF write support](https://github.com/keirf/flashfloppy
 
 See [local validation results](docs/validation.md) for the tested build and
 emulator configurations. Hardware reference results remain to be collected.
+
+## Standalone ROM experiments over OneROM USB
+
+The expanded 68000 ROM harness collects 6,240 CIA and IRQ trials in RAM, then
+transfers a checksum-protected capture using RBCP. See
+[ROM measurements and capture instructions](docs/rom-measurement.md).
+The original ADF build and its capture format are unchanged.
+
+[Hardware findings from the RBCP runs](docs/rom-findings-2026-10-13.md) document
+repeatable timer and ICR differences, capture provenance and the ROM footer fix.
