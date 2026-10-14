@@ -141,7 +141,7 @@ References: [FlashFloppy ADF write support](https://github.com/keirf/flashfloppy
 See [local validation results](docs/validation.md) for the tested build and
 emulator configurations. Standalone ROM hardware measurements are linked below.
 
-## Standalone ROM experiments over OneROM USB
+## Standalone ROM experiments over One ROM USB
 
 The expanded 68000 ROM harness collects 6,240 CIA and IRQ trials in RAM, then
 transfers a checksum-protected capture using RBCP. See
@@ -164,7 +164,34 @@ matrix (2,560 rows):
 ```powershell
 python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --irq-paths
 python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --bzero-line
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic-fine
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic-followup
 ```
+
+`--line-logic` builds kind 25 (3,456 trials): line minterms `$00/$ff/$ca/$f0`,
+A data `$0000/$8000`, B data `$0000/$ffff/$1000`, initial C data `$0000/$ffff`,
+USEB disabled/enabled, and 1/2/22 pixel lines. It samples DMACONR and beam position
+before waiting for BBUSY, then checks the destination OR and selected words after
+completion. Every source and destination area is initialized independently.
+
+`--line-logic-fine` builds kind 26 (544 trials) for the measured BZERO discrepancy:
+minterm `$CA`, BLTADAT `$8000`, zero C data, B data `$0000/$1000`, USEB off/on,
+and 2/22 pixel lines. BLTAPT is initialized to signed `-80`. It samples every
+integer NOP delay from 0 through 16 with NOP/EXG phase pads and BLTPRI off/on,
+then records the same post-completion memory checks. The combined phase and delay
+samples adjacent color-clock readback ages on the A500. Keep this capture separate
+from kind 25 because its `BLTAPT` setup is explicitly fixed.
+
+`--line-logic-followup` builds kind 27 (3,360 trials) to isolate input-data and
+BLTBDAT-order effects around the kind26 BZERO clears. It fixes minterm `$CA`
+and `BLTAPT=-80`, and sweeps A `$0000/$8000/$ffff`, C `$0000/$ffff`, B
+`$0000/$0001/$0002/$0004/$8000/$1000/$ffff`, USEB off/on, and 2/22 pixel lines.
+It pairs NOP/EXG phase pads with delays of 0 through 4 NOPs. Descriptor repeat
+0/1 loads BLTBDAT late/early relative to the other direct custom-register
+writes; this is an ordering probe, while the selected B-pattern value remains
+the same. Every trial reads complete valid DMACONR and beam position before
+waiting for BBUSY, then records the destination OR and selected words.
 
 Archive each generated ROM and its source snapshot before collecting hardware
 data. Compare validated hardware and emulator capture folders with:

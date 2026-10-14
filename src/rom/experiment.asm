@@ -105,6 +105,12 @@ main:
         beq .irq_paths
         cmpi.w #24,(a4)
         beq .bzero_line
+        cmpi.w #25,(a4)
+        beq .line_logic
+        cmpi.w #26,(a4)
+        beq .line_logic_fine
+        cmpi.w #27,(a4)
+        beq .line_logic_followup
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -141,6 +147,15 @@ main:
         bra.s .recorded
 .bzero_line:
         bsr bzero_line_trial
+        bra.s .recorded
+.line_logic:
+        bsr line_logic_trial
+        bra.s .recorded
+.line_logic_fine:
+        bsr line_logic_trial
+        bra.s .recorded
+.line_logic_followup:
+        bsr line_logic_trial
         bra.s .recorded
 .divirq:
         bsr divirq_trial
@@ -561,6 +576,240 @@ bzero_line_trial:
         add.l d1,d0
         move.l d0,a2
         jmp (a2)
+; Kind 25 uses disjoint initialized chip-RAM sources and direct writes to all
+; write-only blitter registers. Descriptor variant bits select minterm (0-1),
+; A data (2), B source data (3-4), initial C data (5), and size (6-7).
+; Target 32/33 selects USEB off/on. The first two observer reads occur before
+; waiting for BBUSY to clear; destination memory is sampled only afterward.
+line_logic_trial:
+        move.l d7,-(sp)
+        cmpi.w #27,(a4)
+        bne.s .bdat_seed_ready
+        move.w #$0001,$42(a6)
+        move.w #$ffff,$72(a6)
+.bdat_seed_ready:
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.clear_d: move.w d0,(a0)+
+        dbra d7,.clear_d
+        lea $11000,a0
+        moveq #0,d0
+        btst #5,5(a4)
+        beq.s .c_ready
+        move.w #$ffff,d0
+.c_ready:
+        move.w d0,$70(a6)
+        move.w #1023,d7
+.fill_c: move.w d0,(a0)+
+        dbra d7,.fill_c
+        move.w 4(a4),d3
+        move.w d3,d1
+        cmpi.w #26,(a4)
+        beq.s .fine_b_index
+        cmpi.w #27,(a4)
+        beq.w .followup_b_index
+.b_index_general:
+        lsr.w #3,d1
+        andi.w #3,d1
+        bra.w .b_index_ready
+.fine_b_index:
+        andi.w #1,d1
+        lsl.w #1,d1
+        bra.w .b_index_ready
+.b_index_ready:
+        beq.s .b_zero
+        cmpi.w #1,d1
+        beq.s .b_full
+        move.w #$1000,d1
+        bra.s .b_ready
+.b_zero: moveq #0,d1
+        bra.s .b_ready
+.b_full: move.w #$ffff,d1
+.b_ready:
+        cmpi.w #27,(a4)
+        bne.s .b_fill_memory
+        btst #0,11(a4)
+        beq.s .b_fill_memory
+        move.w d1,$72(a6)
+.b_fill_memory:
+        lea $16000,a0
+        move.w #1023,d7
+.fill_b: move.w d1,(a0)+
+        dbra d7,.fill_b
+        move.w d3,d0
+        cmpi.w #26,(a4)
+        beq.s .fine_minterm
+        cmpi.w #27,(a4)
+        beq.s .fine_minterm
+        andi.w #3,d0
+        bra.s .minterm_ready
+.fine_minterm:
+        moveq #2,d0
+.minterm_ready:
+        add.w d0,d0
+        lea .line_minterms(pc),a0
+        move.w 0(a0,d0.w),d0
+        move.w #$0b00,d2
+        cmpi.w #33,2(a4)
+        bne.s .b_enable_ready
+        move.w #$0f00,d2
+.b_enable_ready:
+        or.w d2,d0
+        move.w d0,$40(a6)
+        move.w #$0001,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        ; In line mode BLTAPT ($50) is the signed error accumulator, not a
+        ; source pointer. Pin it identically for both line-logic matrices.
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        cmpi.w #27,(a4)
+        bne.s .legacy_bdat
+        btst #0,11(a4)
+        bne.s .bdat_ready
+        move.w d1,$72(a6)
+        bra.s .bdat_ready
+.legacy_bdat:
+        move.w d1,$72(a6)
+.bdat_ready:
+        moveq #0,d0
+        cmpi.w #26,(a4)
+        beq.s .fine_a_data
+        cmpi.w #27,(a4)
+        beq.s .followup_a_data
+        btst #2,5(a4)
+        beq.s .a_ready
+        move.w #$8000,d0
+        bra.s .a_ready
+.fine_a_data:
+        move.w #$8000,d0
+        bra.s .a_ready
+.followup_a_data:
+        move.w d3,d0
+        lsr.w #3,d0
+        andi.w #3,d0
+        add.w d0,d0
+        lea .line_a_patterns(pc),a0
+        move.w 0(a0,d0.w),d0
+.a_ready:
+        move.w d0,$74(a6)
+        move.w d3,d5
+        cmpi.w #26,(a4)
+        beq.s .fine_size
+        cmpi.w #27,(a4)
+        beq.s .followup_size
+        lsr.w #6,d5
+        andi.w #3,d5
+        cmpi.w #0,d5
+        bne.s .size_not_one
+        move.w #$0042,d5
+        bra.w .size_ready
+.size_not_one:
+        cmpi.w #1,d5
+        bne.s .size_twenty_two
+        move.w #$0082,d5
+        bra.s .size_ready
+.size_twenty_two:
+        move.w #$0582,d5
+        bra.w .size_ready
+.fine_size:
+        btst #1,5(a4)
+        beq.s .fine_size_two
+        move.w #$0582,d5
+        bra.s .size_ready
+.fine_size_two:
+        move.w #$0082,d5
+        bra.s .size_ready
+.followup_size:
+        btst #6,5(a4)
+        beq.s .fine_size_two
+        move.w #$0582,d5
+        bra.w .size_ready
+.size_ready:
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        btst #2,11(a4)
+        beq.s .line_priority_ready
+        move.w #$8640,$96(a6)
+.line_priority_ready:
+        bsr sync_beam
+        lea $58(a6),a1
+        moveq #0,d0
+        move.w 8(a4),d0
+        cmpi.w #26,(a4)
+        beq.s .fine_delay_ready
+        cmpi.w #27,(a4)
+        beq.s .fine_delay_ready
+        cmpi.w #0,d0
+        beq.s .delay_ready
+        cmpi.w #1,d0
+        beq.s .delay_one
+        cmpi.w #2,d0
+        beq.s .delay_two
+        cmpi.w #4,d0
+        beq.s .delay_four
+        cmpi.w #8,d0
+        beq.s .delay_eight
+        moveq #5,d0
+        bra.s .delay_ready
+.delay_one: moveq #1,d0
+        bra.s .delay_ready
+.delay_two: moveq #2,d0
+        bra.s .delay_ready
+.delay_four: moveq #3,d0
+        bra.s .delay_ready
+.delay_eight: moveq #4,d0
+.delay_ready:
+        bra.w .delay_scaled
+.fine_delay_ready:
+.delay_scaled:
+        lsl.w #8,d0
+        moveq #0,d1
+        move.w 6(a4),d1
+        andi.w #1,d1
+        cmpi.w #26,(a4)
+        beq.s .fine_phase_offset
+        cmpi.w #27,(a4)
+        beq.s .fine_phase_offset
+        lsl.w #4,d1
+        bra.s .phase_scaled
+.fine_phase_offset:
+        lsl.w #5,d1
+.phase_scaled:
+        lsl.w #8,d1
+        add.l d1,d0
+        cmpi.w #26,(a4)
+        beq.s .fine_stub_base
+        cmpi.w #27,(a4)
+        beq.s .fine_stub_base
+        addi.l #$fe9000,d0
+        bra.s .stub_base_ready
+.fine_stub_base:
+        addi.l #$feb000,d0
+.stub_base_ready:
+        move.l d0,a2
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+.line_minterms:
+        dc.w $0000,$00ff,$00ca,$00f0
+.followup_b_index:
+        andi.w #7,d1
+        add.w d1,d1
+        lea .line_b_patterns(pc),a0
+        move.w 0(a0,d1.w),d1
+        bra.w .b_ready
+.line_b_patterns:
+        dc.w 0,$0001,$0002,$0004,$8000,$1000,$ffff
+.line_a_patterns:
+        dc.w 0,$8000,$ffff
 divirq_handler:
         move.w 6(a6),24(a4)
         move.l 2(sp),28(a4)

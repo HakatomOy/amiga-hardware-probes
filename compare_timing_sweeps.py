@@ -354,7 +354,7 @@ def _compare_bzero_line(pairs):
         _,target,variant,phase,delay,repeat=key
         pattern=variant & 0xff
         late_bdat=bool(variant & 0x100)
-        if target not in (32,33) or pattern not in (0,1,4,8,16) or variant & ~0x10f:
+        if target not in (32,33) or pattern not in (0,1,4,8,16) or variant & ~0x11f:
             raise ValueError(f'Invalid line BZERO pattern/order descriptor {key}')
         if phase not in (0,1) or delay not in range(32) or repeat not in (0,4):
             raise ValueError(f'Invalid line BZERO phase/delay/priority descriptor {key}')
@@ -395,6 +395,143 @@ def _compare_bzero_line(pairs):
 
 
 
+def _compare_line_logic(pairs):
+    """Compare line minterm/BZERO states and destination data by exact setup."""
+    minterms=(0x00,0xff,0xca,0xf0)
+    b_patterns=(0x0000,0xffff,0x1000)
+    pixel_counts=(1,2,22)
+    delays=(0,1,2,4,8,16)
+    memory_fields=(('destination_or','icr'),('destination_first','irq_beam'),
+                   ('destination_10050','irq_level'),('destination_100a0','saved_pc_offset'))
+    grouped=collections.defaultdict(dict)
+    for key,hw,emu in pairs:
+        _,target,variant,phase,delay,repeat=key
+        lf=variant&3
+        a_index=(variant>>2)&1
+        b_index=(variant>>3)&3
+        c_full=(variant>>5)&1
+        pixel_index=(variant>>6)&3
+        if target not in (32,33) or variant & ~0xff or b_index not in range(3) or pixel_index not in range(3):
+            raise ValueError(f'Invalid line-logic descriptor {key}')
+        if phase not in (0,1) or delay not in delays or repeat!=0:
+            raise ValueError(f'Invalid line-logic phase/delay/repeat {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Line-logic launch position differs for {key}')
+        group=(target,variant,phase)
+        if delay in grouped[group]:
+            raise ValueError(f'Duplicate line-logic delay {key}')
+        elapsed_hw=_beam_elapsed(hw['launch_beam'],hw['end_beam'])
+        elapsed_emu=_beam_elapsed(emu['launch_beam'],emu['end_beam'])
+        hw_memory=[hw[f] if f!='saved_pc_offset' else hw[f]>>16 for _,f in memory_fields]
+        emu_memory=[emu[f] if f!='saved_pc_offset' else emu[f]>>16 for _,f in memory_fields]
+        grouped[group][delay]=dict(
+            hardware_dmaconr=hw['counter']&0x67ff, emulator_dmaconr=emu['counter']&0x67ff,
+            dmaconr_mismatch=(hw['counter']&0x67ff)!=(emu['counter']&0x67ff),
+            hardware_elapsed_cck=elapsed_hw, emulator_elapsed_cck=elapsed_emu,
+            elapsed_mismatch=elapsed_hw!=elapsed_emu,
+            hardware_memory=hw_memory, emulator_memory=emu_memory,
+            memory_mismatch=hw_memory!=emu_memory)
+    groups=[]
+    for (target,variant,phase),by_delay in sorted(grouped.items()):
+        lf=variant&3; a_index=(variant>>2)&1; b_index=(variant>>3)&3
+        c_full=(variant>>5)&1; pixel_index=(variant>>6)&3
+        traces=[dict(delay=delay,**by_delay[delay]) for delay in delays if delay in by_delay]
+        groups.append(dict(target=target,use_b=target==33,variant=variant,
+            minterm_index=lf,minterm=minterms[lf],a_data=0x8000 if a_index else 0,
+            b_pattern=b_patterns[b_index],initial_c=0xffff if c_full else 0,
+            pixels=pixel_counts[pixel_index],phase=phase,phase_pad_cck=2 if phase==0 else 3,
+            samples=len(traces),delay_trace=traces,
+            dmaconr_mismatches=sum(row['dmaconr_mismatch'] for row in traces),
+            elapsed_mismatches=sum(row['elapsed_mismatch'] for row in traces),
+            destination_memory_mismatches=sum(row['memory_mismatch'] for row in traces)))
+    return dict(kind=25,groups=groups,
+        note='Variant packs minterm selector in bits 0-1 (00/ff/ca/f0), A data in bit 2 (0000/8000), B data in bits 3-4 (0000/ffff/1000), initial C data in bit 5 (0000/ffff), and line length in bits 6-7 (1/2/22 pixels). Target 32/33 selects USEB off/on. Delays are 0/1/2/4/8/16 NOPs, phase padding is NOP/EXG, and BLTPRI is off. Comparison covers DMACONR bits 0x67ff, beam elapsed (227*deltaV+deltaH), and destination OR/selected words after BBUSY clears.')
+
+
+def _compare_line_logic_fine(pairs):
+    """Compare the focused 1-CCK line BZERO readback sweep."""
+    delays=tuple(range(17))
+    memory_fields=(('destination_or','icr'),('destination_first','irq_beam'),
+                   ('destination_10050','irq_level'),('destination_100a0','saved_pc_offset'))
+    grouped=collections.defaultdict(dict)
+    for key,hw,emu in pairs:
+        _,target,variant,phase,delay,repeat=key
+        if target not in (32,33) or variant not in range(4):
+            raise ValueError(f'Invalid fine line-logic descriptor {key}')
+        if phase not in (0,1) or delay not in delays or repeat not in (0,4):
+            raise ValueError(f'Invalid fine line-logic phase/delay/priority {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Fine line-logic launch position differs for {key}')
+        group=(target,variant,phase,repeat)
+        if delay in grouped[group]:
+            raise ValueError(f'Duplicate fine line-logic delay {key}')
+        elapsed_hw=_beam_elapsed(hw['launch_beam'],hw['end_beam'])
+        elapsed_emu=_beam_elapsed(emu['launch_beam'],emu['end_beam'])
+        hw_memory=[hw[f] if f!='saved_pc_offset' else hw[f]>>16 for _,f in memory_fields]
+        emu_memory=[emu[f] if f!='saved_pc_offset' else emu[f]>>16 for _,f in memory_fields]
+        grouped[group][delay]=dict(
+            hardware_dmaconr=hw['counter']&0x67ff,emulator_dmaconr=emu['counter']&0x67ff,
+            dmaconr_mismatch=(hw['counter']&0x67ff)!=(emu['counter']&0x67ff),
+            hardware_elapsed_cck=elapsed_hw,emulator_elapsed_cck=elapsed_emu,
+            elapsed_mismatch=elapsed_hw!=elapsed_emu,
+            hardware_memory=hw_memory,emulator_memory=emu_memory,
+            memory_mismatch=hw_memory!=emu_memory)
+    groups=[]
+    for (target,variant,phase,repeat),by_delay in sorted(grouped.items()):
+        traces=[dict(delay=delay,**by_delay[delay]) for delay in delays if delay in by_delay]
+        groups.append(dict(target=target,use_b=target==33,b_pattern=0x1000 if variant&1 else 0,
+            pixels=22 if variant&2 else 2,variant=variant,phase=phase,
+            phase_pad_cck=2 if phase==0 else 3,bltpri_enabled=bool(repeat&4),
+            samples=len(traces),delay_trace=traces,
+            dmaconr_mismatches=sum(row['dmaconr_mismatch'] for row in traces),
+            elapsed_mismatches=sum(row['elapsed_mismatch'] for row in traces),
+            destination_memory_mismatches=sum(row['memory_mismatch'] for row in traces)))
+    return dict(kind=26,groups=groups,
+        note='Fixed line-mode setup: minterm $CA, BLTADAT=$8000, C source/data zero, B data $0000/$1000, USEB off/on, line length 2/22, BLTAPT=-80. Repeat 0/4 selects BLTPRI off/on. Delay is each integer NOP count 0-16, with NOP/EXG phase pads; phase plus delay covers contiguous readback ages. Each trial records full valid DMACONR and beam first, waits for BBUSY, then records destination OR/selected words.')
+
+
+def _compare_line_logic_followup(pairs):
+    """Validate and compare the kind27 line-mode BZERO input matrix."""
+    groups=collections.defaultdict(dict)
+    for key,hw,emu in pairs:
+        _,target,variant,phase,delay,order=key
+        b_index=variant&7; a_index=(variant>>3)&3
+        if target not in (32,33) or b_index not in range(7) or a_index not in range(3):
+            raise ValueError(f'Invalid kind27 descriptor {key}')
+        if phase not in (0,1) or delay not in range(5) or order not in (0,1):
+            raise ValueError(f'Invalid kind27 phase/delay/BDAT order {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind27 launch position differs for {key}')
+        group=(target,variant,phase,order)
+        if delay in groups[group]:
+            raise ValueError(f'Duplicate kind27 delay {key}')
+        elapsed_hw=_beam_elapsed(hw['launch_beam'],hw['end_beam'])
+        elapsed_emu=_beam_elapsed(emu['launch_beam'],emu['end_beam'])
+        hw_memory=[hw[f] if f!='saved_pc_offset' else hw[f]>>16 for f in ('icr','irq_beam','irq_level','saved_pc_offset')]
+        emu_memory=[emu[f] if f!='saved_pc_offset' else emu[f]>>16 for f in ('icr','irq_beam','irq_level','saved_pc_offset')]
+        groups[group][delay]=dict(hardware_dmaconr=hw['counter']&0x67ff,
+            emulator_dmaconr=emu['counter']&0x67ff,
+            dmaconr_mismatch=(hw['counter']&0x67ff)!=(emu['counter']&0x67ff),
+            hardware_elapsed_cck=elapsed_hw,emulator_elapsed_cck=elapsed_emu,
+            elapsed_mismatch=elapsed_hw!=elapsed_emu,hardware_memory=hw_memory,
+            emulator_memory=emu_memory,memory_mismatch=hw_memory!=emu_memory)
+    output=[]
+    for (target,variant,phase,order),by_delay in sorted(groups.items()):
+        traces=[dict(delay=d,**by_delay[d]) for d in range(5) if d in by_delay]
+        output.append(dict(target=target,use_b=target==33,variant=variant,
+            b_index=variant&7,b_pattern=(0,1,2,4,0x8000,0x1000,0xffff)[variant&7],
+            a_pattern=(0,0x8000,0xffff)[(variant>>3)&3],
+            c_pattern=0xffff if variant&0x20 else 0,
+            pixels=22 if variant&0x40 else 2,phase=phase,
+            phase_pad_cck=2 if phase==0 else 3,
+            bdat_order='early' if order else 'late',samples=len(traces),delay_trace=traces,
+            dmaconr_mismatches=sum(r['dmaconr_mismatch'] for r in traces),
+            elapsed_mismatches=sum(r['elapsed_mismatch'] for r in traces),
+            destination_memory_mismatches=sum(r['memory_mismatch'] for r in traces)))
+    return dict(kind=27,groups=output,
+        note='Line-mode BZERO follow-up: minterm $CA, BLTAPT=-80; A=0/$8000/$ffff, C=0/$ffff, B=0/1/2/4/$8000/$1000/$ffff, USEB off/on, 2/22 pixels. Repeat 0/1 loads BLTBDAT late/early while all other blitter registers are initialized directly. Five consecutive NOP delays 0-4 are paired with NOP/EXG phase; capture reads full DMACONR and beam first, then destination OR/selected words after BBUSY clears.')
+
+
 def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emulator_sha256=None):
     provenance = capture_provenance(emu_folder, expected_emulator_binary, expected_emulator_sha256)
     hm, hr = load(hw_folder)
@@ -404,7 +541,7 @@ def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emula
     pairs = _paired_rows(hr, er)
     kinds = {key[0] for key, _, _ in pairs}
     reports = []
-    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line}
+    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup}
     for kind in sorted(kinds):
         if kind not in funcs:
             raise ValueError(f'Unsupported experiment kind {kind}')

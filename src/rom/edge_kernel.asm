@@ -350,3 +350,97 @@ bzero_line_delay set bzero_line_delay+1
         endr
 bzero_line_phase set bzero_line_phase+1
         endr
+
+        dcb.b $fe9000-*,0
+line_logic_phase set 0
+        rept 2
+line_logic_slot set 0
+line_logic_delay set 0
+        rept 6
+        dcb.b $fe9000+line_logic_phase*$1000+line_logic_slot*$100-*,0
+        move.l d7,-(sp)
+        jsr $fb0000
+        move.w 6(a6),d7
+        move.w d5,(a1)
+        ifne line_logic_phase
+        exg d0,d1
+        else
+        nop
+        endc
+        rept line_logic_delay
+        nop
+        endr
+        move.w $02(a6),d0
+        move.w $06(a6),d1
+        move.w d7,12(a4)
+        move.w d0,20(a4)
+        move.w d1,16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.l d2,-(sp)
+        moveq #0,d2
+        lea $10000,a0
+        move.w #1023,d0
+        or.w (a0)+,d2
+        dbra d0,*-2
+        move.w d2,22(a4)
+        move.w $10000,24(a4)
+        move.w $10050,26(a4)
+        move.w $100a0,28(a4)
+        move.l (sp)+,d2
+        move.l (sp)+,d7
+        rts
+        ifeq line_logic_delay
+line_logic_delay set 1
+        else
+line_logic_delay set line_logic_delay*2
+        endc
+line_logic_slot set line_logic_slot+1
+        endr
+line_logic_phase set line_logic_phase+1
+        endr
+
+        dcb.b $feb000-*,0
+line_logic_fine_phase set 0
+        rept 2
+line_logic_fine_slot set 0
+line_logic_fine_delay set 0
+        rept 17
+        dcb.b $feb000+line_logic_fine_phase*$2000+line_logic_fine_slot*$100-*,0
+        move.l d7,-(sp)
+        jsr $fb0000
+        move.w 6(a6),d7
+        move.w d5,(a1)
+        ifne line_logic_fine_phase
+        exg d0,d1
+        else
+        nop
+        endc
+        rept line_logic_fine_delay
+        nop
+        endr
+        move.w $02(a6),d0
+        move.w $06(a6),d1
+        move.w d7,12(a4)
+        move.w d0,20(a4)
+        move.w d1,16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.l d2,-(sp)
+        moveq #0,d2
+        lea $10000,a0
+        move.w #1023,d0
+        or.w (a0)+,d2
+        dbra d0,*-2
+        move.w d2,22(a4)
+        move.w $10000,24(a4)
+        move.w $10050,26(a4)
+        move.w $100a0,28(a4)
+        move.l (sp)+,d2
+        move.l (sp)+,d7
+        rts
+line_logic_fine_delay set line_logic_fine_delay+1
+line_logic_fine_slot set line_logic_fine_slot+1
+        endr
+line_logic_fine_phase set line_logic_fine_phase+1
+        endr

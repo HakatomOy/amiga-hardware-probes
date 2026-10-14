@@ -140,6 +140,81 @@ class RomFormatTests(unittest.TestCase):
         source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
         self.assertNotRegex(source,r'(?im)^\s*(?:ori|andi|eori)\.w\s+[^\n]*\$40\(a6\)')
 
+    def test_line_logic_matrix_coverage_and_direct_write_only_register_setup(self):
+        rows=build_rom.trials(line_logic=True)
+        self.assertEqual(len(rows),3456)
+        self.assertEqual(len(set(rows)),3456)
+        self.assertEqual({r[0] for r in rows},{25})
+        self.assertEqual({r[1] for r in rows},{32,33})
+        self.assertEqual({r[3] for r in rows},{0,1})
+        self.assertEqual({r[4] for r in rows},{0,1,2,4,8,16})
+        self.assertEqual({r[5] for r in rows},{0})
+        variants={r[2] for r in rows}
+        self.assertEqual(len(variants),144)
+        self.assertEqual({v&3 for v in variants},{0,1,2,3})
+        self.assertEqual({(v>>2)&1 for v in variants},{0,1})
+        self.assertEqual({(v>>3)&3 for v in variants},{0,1,2})
+        self.assertEqual({(v>>5)&1 for v in variants},{0,1})
+        self.assertEqual({(v>>6)&3 for v in variants},{0,1,2})
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        routine=source.split('line_logic_trial:',1)[1].split('divirq_handler:',1)[0]
+        self.assertNotRegex(routine,r'(?im)^\s*(?:ori|andi|eori|add|sub|clr|neg|not|bset|bclr|bchg)\.w?\s+[^\n]*\$(?:40|42|44|46|60|62|64|66|70|72|74)\(a6\)')
+        c_setup=routine.split('.c_ready:',1)[1].split('move.w #1023,d7',1)[0]
+        self.assertIn('move.w d0,$70(a6)',c_setup)
+        self.assertRegex(routine,r'(?s)move\.w #\$8240,\$96\(a6\).*?btst #2,11\(a4\).*?move\.w #\$8640,\$96\(a6\)')
+        self.assertIn('        jsr (a2)',routine)
+        self.assertNotIn('        jmp (a2)',routine)
+        self.assertIn('move.l #-80,$50(a6)',routine)
+        self.assertNotIn('move.l #$15000,$50(a6)',routine)
+
+    def test_fine_line_bzero_matrix_is_544_bounded_trials(self):
+        rows=build_rom.trials(line_logic_fine=True)
+        self.assertEqual(len(rows),544)
+        self.assertEqual(len(set(rows)),544)
+        self.assertEqual({r[0] for r in rows},{26})
+        self.assertEqual({r[1] for r in rows},{32,33})
+        self.assertEqual({r[2] for r in rows},{0,1,2,3})
+        self.assertEqual({r[3] for r in rows},{0,1})
+        self.assertEqual({r[4] for r in rows},set(range(17)))
+        self.assertEqual({r[5] for r in rows},{0,4})
+        for target in (32,33):
+            for variant in range(4):
+                for phase in (0,1):
+                    for repeat in (0,4):
+                        subset=[r for r in rows if r[1:4]==(target,variant,phase) and r[5]==repeat]
+                        self.assertEqual([r[4] for r in subset],list(range(17)))
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        routine=source.split('line_logic_trial:',1)[1].split('divirq_handler:',1)[0]
+        self.assertRegex(routine,r'(?s)move\.w #\$8240,\$96\(a6\).*?btst #2,11\(a4\).*?move\.w #\$8640,\$96\(a6\)')
+
+    def test_kind27_followup_matrix_drives_line_inputs_and_bdat_order(self):
+        rows=build_rom.trials(line_logic_followup=True)
+        self.assertEqual(len(rows),3360)
+        self.assertEqual(len(set(rows)),3360)
+        self.assertEqual({r[0] for r in rows},{27})
+        self.assertEqual({r[1] for r in rows},{32,33})
+        variants={r[2] for r in rows}
+        self.assertEqual({v&7 for v in variants},set(range(7)))
+        self.assertEqual({(v>>3)&3 for v in variants},set(range(3)))
+        self.assertEqual({(v>>5)&1 for v in variants},{0,1})
+        self.assertEqual({(v>>6)&1 for v in variants},{0,1})
+        self.assertEqual({r[3] for r in rows},{0,1})
+        self.assertEqual({r[4] for r in rows},set(range(5)))
+        self.assertEqual({r[5] for r in rows},{0,1})
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        routine=source.split('line_logic_trial:',1)[1].split('divirq_handler:',1)[0]
+        self.assertIn('move.l #-80,$50(a6)',routine)
+        self.assertIn('move.w d0,$70(a6)',routine)
+        self.assertIn('move.w d0,$74(a6)',routine)
+        self.assertIn('move.w d1,$72(a6)',routine)
+        self.assertRegex(routine,r'(?s)move\.l d7,-\(sp\)\s+cmpi\.w #27,\(a4\)\s+bne\.s \.bdat_seed_ready\s+move\.w #\$0001,\$42\(a6\)\s+move\.w #\$ffff,\$72\(a6\).*?btst #0,11\(a4\).*?move\.w d1,\$72\(a6\)')
+        self.assertIn('btst #0,11(a4)',routine)
+        self.assertIn('dc.w 0,$0001,$0002,$0004,$8000,$1000,$ffff',routine)
+        self.assertIn('dc.w 0,$8000,$ffff',routine)
+
 
     def test_cpu_trial_coverage(self):
         rows=build_rom.trials(cpu=True)

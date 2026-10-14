@@ -4,7 +4,7 @@ import argparse, hashlib, json, subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 
-def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False):
+def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False):
     if bzero:
         targets=[*range(32),32,33]
         rows=[]
@@ -25,6 +25,31 @@ def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,l
                 for target in (32,33) for pattern in (0,1,4,8,16) for late in (0,1)
                 for phase in range(2)
                 for delay in range(32) for repeat in (0,4)]
+    if line_logic_fine:
+        return [(26,target,b_pattern | (long_line << 1),phase,delay,repeat)
+                for target in (32,33) for b_pattern in range(2) for long_line in range(2)
+                for phase in range(2) for delay in range(17) for repeat in (0,4)]
+    if line_logic_followup:
+        # variant: B pattern index[0:2], A pattern index[3:4], C full[5],
+        # long line[6]. repeat bit 0 selects early (1) vs late (0) BLTBDAT.
+        return [(27,target,b_index | (a_index<<3) | (c_full<<5) | (long_line<<6),phase,delay,order)
+                for target in (32,33) for b_index in range(7) for a_index in range(3)
+                for c_full in range(2) for long_line in range(2) for phase in range(2)
+                for delay in range(5) for order in (0,1)]
+    if line_logic:
+        delays=(0,1,2,4,8,16)
+        rows=[]
+        for target in (32,33):
+            for lf_index in range(4):
+                for a_enabled in range(2):
+                    for b_index in range(3):
+                        for c_full in range(2):
+                            for pixel_index in range(3):
+                                variant=(lf_index | (a_enabled<<2) | (b_index<<3)
+                                         | (c_full<<5) | (pixel_index<<6))
+                                rows.extend((25,target,variant,phase,delay,0)
+                                            for phase in range(2) for delay in delays)
+        return rows
     if channels or priority:
         masks=[*range(16),*(16+m for m in range(1,16,2)),32,33,34]
         repeat=observe | (4 if priority else 0)
@@ -95,8 +120,8 @@ def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,l
                             rows.append((10,source,kernel,phase,dma+memory*4,repeat))
     return rows
 
-def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False):
-    rows=trials(focused,continuous,modes,pulses,reads,loads,blits,cpu,edges,channels,observe,priority,bzero,irq_paths,bzero_line)
+def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False):
+    rows=trials(focused,continuous,modes,pulses,reads,loads,blits,cpu,edges,channels,observe,priority,bzero,irq_paths,bzero_line,line_logic,line_logic_fine,line_logic_followup)
     build=ROOT/'build/rom'; build.mkdir(parents=True,exist_ok=True)
     sources=sorted([ROOT/'build_rom.py',*list((ROOT/'src/rom').glob('*')),*list((ROOT/'vendor/rbcp').glob('*'))])
     h=hashlib.sha256()
@@ -115,7 +140,7 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
             return str(p)
         command=(['wsl','-d','Ubuntu-24.04','--exec',assembler] if wsl else [assembler])
         command+=['-m68000','-no-opt','-Fbin','-DCONFIG_ROM_KB=512']
-        if edges or channels or cpu or priority or bzero or irq_paths or bzero_line: command+=['-DEDGE_ROM_KERNEL=1']
+        if edges or channels or cpu or priority or bzero or irq_paths or bzero_line or line_logic or line_logic_fine or line_logic_followup: command+=['-DEDGE_ROM_KERNEL=1']
         for p in paths: command+=['-I',path(p)]
         command += [path(source),'-o',path(out),'-L',path(out.with_suffix('.lst'))]
         subprocess.run(command,cwd=ROOT,check=True)
@@ -145,7 +170,7 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
     assert 0x40000+64+len(rows)*40 < 0x7e000, 'Results overlap stack'
     (build/'rom_layout.i').write_text(f'TRIAL_COUNT equ {len(rows)}\nPAYLOAD_BYTES equ {len(data)}\n')
     out=build/'a500-timing-rom.bin'
-    if edges or channels or cpu or priority or bzero or irq_paths or bzero_line: assemble(ROOT/'src/rom/edge_kernel.asm',build/'rom_kernel.bin')
+    if edges or channels or cpu or priority or bzero or irq_paths or bzero_line or line_logic or line_logic_fine or line_logic_followup: assemble(ROOT/'src/rom/edge_kernel.asm',build/'rom_kernel.bin')
     assemble(ROOT/'src/rom/boot.asm',out)
     data=out.read_bytes(); assert len(data)==524288
     assert data[-16:]==bytes.fromhex('00180019001a001b001c001d001e001f')
@@ -161,5 +186,5 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
     return manifest
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); group=p.add_mutually_exclusive_group(); group.add_argument('--focused',action='store_true'); group.add_argument('--continuous',action='store_true'); group.add_argument('--modes',action='store_true'); group.add_argument('--pulses',action='store_true'); group.add_argument('--reads',action='store_true'); group.add_argument('--loads',action='store_true'); group.add_argument('--blits',action='store_true'); group.add_argument('--cpu',action='store_true'); group.add_argument('--edges',action='store_true'); group.add_argument('--channels',action='store_true'); group.add_argument('--priority',action='store_true',help='aligned observer sweep with BLTPRI enabled'); group.add_argument('--bzero',action='store_true',help='BZERO transition observer matrix'); group.add_argument('--irq-paths',action='store_true',help='native and Copper-generated IRQ STOP path matrix'); group.add_argument('--bzero-line',action='store_true',help='line-mode BZERO onset sweep'); p.add_argument('--observe',choices=['busy','irq','memory'],default='busy')
-    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads,a.loads,a.blits,a.cpu,a.edges,a.channels,['busy','irq','memory'].index(a.observe),a.priority,a.bzero,a.irq_paths,a.bzero_line)
+    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); group=p.add_mutually_exclusive_group(); group.add_argument('--focused',action='store_true'); group.add_argument('--continuous',action='store_true'); group.add_argument('--modes',action='store_true'); group.add_argument('--pulses',action='store_true'); group.add_argument('--reads',action='store_true'); group.add_argument('--loads',action='store_true'); group.add_argument('--blits',action='store_true'); group.add_argument('--cpu',action='store_true'); group.add_argument('--edges',action='store_true'); group.add_argument('--channels',action='store_true'); group.add_argument('--priority',action='store_true',help='aligned observer sweep with BLTPRI enabled'); group.add_argument('--bzero',action='store_true',help='BZERO transition observer matrix'); group.add_argument('--irq-paths',action='store_true',help='native and Copper-generated IRQ STOP path matrix'); group.add_argument('--bzero-line',action='store_true',help='line-mode BZERO onset sweep'); group.add_argument('--line-logic',action='store_true',help='line minterm and BZERO/data behavior matrix'); group.add_argument('--line-logic-fine',action='store_true',help='focused 1-CCK line BZERO readback sweep'); group.add_argument('--line-logic-followup',action='store_true',help='focused kind27 line BZERO input/BDAT ordering matrix'); p.add_argument('--observe',choices=['busy','irq','memory'],default='busy')
+    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads,a.loads,a.blits,a.cpu,a.edges,a.channels,['busy','irq','memory'].index(a.observe),a.priority,a.bzero,a.irq_paths,a.bzero_line,a.line_logic,a.line_logic_fine,a.line_logic_followup)

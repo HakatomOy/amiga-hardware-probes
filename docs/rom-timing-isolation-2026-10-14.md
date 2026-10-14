@@ -1,12 +1,12 @@
 # ROM timing isolation, 14 October 2026
 
-This note records the focused OneROM measurements behind the timing changes and separates exact phase-matched results from older, phase-mixed timing-table readings. The emulator timing-model discussion is in [Copperline internals: timing](../../Copperline/docs/internals/timing.md); earlier broad RAM results remain in [earlier ROM golden findings](rom-golden-findings-2026-10-14.md).
+This note records the focused One ROM measurements behind the timing changes and separates exact phase-matched results from older, phase-mixed timing-table readings. The emulator timing-model discussion is in [Copperline internals: timing](../../Copperline/docs/internals/timing.md); earlier broad RAM results remain in [earlier ROM golden findings](rom-golden-findings-2026-10-14.md).
 
-The final [comparison, fixes and detailed remaining measurement plan](rom-timing-wrapup-2026-10-14.md) supersedes intermediate candidate and capture-pending statements below. It records the remaining native odd-phase +2 CCK and unresolved line-mode BZERO behavior.
+The final [comparison, fixes and detailed remaining measurement plan](rom-timing-wrapup-2026-10-14.md) updates the intermediate candidate notes below. The synchronized 896-trial STOP matrix now matches A500 exactly; line-mode BZERO remains partially unresolved after kinds 25-27.
 
 ## Machine and evidence
 
-The physical test machine was a PAL A500 with ECS Agnus 8372A (`VPOSR=$a000`), OCS Denise (raw ID `$ffff`), 512 KiB chip RAM and 512 KiB slow RAM. The OneROM Fire-40-A was v0.8.0 (USB 0.3.2, host-control 0.1.6); SEL_C reset the 68000. The Kickstart image was backed up and restored byte-for-byte; restored live-ROM SHA-256: `9797dfe08af1e48271528411a41eda20fb03ee3cf387e610ce50eedfb0c457eb`. Results were gathered in RAM and transferred after measurement; RBCP was not called inside timed loops. No AGA or analogue-video claim follows from these captures.
+The physical test machine was a PAL A500 with ECS Agnus 8372A (`VPOSR=$a000`), OCS Denise (raw ID `$ffff`), 512 KiB chip RAM and 512 KiB slow RAM. The One ROM Fire-40-A was v0.8.0 (USB 0.3.2, host-control 0.1.6); SEL_C reset the 68000. The Kickstart image was backed up and restored byte-for-byte; restored live-ROM SHA-256: `9797dfe08af1e48271528411a41eda20fb03ee3cf387e610ce50eedfb0c457eb`. Results were gathered in RAM and transferred after measurement; RBCP was not called inside timed loops. No AGA or analogue-video claim follows from these captures.
 
 WinUAE reference captures used WinUAE 6.0.3 (2026-03-01), A500 quickstart, Best Compatibility, cycle-exact 68000, PAL, ECS Agnus, matching memory arrangement. Copperline runs used the pinned `tmp/golden-a500-ecs.toml` configuration: A500, 68000, ECS, 512 KiB chip plus 512 KiB slow, no JIT, no audio. The fixed-candidate capture used `target/ci/copperline.exe`, SHA-256 `69f242e04cbc696d04dbc3c38d8b7a55e96fa053641234d0b51b43df772d786b`. The analysis validated both the capture's invocation path/hash and the current on-disk binary hash. An earlier preflight accidentally used `target/release/copperline.exe`, SHA-256 `be0b85e7a67145cc8861bbbc0eab7cb5a75e719ebd81a4e75942583fb423efbb`; it is explicitly a baseline, not evidence about the fixed CI candidate.
 
@@ -36,7 +36,7 @@ The three mode source IDs and ROM SHA-256 values are:
 
 The existing 10,368-row baseline captures keep BLTPRI clear and compare the masked observer state plus elapsed time exactly. The earlier 540-row blitter sweep still showed a +2 colour-clock residual for fill and line cases under BLTPRI. A separate 3,456-row busy-observer ROM now forces DMACON BLTPRI (`$0400`) before each blit launch while preserving the trial's busy observer and aligned launch phases. Its repeat descriptor is 4 (low bits select busy; bit 2 marks BLTPRI on). The immutable ROM bundles are under `Copperline/tmp/timing-isolation/aligned-priority-{busy,irq}-rom`:
 
-| Observer | Source ID | ROM SHA-256 | OneROM-order ROM SHA-256 | Source-snapshot SHA-256 |
+| Observer | Source ID | ROM SHA-256 | One ROM-order ROM SHA-256 | Source-snapshot SHA-256 |
 | --- | --- | --- | --- | --- |
 | busy | `93adfec44fe58ea38aba0e07e81f7949d1eaf519dc6bcc5914d10f2f5d2ccf1f` | `aed3a4b3db7648cd615526e2d1b5999c3d1115b50b6ec3cecbec60d9ec1e626b` | `215355fd63d02f5a92ff9298e4339c5eefa4a6ba105fd866695c322574027f1d` | `50dc611f6b0ab16caefb6d6fc2f091a34fca7e833a3a3fef625d69e40f7eba34` |
 | IRQ | `18786132832d8aab99388ce1a1c52fbd12ff01465f40a73d21c71799f07edd53` | `5887ecfb0c0eed192b1a134dad4855363f07689d9fa2bc2aeb5926ebb59f57e2` | `7f75ed93baeaae1b22e59cf11771e45d38963b04ffb47d1dc38c94a78a26aaac` | `dc88298a70cd05acbd7aafbcb7358165ebf8199a820ff96b483a4f72ec541f8c` |
@@ -61,18 +61,73 @@ The old `Remaining constraints` section in [earlier ROM golden findings](rom-gol
 
 A kind-22 ROM is archived at `Copperline/tmp/timing-isolation/bzero-edges-rom2`. It samples both BBUSY and BZERO from full DMACONR around the first computed blitter word, with phase gap 2 CCK (`NOP`) or 3 CCK (`EXG`) after BLTSIZE and an additional 0-15 NOP delay. The 4,608 rows cover normal and every fill minterm mask 0-31, line targets 32/33, BLTPRI clear/set, and A-source first-nonzero positions 0/1/4 for A-enabled normal/fill cases. Six targets also run a one-word/one-pixel case to test whether BZERO may outlive engine completion. The comparison groups by target, variant and priority; it requires matching launch beam and reports the BBUSY+BZERO mask (`$6000`) separately from valid full DMACONR bits (`$67ff`). The phase and delay indexes are explicitly zero-extended before address calculation; assembled stubs occupy `$FD0000` through `$FD1F00` in `$100`-byte slots, after the alignment kernel ending below `$FD0000`. Hardware and emulator captures are complete. Before BZERO correction Copperline differs in 86 of 4,608 defined-DMACONR samples; WinUAE differs in 20. The final normal/fill candidate has zero mismatches and its entire packet is byte-identical to hardware (SHA-256 3fc9ac2ef2134a5b03090fefca5d5251e5445c71fbee8c9c2f0759284138e7fe). The broader line-texture experiment below remains a separate limitation.
 
-The first archived bundle `bzero-edges-rom` is retained but superseded: its phase/delay address calculation did not clear register upper words, and target 33 included an unnecessary short variant. Use only `bzero-edges-rom2`, source ID `634599ff1094acc5fd95f87f8ab34264a61a12407ff0577330b2b30f348fc076`; ROM SHA-256 `059112d740325bdb74ca958434e99b44371cdfc095b535b1f32d16a5f9cd4a84`; OneROM-order ROM SHA-256 `88e24139912850ed8546014c18ee6cd77c0c5ebf31db3100554adf5de255cd1c`; source-snapshot SHA-256 `7b85e9b2cce92f753df949e9a228be6235d02415619aa09e2b26db425acefb2d`.
+The first archived bundle `bzero-edges-rom` is retained but superseded: its phase/delay address calculation did not clear register upper words, and target 33 included an unnecessary short variant. Use only `bzero-edges-rom2`, source ID `634599ff1094acc5fd95f87f8ab34264a61a12407ff0577330b2b30f348fc076`; ROM SHA-256 `059112d740325bdb74ca958434e99b44371cdfc095b535b1f32d16a5f9cd4a84`; One ROM-order ROM SHA-256 `88e24139912850ed8546014c18ee6cd77c0c5ebf31db3100554adf5de255cd1c`; source-snapshot SHA-256 `7b85e9b2cce92f753df949e9a228be6235d02415619aa09e2b26db425acefb2d`.
 
 ### Native and Copper IRQ STOP paths
 
-The kind-23 ROM is archived at `Copperline/tmp/timing-isolation/irq-paths-rom2`. Its 896 trials cross seven sources (native D-only, AD copy, AD fill, line; Copper INTREQ BLIT, COPER and SOFT), RAM-copied versus ROM interrupt handler, 2- versus 3-CCK phase padding after launch, 0-15 additional NOPs before STOP, and BLTPRI clear/set. The Copper list waits for line 67, HPOS 64 and writes the selected INTREQ source. Before phase alignment, the controller rendezvous with VPOSR line 64, matching the RAM timing probes. Both level-1 and level-3 vectors point to the selected handler during each trial, then the main harness restores its regular vectors. The handler records the beam and 68000 exception-frame PC before acknowledging INTREQ and setting DONE. Hardware and WinUAE have identical launch beams and saved PCs for all 896 trials. The fixed Copperline candidate matches all three Copper-generated sources exactly; before native-source correction, native sources show +2/+4 CCK. The final measured candidate improves these to 0/+2 CCK: all 256 NOP-phase native cases match, while all 256 EXG-phase native cases remain two clocks late. This localizes the remaining measured difference to native blitter IRQ/STOP behavior in this matrix, without establishing a general latency rule. The first archived `irq-paths-rom` omitted the line-64 rendezvous and is preserved as exploratory only.
+The kind-23 ROM is archived at `Copperline/tmp/timing-isolation/irq-paths-rom2`. Its 896 trials cross seven sources (native D-only, AD copy, AD fill, line; Copper INTREQ BLIT, COPER and SOFT), RAM-copied versus ROM interrupt handler, 2- versus 3-CCK phase padding after launch, 0-15 additional NOPs before STOP, and BLTPRI clear/set. The Copper list waits for line 67, HPOS 64 and writes the selected INTREQ source. Before phase alignment, the controller rendezvous with VPOSR line 64, matching the RAM timing probes. Both level-1 and level-3 vectors point to the selected handler during each trial, then the main harness restores its regular vectors. The handler records the beam and 68000 exception-frame PC before acknowledging INTREQ and setting DONE. Hardware and WinUAE have identical launch beams and saved PCs for all 896 trials. Before the exact STOP deadline clamp, the measured candidate matched all three Copper-generated sources and all 256 NOP-phase native cases; the 256 EXG-phase native cases remained two clocks late. The 15 October follow-up below closes this residual in the synchronized kind-23 matrix. The first archived `irq-paths-rom` omitted the line-64 rendezvous and is preserved as exploratory only.
 
-Source ID `e3ed3ab473e1a1f2c2f65d6ad03b33684cbf2eb7aa68f076fb7a75d4cd1a4e0a`; ROM SHA-256 `abfbaf4a5fb6ae20326be1b0e9ff41a2d3667a0923b6db26156d4f15664099db`; OneROM-order ROM SHA-256 `b27800412f3b294a43a2051a11afec28a7afff48425482efb11d1c4ab4176f15`; source-snapshot SHA-256 `f01621c44382ccf4cbcf00e0d5702846118112c3c81f96d95f3381c3eb48dc19`.
+Source ID `e3ed3ab473e1a1f2c2f65d6ad03b33684cbf2eb7aa68f076fb7a75d4cd1a4e0a`; ROM SHA-256 `abfbaf4a5fb6ae20326be1b0e9ff41a2d3667a0923b6db26156d4f15664099db`; One ROM-order ROM SHA-256 `b27800412f3b294a43a2051a11afec28a7afff48425482efb11d1c4ab4176f15`; source-snapshot SHA-256 `f01621c44382ccf4cbcf00e0d5702846118112c3c81f96d95f3381c3eb48dc19`.
 
 ### Line-mode BZERO and data (complete; flag semantics unresolved)
 
-The initial kind-24 768-row matrix in `Copperline/tmp/timing-isolation/bzero-line-rom4` showed identical BZERO edges across the three pixel patterns, so it did not establish the generated D-data behavior. The expanded 2,560-row `bzero-line-data-rom` matrix adds B patterns `$0000/$8000/$1000/$0100/$ffff` and toggles whether BLTBDAT is written after BLTCON1. It preserves the USEB-off/on targets, 22-pixel line walk, phase NOP/EXG, 0-31 NOP delays and BLTPRI clear/set. Both BLTAFWM and BLTALWM are reset to `$ffff`, the 1,024-word C/D destination region starts at zero, and USEB-on is written directly as `$0fca` (BLTCON0 is write-only). After BBUSY clears, the capture stores an OR of all 1,024 destination words plus words at `$10000`, `$10050` and `$100a0`; the comparator reports these separately from the `$6000` BZERO/BBUSY mask and `$67ff` valid DMACONR bits. In the decoded report these values are named `destination_or`, `destination_first`, `destination_10050`, and `destination_100a0`. RAM `sync_beam` rendezvous at VPOSR line 64 before ROM horizontal alignment. The reviewed immutable ROM is archived at `Copperline/tmp/timing-isolation/bzero-line-data-rom`; all captures are complete. All 2,560 destination OR reductions and selected words match on all three systems. Hardware BZERO still differs from WinUAE in 872 samples and the initial one-CCK line candidate in 956. The all-zero texture control leaves destination OR zero, yet hardware clears BZERO; BLTBDAT write ordering has no effect. The next minterm/channel/line-length experiment is specified in the wrap-up plan, not committed as a validated result. The earlier `bzero-line-rom` through `-rom4` bundles and their captures remain immutable historical artifacts; `-rom3` used a read-modify-write on BLTCON0 and is exploratory only.
+The initial kind-24 768-row matrix in `Copperline/tmp/timing-isolation/bzero-line-rom4` showed identical BZERO edges across the three pixel patterns, so it did not establish the generated D-data behavior. The expanded 2,560-row `bzero-line-data-rom` matrix adds B patterns `$0000/$8000/$1000/$0100/$ffff` and toggles whether BLTBDAT is written after BLTCON1. It preserves the USEB-off/on targets, 22-pixel line walk, phase NOP/EXG, 0-31 NOP delays and BLTPRI clear/set. Both BLTAFWM and BLTALWM are reset to `$ffff`, the 1,024-word C/D destination region starts at zero, and USEB-on is written directly as `$0fca` (BLTCON0 is write-only). After BBUSY clears, the capture stores an OR of all 1,024 destination words plus words at `$10000`, `$10050` and `$100a0`; the comparator reports these separately from the `$6000` BZERO/BBUSY mask and `$67ff` valid DMACONR bits. In the decoded report these values are named `destination_or`, `destination_first`, `destination_10050`, and `destination_100a0`. RAM `sync_beam` rendezvous at VPOSR line 64 before ROM horizontal alignment. The reviewed immutable ROM is archived at `Copperline/tmp/timing-isolation/bzero-line-data-rom`; all captures are complete. All 2,560 destination OR reductions and selected words match on all three systems. Hardware BZERO still differs from WinUAE in 872 samples and the initial one-CCK line candidate in 956. The all-zero texture control leaves destination OR zero, yet hardware clears BZERO; BLTBDAT write ordering has no effect. The initial 1-CCK candidate had 956 BZERO mismatches. The 15 October follow-up below records a separate replay with zero extra line visibility delay, reducing this to 932. The earlier `bzero-line-rom` through `-rom4` bundles and their captures remain immutable historical artifacts; `-rom3` used a read-modify-write on BLTCON0 and is exploratory only.
 
-Source ID `e9ca4607f72ec69f6c5728b87feb1398bb594f2748e995f6642981127ea8e019`; ROM SHA-256 `29f4c98a7de30cbe5becc97125bcfba47b629d432bbb1b831e2a02b40cd3c4c8`; OneROM-order ROM SHA-256 `99f83f0a2b2e65baa0acbbe705def000de085f58e5d725f3a2bc95db53f5325a`; source-snapshot SHA-256 `44c57811f9b1c67d135c8dc3d228f41175a88b8a78351ecd242f532699058722`.
+Source ID `e9ca4607f72ec69f6c5728b87feb1398bb594f2748e995f6642981127ea8e019`; ROM SHA-256 `29f4c98a7de30cbe5becc97125bcfba47b629d432bbb1b831e2a02b40cd3c4c8`; One ROM-order ROM SHA-256 `99f83f0a2b2e65baa0acbbe705def000de085f58e5d725f3a2bc95db53f5325a`; source-snapshot SHA-256 `44c57811f9b1c67d135c8dc3d228f41175a88b8a78351ecd242f532699058722`.
 
-Source ID `48a5ad0df58634d0e4bbb9fe731c5173b0077ac646f6a9f8fe72ab55b8f713f4`; ROM SHA-256 `23f86d26089545f05eb5a005547df7b73f609433e2bd3785f84e90c9361fe530`; OneROM-order ROM SHA-256 `274bc69f34c039c2ff195f2fb98a91a1595fd80d58ced61de4e88ed91d66d65b`; source-snapshot SHA-256 `dfa09ea969e5bb5a4c2b93955bf05a042494a9e07bb521e0566852320112d31f`.
+Source ID `48a5ad0df58634d0e4bbb9fe731c5173b0077ac646f6a9f8fe72ab55b8f713f4`; ROM SHA-256 `23f86d26089545f05eb5a005547df7b73f609433e2bd3785f84e90c9361fe530`; One ROM-order ROM SHA-256 `274bc69f34c039c2ff195f2fb98a91a1595fd80d58ced61de4e88ed91d66d65b`; source-snapshot SHA-256 `dfa09ea969e5bb5a4c2b93955bf05a042494a9e07bb521e0566852320112d31f`.
+
+## Follow-up One ROM measurements, 15 October 2026
+
+The synchronized kind-23 IRQ experiment was replayed using the exact candidate
+binary after correcting a stale-executable provenance mistake in the first
+attempt. The verified combined Copperline binary is the optimized CI-profile
+build, SHA-256
+97a0b51616eb47bdfd060cb8bd66a2a53ad1ca1b1c4e9242c9858ccf5561dc38. All 896
+Copperline result records have the same packet SHA as A500:
+9c74959d803b60cea0f2823372d2b6e52a4dd896ac005b366846da7bd6c883c0. The capture
+has zero timeouts and skips. WinUAE 6.0.3 Best Compatibility reports zero
+IRQ-beam and saved-PC mismatches on the same paths. The prior +2 CCK native
+odd-phase residual is therefore closed for this tested matrix.
+
+The saved kind-25 through kind-27 A500 captures were replayed on that same
+binary. The candidate changes only the line-mode extra BZERO visibility delay,
+from one CCK to zero; normal/fill timing remains unchanged. Results:
+
+| Kind | A500 rows | WinUAE BZERO mismatches | Copperline at 1 extra CCK | Copperline at 0 extra CCK | Beam/data mismatches after |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 22 normal/fill BZERO | 4,608 | 20 before the normal/fill correction | 0 | 0 | 0; packet SHA equals A500 |
+| 24 line data/texture | 2,560 | 872 | 956 | 932 | 0 |
+| 25 line minterm/channel | 3,456 | 74 | 74 | 74 | 0 |
+| 26 fine line BZERO | 544 | 434 | 454 | 450 | 0 |
+| 27 line inputs/BDAT order | 3,360 | 624 | 652 | 596 | 0 |
+
+Every remaining mismatch in kinds 25, 26 and 27 is directional: A500 has
+cleared BZERO while Copperline still reads it set. Hardware destination ORs and
+selected words match exactly. Kind 27 has no mismatch when A=0; nonzero A has
+mismatches for selected B/C/USEB combinations. BLTBDAT write order, 2-vs-22
+pixel length, and BLTPRI do not explain the residual in the focused cases.
+Changing the line visibility delay improves kinds 24, 26 and 27, but does not
+give one rule that explains all line-mode flag behavior. WinUAE remains closer
+on kinds 24 and 26; Copperline is closer on kind 27; kind 25 ties.
+
+Source IDs and candidate capture packet SHA-256 values:
+
+| Kind | Source ID | Candidate capture packet SHA-256 |
+| --- | --- | --- |
+| 22 | 634599ff1094acc5fd95f87f8ab34264a61a12407ff0577330b2b30f348fc076 | 3fc9ac2ef2134a5b03090fefca5d5251e5445c71fbee8c9c2f0759284138e7fe |
+| 23 | e3ed3ab473e1a1f2c2f65d6ad03b33684cbf2eb7aa68f076fb7a75d4cd1a4e0a | 9c74959d803b60cea0f2823372d2b6e52a4dd896ac005b366846da7bd6c883c0 |
+| 24 | e9ca4607f72ec69f6c5728b87feb1398bb594f2748e995f6642981127ea8e019 | 19d3b947bd0bde64d4585ac98f9fd452d8d5742b390c851922d89958c9c53152 |
+| 25 | 31b9aa0cf37222a2b6dca7c1d7cc982beed7543a3012d43a26c9fe1a6a33eaa7 | da9a761f652cc7e8ebcffc54e92e27b7df764e5a7146cf24a9beb953394e3e80 |
+| 26 | c340ff9336275a570317fc8f0b83a6ee5d0edb6a034a8365f74edfd8f6f62bd0 | 1b0e033455d7b9ff05cc0fa3a648e030072310e7059af840e42b94c95acebd35 |
+| 27 | c610b7ff62314870a21a03dfab5aae8c1ff87ce01578f57c7a2e9a42f6476223 | 90663ecf343e2994c9085ac98f9fd452d8d5742b390c851922d89958c9c53152 |
+
+The detailed line-mode TODO is now kind 28: sample DMACONR at both NOP and EXG
+phase offsets around each pixel; vary A-bit position, B texture/shift, C,
+minterm, channel enables, SING, SIGN/error accumulator and D enable. Keep
+one-, two- and 22-pixel lines and record the beam and destination data. The
+measurement should establish whether A500's BZERO latch follows an earlier
+line ALU/pipeline value than the value eventually written to D. Change the
+state update point only after the matrix identifies a stable rule. The A500
+remained on its original Kickstart; live-ROM SHA-256 after restoration remains
+9797dfe08af1e48271528411a41eda20fb03ee3cf387e610ce50eedfb0c457eb.
