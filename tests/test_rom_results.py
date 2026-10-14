@@ -3,6 +3,16 @@ from pathlib import Path
 import build_rom,rom_results,compare_phase,compare_continuous
 
 class RomFormatTests(unittest.TestCase):
+    def test_running_load_and_blitter_sweep_coverage(self):
+        loads=build_rom.trials(loads=True)
+        self.assertEqual(len(loads),1280)
+        self.assertEqual({r[1] for r in loads},{0,1,2,3})
+        self.assertEqual(sum(r[2]==1 for r in loads),640)
+        blits=build_rom.trials(blits=True)
+        self.assertEqual(len(blits),540)
+        self.assertEqual({(r[1],r[2]) for r in blits},{(t,v) for t in range(3) for v in range(3)})
+        self.assertLess(0x40000+64+len(blits)*40,0x7e000)
+
     def packet(self):
         h=bytearray(64);h[:8]=b'A5RBCP01'
         struct.pack_into('>HHIII',h,8,1,40,1,104,0)

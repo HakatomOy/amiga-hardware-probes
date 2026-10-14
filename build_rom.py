@@ -4,7 +4,11 @@ import argparse, hashlib, json, subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 
-def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False):
+def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False):
+    if blits:
+        return [(17,t,v,p,h,r) for t in range(3) for v in range(3) for p in range(5) for h in (1,2,8,32,128,220) for r in range(2)]
+    if loads:
+        return [(16,t,v,p,d,r) for t in range(4) for v in range(2) for p in range(5) for d in range(16) for r in range(2)]
     if reads:
         return [(9,t,l,p,d,r) for t in range(4) for l in (1,3,15,200)
                 for p in range(3) for d in (*range(64),127) for r in range(2)]
@@ -62,8 +66,8 @@ def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False):
                             rows.append((10,source,kernel,phase,dma+memory*4,repeat))
     return rows
 
-def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False):
-    rows=trials(focused,continuous,modes,pulses,reads)
+def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False):
+    rows=trials(focused,continuous,modes,pulses,reads,loads,blits)
     build=ROOT/'build/rom'; build.mkdir(parents=True,exist_ok=True)
     sources=sorted([ROOT/'build_rom.py',*list((ROOT/'src/rom').glob('*')),*list((ROOT/'vendor/rbcp').glob('*'))])
     h=hashlib.sha256()
@@ -106,5 +110,5 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
     return manifest
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); group=p.add_mutually_exclusive_group(); group.add_argument('--focused',action='store_true'); group.add_argument('--continuous',action='store_true'); group.add_argument('--modes',action='store_true'); group.add_argument('--pulses',action='store_true'); group.add_argument('--reads',action='store_true')
-    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads)
+    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); group=p.add_mutually_exclusive_group(); group.add_argument('--focused',action='store_true'); group.add_argument('--continuous',action='store_true'); group.add_argument('--modes',action='store_true'); group.add_argument('--pulses',action='store_true'); group.add_argument('--reads',action='store_true'); group.add_argument('--loads',action='store_true'); group.add_argument('--blits',action='store_true')
+    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads,a.loads,a.blits)

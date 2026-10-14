@@ -139,7 +139,7 @@ References: [FlashFloppy ADF write support](https://github.com/keirf/flashfloppy
 [vAmiga interrupt hardware experiments](https://github.com/dirkwhoffmann/vAmiga/issues/274).
 
 See [local validation results](docs/validation.md) for the tested build and
-emulator configurations. Hardware reference results remain to be collected.
+emulator configurations. Standalone ROM hardware measurements are linked below.
 
 ## Standalone ROM experiments over OneROM USB
 
@@ -150,3 +150,8 @@ The original ADF build and its capture format are unchanged.
 
 [Hardware findings from the RBCP runs](docs/rom-findings-2026-10-13.md) document
 repeatable timer and ICR differences, capture provenance and the ROM footer fix.
+
+[RAM timing-probe measurements on 14 October](docs/rom-golden-findings-2026-10-14.md)
+cover repeated FORCE LOAD, stopped/polling blitter duration, DIVU display
+contention and Copper polling phase. `build_golden_rom.py` wraps the committed
+Copperline RAM programs; `compare_golden_rom.py` validates and compares captures.

@@ -96,6 +96,10 @@ main:
         clr.w EVLEVEL2(a5)
         cmpi.w #10,(a4)
         beq .interrupt
+        cmpi.w #17,(a4)
+        beq .blits
+        cmpi.w #16,(a4)
+        beq .loads
         cmpi.w #14,(a4)
         beq .pulses
         cmpi.w #13,(a4)
@@ -113,6 +117,12 @@ main:
         cmpi.w #5,(a4)
         beq .stop_only
         bsr timer_trial
+        bra.s .recorded
+.blits:
+        bsr blits_trial
+        bra.s .recorded
+.loads:
+        bsr loads_trial
         bra.s .recorded
 .pulses:
         bsr pulses_trial
@@ -220,6 +230,113 @@ delay:
 delay_end: rts
 ; STOP-only: freeze a running continuous timer, sweep delay before reading.
 ; aux is the last running counter snapshot; counter/second_counter are stopped reads.
+; Reload an already-running timer. Variant 0 is START only (control);
+; variant 1 is START+LOAD. Counter is live low byte, aux is frozen count.
+; Blitter duration: target D-only/AD fill/line; variant STOP/nice-poll/nasty-poll.
+blits_trial:
+        move.l #blit_irq,$6c
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #$0100,$40(a6)
+        clr.w $42(a6)
+        clr.w $64(a6)
+        clr.w $66(a6)
+        move.l #$10000,$54(a6)
+        move.w 8(a4),d5
+        lsl.w #6,d5
+        ori.w #22,d5
+        cmpi.w #1,2(a4)
+        bne.s .not_fill
+        move.w #$09f0,$40(a6)
+        move.w #$0012,$42(a6)
+        move.l #$1a000,$50(a6)
+        move.l #$14000,$54(a6)
+.not_fill:
+        cmpi.w #2,2(a4)
+        bne.s .configured
+        move.w #$0bca,$40(a6)
+        move.w #$0001,$42(a6)
+        move.w #-280,$64(a6)
+        move.w #120,$62(a6)
+        move.l #-80,$50(a6)
+        move.w #$8000,$74(a6)
+        move.w #$ffff,$72(a6)
+        move.l #$10000,$48(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        andi.w #$ffc0,d5
+        ori.w #2,d5
+.configured:
+        move.w #$8240,$96(a6)
+        cmpi.w #2,4(a4)
+        bne.s .not_nasty
+        move.w #$8400,$96(a6)
+.not_nasty:
+        move.w #$c040,$9a(a6)
+        bsr sync_beam
+        move.w 6(a6),12(a4)
+        move.w d5,$58(a6)
+        tst.w 4(a4)
+        bne.s .poll
+.stop:  stop #$2000
+        tst.w DONE(a5)
+        beq.s .stop
+        move.w #$2700,sr
+        move.w EVBEAM(a5),d0
+        bra.s .record
+.poll:  tst.w $02(a6)
+.busy:  btst #6,$02(a6)
+        bne.s .busy
+        move.w 6(a6),d0
+.record:
+        move.w d0,16(a4)
+        move.w EVBEAM(a5),24(a4)
+        move.l #irq3,$6c
+        rts
+blit_irq:
+        move.w 6(a6),EVBEAM(a5)
+        move.w #$0040,$9c(a6)
+        move.w #1,DONE(a5)
+        rte
+loads_trial:
+        bsr select_target
+        move.w LOREG,d2
+        move.w HIREG,d3
+        move.w CONTROL,d4
+        move.b #200,0(a0,d2.w)
+        clr.b 0(a0,d3.w)
+        move.b #$11,0(a0,d4.w)
+        bsr sync_beam
+        moveq #1,d1
+        tst.w 4(a4)
+        beq.s .control
+        moveq #$11,d1
+.control:
+        move.w 8(a4),d0
+        lea loads_delay_end(pc),a2
+        add.w d0,d0
+        suba.w d0,a2
+        move.w 6(a6),12(a4)
+        move.b d1,0(a0,d4.w)
+        jmp (a2)
+        rept 16
+        nop
+        endr
+loads_delay_end:
+        moveq #0,d0
+        move.b 0(a0,d2.w),d0
+        move.w d0,20(a4)
+        clr.b 0(a0,d4.w)
+        rept 16
+        nop
+        endr
+        moveq #0,d0
+        move.b 0(a0,d3.w),d0
+        lsl.w #8,d0
+        move.b 0(a0,d2.w),d0
+        move.w d0,34(a4)
+        move.w 6(a6),16(a4)
+        rts
 stop_only_trial:
         bsr select_target
         move.w LOREG,d2
