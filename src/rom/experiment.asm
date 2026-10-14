@@ -96,9 +96,32 @@ main:
         clr.w EVLEVEL2(a5)
         cmpi.w #10,(a4)
         beq .interrupt
+        cmpi.w #14,(a4)
+        beq .pulses
+        cmpi.w #13,(a4)
+        beq .modes
+        cmpi.w #6,(a4)
+        beq .continuous
+        cmpi.w #7,(a4)
+        beq .continuous
+        cmpi.w #8,(a4)
+        beq .continuous
+        cmpi.w #9,(a4)
+        beq .continuous
+        cmpi.w #12,(a4)
+        beq .continuous
         cmpi.w #5,(a4)
         beq .stop_only
         bsr timer_trial
+        bra.s .recorded
+.pulses:
+        bsr pulses_trial
+        bra.s .recorded
+.modes:
+        bsr modes_trial
+        bra.s .recorded
+.continuous:
+        bsr continuous_trial
         bra.s .recorded
 .stop_only:
         bsr stop_only_trial
@@ -218,6 +241,244 @@ stop_only_trial:
         move.w d0,34(a4)
         clr.b 0(a0,d4.w)
         jmp (a2)
+; First and final underflow snapshots, before and after target STOP.
+; repeat selects START, START+LOAD, one-shot START, one-shot START+LOAD.
+pulses_trial:
+        bsr select_target
+        move.w LOREG,d2
+        move.w CONTROL,d4
+        move.l REF,a1
+        moveq #0,d0
+        move.b d0,$f00(a1)
+        move.b #$ff,$600(a1)
+        move.b #$ff,$700(a1)
+        move.b #$ff,$600(a0)
+        move.b #$ff,$700(a0)
+        move.w 4(a4),d0
+        move.b d0,0(a0,d2.w)
+        move.w HIREG,d0
+        clr.b 0(a0,d0.w)
+        bsr sync_beam
+        move.w #$ffff,14(a4)
+        move.w 6(a6),12(a4)
+        move.w 10(a4),d0
+        add.w d0,d0
+        lea pulse_controls(pc),a2
+        move.w 0(a2,d0.w),d0
+        move.w d0,d1
+        andi.w #8,d1
+        move.w 8(a4),d6
+        lea pulses_delay_end(pc),a2
+        add.w d6,d6
+        suba.w d6,a2
+        move.b #$11,$f00(a1)
+        move.b #$51,$f00(a0)
+        move.b d0,0(a0,d4.w)
+        jmp (a2)
+        rept 64
+        nop
+        endr
+pulses_delay_end:
+        moveq #0,d5
+        move.b $600(a0),d5
+        ori.w #$ff00,d5
+        move.w d5,34(a4)
+        moveq #0,d6
+        move.b d6,$f00(a1)
+        move.b 0(a0,d2.w),d6
+        move.w d6,20(a4)
+        move.b 0(a0,d4.w),d6
+        move.w d6,22(a4)
+        move.b d1,0(a0,d4.w)
+        rept 16
+        nop
+        endr
+        move.b #$40,$f00(a0)
+        rept 16
+        nop
+        endr
+        moveq #0,d0
+        move.b 0(a0,d2.w),d0
+        move.w d0,36(a4)
+        move.b $700(a0),d0
+        lsl.w #8,d0
+        move.b $600(a0),d0
+        move.w d0,38(a4)
+        bsr read_reference
+        move.w d0,18(a4)
+        move.w 6(a6),16(a4)
+        rts
+pulse_controls:
+        dc.w $01,$11,$09,$19
+; Input-mode transitions: target TB, target TA stopped, other CIA TB clock.
+; aux is last running low count, counter/second_counter are fully frozen.
+modes_trial:
+        bsr select_target
+        move.w LOREG,d2
+        move.w CONTROL,d4
+        move.l REF,a1
+        moveq #0,d0
+        move.b d0,$f00(a1)
+        move.b #$ff,$600(a1)
+        move.b #$ff,$700(a1)
+        move.b #200,0(a0,d2.w)
+        move.w HIREG,d0
+        clr.b 0(a0,d0.w)
+        bsr sync_beam
+        move.w #$ffff,14(a4)
+        move.w 6(a6),12(a4)
+        move.w 4(a4),d0
+        mulu.w #6,d0
+        lea mode_controls(pc),a2
+        move.w 0(a2,d0.w),d5
+        move.w 4(a2,d0.w),d1
+        move.w 2(a2,d0.w),d0
+        move.w 8(a4),d6
+        lea modes_delay_end(pc),a2
+        add.w d6,d6
+        suba.w d6,a2
+        move.b #$11,$f00(a1)
+        move.b d5,0(a0,d4.w)
+        rept 16
+        nop
+        endr
+        moveq #0,d6
+        move.b 0(a0,d2.w),d6
+        move.w d6,34(a4)
+        move.b d0,0(a0,d4.w)
+        jmp (a2)
+        rept 32
+        nop
+        endr
+modes_delay_end:
+        move.b d1,0(a0,d4.w)
+        moveq #0,d0
+        move.b d0,$f00(a1)
+        rept 16
+        nop
+        endr
+        move.b 0(a0,d2.w),d0
+        move.w d0,20(a4)
+        move.w 6(a6),16(a4)
+        bsr read_reference
+        move.w d0,18(a4)
+        moveq #0,d0
+        move.b 0(a0,d2.w),d0
+        move.w d0,36(a4)
+        move.b $d00(a0),d0
+        move.w d0,22(a4)
+        rts
+mode_controls:
+        dc.w $11,$20,$20 ; PHI2 -> STOP + CNT
+        dc.w $11,$40,$40 ; PHI2 -> STOP + TA
+        dc.w $11,$41,$40 ; running PHI2 -> running TA
+        dc.w $51,$01,$00 ; running TA -> running PHI2
+        dc.w $11,$00,$00 ; PHI2 -> STOP, same source control
+; Frozen continuous-timer experiment. Kind 6 paired timer counts PHI2;
+; kind 7 paired TB counts target TA underflows. Other CIA TB counts PHI2.
+; Both reference timers and target are stopped and drained before reads.
+continuous_trial:
+        bsr select_target
+        move.w LOREG,d2
+        move.w HIREG,d3
+        move.w CONTROL,d4
+        move.w d4,d5
+        eori.w #$100,d5
+        move.w d2,d6
+        eori.w #$200,d6
+        move.l REF,a1
+        moveq #0,d0
+        move.b d0,$f00(a1)
+        move.b d0,0(a0,d4.w)
+        move.b d0,0(a0,d5.w)
+        move.b #$ff,$600(a1)
+        move.b #$ff,$700(a1)
+        move.b #$ff,0(a0,d6.w)
+        move.w d6,d3
+        addi.w #$100,d3
+        move.b #$ff,0(a0,d3.w)
+        move.w 4(a4),d0
+        move.b d0,0(a0,d2.w)
+        move.w HIREG,d0
+        clr.b 0(a0,d0.w)
+        bsr sync_beam
+        move.w #$ffff,14(a4)
+        move.w 6(a6),12(a4)
+        move.w 8(a4),d0
+        lea continuous_delay_end(pc),a2
+        add.w d0,d0
+        suba.w d0,a2
+        moveq #$11,d1
+        cmpi.w #7,(a4)
+        beq.s .cascade
+        cmpi.w #8,(a4)
+        beq.s .cascade
+        cmpi.w #12,(a4)
+        bne.s .phi2
+.cascade: moveq #$51,d1
+.phi2:  moveq #$11,d0
+        move.b d0,$f00(a1)
+        move.b d1,0(a0,d5.w)
+        cmpi.w #12,(a4)
+        bne.s .continuous_mode
+        moveq #$19,d0
+.continuous_mode:
+        move.b d0,0(a0,d4.w)
+        cmpi.w #8,(a4)
+        bne.s .short_delay
+        move.l #$0001fedc,d0
+        divu.w #$1234,d0
+.short_delay:
+        jmp (a2)
+        rept 128
+        nop
+        endr
+continuous_delay_end:
+        cmpi.w #9,(a4)
+        bne.s .freeze
+        moveq #0,d0
+        move.b 0(a0,d2.w),d0
+        move.w d0,20(a4)
+        moveq #0,d0
+        move.b d0,$f00(a1)
+.freeze:
+        moveq #0,d0
+        move.b d0,0(a0,d4.w)
+        rept 16
+        nop
+        endr
+        andi.b #$40,d1
+        move.b d1,0(a0,d5.w)
+        cmpi.w #9,(a4)
+        beq.s .reference_stopped
+        move.b d0,$f00(a1)
+.reference_stopped:
+        rept 16
+        nop
+        endr
+        cmpi.w #9,(a4)
+        beq.s .live_recorded
+        move.b 0(a0,d2.w),d0
+        move.w d0,20(a4)
+.live_recorded:
+        move.w 6(a6),16(a4)
+        move.b $d00(a0),d0
+        move.w d0,22(a4)
+        moveq #0,d0
+        move.b 0(a0,d3.w),d0
+        lsl.w #8,d0
+        move.b 0(a0,d6.w),d0
+        move.w d0,34(a4)
+        bsr read_reference
+        move.w d0,18(a4)
+        moveq #0,d0
+        move.b 0(a0,d2.w),d0
+        move.w d0,36(a4)
+        move.b 0(a0,d3.w),d0
+        lsl.w #8,d0
+        move.b 0(a0,d6.w),d0
+        move.w d0,38(a4)
+        rts
 timer_trial:
         bsr select_target
         move.w LOREG,d2

@@ -183,3 +183,10 @@ The validator rejects wrong latency, wrong IRQ handler and counter mismatches;
 it excludes horizontal-wrap ambiguity and requires both focused trial kinds.
 An exact source snapshot for this first focused build is archived beside its
 physical results because later builder refactoring changes the source ID.
+
+## Continuous timer isolation suites
+
+`--continuous`, `--modes`, `--pulses` and `--reads` are mutually exclusive
+suite choices alongside `--focused`. Their record contracts, calibration,
+physical captures and strict comparison tool are described in
+[continuous timer isolation](continuous-timers-2026-10-14.md).

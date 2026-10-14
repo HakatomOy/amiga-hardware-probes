@@ -1,6 +1,6 @@
 import importlib.util,struct,unittest
 from pathlib import Path
-import build_rom,rom_results,compare_phase
+import build_rom,rom_results,compare_phase,compare_continuous
 
 class RomFormatTests(unittest.TestCase):
     def packet(self):
@@ -48,6 +48,33 @@ class RomFormatTests(unittest.TestCase):
         self.assertEqual(compare_phase.check(packet())['stop_matches'],1)
         self.assertEqual(compare_phase.check(packet(0x6066))['phase_matches'],0)
         self.assertEqual(compare_phase.check(packet(irq_level=6))['phase_matches'],0)
+
+    def test_continuous_suite_matrices(self):
+        for flags,count,kinds in [
+            ({'continuous':True},5976,{6,7,8,9,12}),
+            ({'modes':True},600,{13}),
+            ({'pulses':True},1728,{14}),
+            ({'reads':True},6240,{9}),
+        ]:
+            rows=build_rom.trials(**flags)
+            self.assertEqual(len(rows),count)
+            self.assertEqual(len(set(rows)),count)
+            self.assertEqual({r[0] for r in rows},kinds)
+            self.assertLess(0x40000+64+count*40,0x7e000)
+
+    def test_continuous_comparison_rejects_provenance_and_counter_errors(self):
+        def packet(counter=3,source=0,variant=3,status=0):
+            data=bytearray(self.packet())
+            data[24]=source
+            row=[0]*20;row[0]=9;row[2]=variant;row[10]=counter;row[16]=status
+            struct.pack_into('>20H',data,64,*row)
+            struct.pack_into('>I',data,20,0)
+            struct.pack_into('>I',data,20,(-sum(struct.unpack('>26I',data)))&0xffffffff)
+            return bytes(data)
+        self.assertEqual(compare_continuous.compare(packet(),packet())['counter_mismatch_records'],0)
+        self.assertEqual(compare_continuous.compare(packet(),packet(counter=2))['counter_mismatch_records'],1)
+        for bad in (packet(source=1),packet(variant=4),packet(status=1)):
+            with self.assertRaises(ValueError):compare_continuous.compare(packet(),bad)
 
     def test_focused_trial_coverage(self):
         rows=build_rom.trials(focused=True)

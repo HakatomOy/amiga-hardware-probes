@@ -4,7 +4,28 @@ import argparse, hashlib, json, subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 
-def trials(focused=False):
+def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False):
+    if reads:
+        return [(9,t,l,p,d,r) for t in range(4) for l in (1,3,15,200)
+                for p in range(3) for d in (*range(64),127) for r in range(2)]
+    if pulses:
+        return [(14,t,l,p,d,style) for t in (0,2) for l in (0,1,3,200)
+                for p in range(3) for d in (*range(16),31,63) for style in range(4)]
+    if modes:
+        return [(13,t,v,p,d,r) for t in (1,3) for v in range(5)
+                for p in range(3) for d in (0,1,2,3,4,5,6,7,15,31) for r in range(2)]
+    if continuous:
+        latches=(0,1,2,3,4,7,15,200)
+        delays=(0,1,2,3,4,5,6,7,15,31,63,127)
+        rows=[(kind,t,l,p,d,r) for kind,targets in ((6,range(4)),(7,(0,2)))
+              for t in targets for l in latches for p in range(3) for d in delays for r in range(2)]
+        rows += [(8,t,l,p,d,r) for t in (0,2) for l in (0,1,3,15,200)
+                 for p in range(3) for d in (0,1,3,7,31,63) for r in range(2)]
+        rows += [(9,t,l,p,d,r) for t in range(4) for l in (0,1,3,15,200)
+                 for p in range(3) for d in delays for r in range(2)]
+        rows += [(12,t,l,p,d,r) for t in (0,2) for l in (0,1,3,15,40)
+                 for p in range(3) for d in delays for r in range(2)]
+        return rows
     if focused:
         rows=[(5,t,0,p,d,r) for t in range(4) for p in range(5) for d in range(8) for r in range(2)]
         return rows + [(10,3,k,p,m*4,r) for k in (5,6) for p in range(16) for m in range(2) for r in range(4)]
@@ -41,8 +62,8 @@ def trials(focused=False):
                             rows.append((10,source,kernel,phase,dma+memory*4,repeat))
     return rows
 
-def build(assembler,wsl=False,focused=False):
-    rows=trials(focused)
+def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False):
+    rows=trials(focused,continuous,modes,pulses,reads)
     build=ROOT/'build/rom'; build.mkdir(parents=True,exist_ok=True)
     sources=sorted([ROOT/'build_rom.py',*list((ROOT/'src/rom').glob('*')),*list((ROOT/'vendor/rbcp').glob('*'))])
     h=hashlib.sha256()
@@ -85,5 +106,5 @@ def build(assembler,wsl=False,focused=False):
     return manifest
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); p.add_argument('--focused',action='store_true')
-    a=p.parse_args(); build(a.vasm,a.wsl,a.focused)
+    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); group=p.add_mutually_exclusive_group(); group.add_argument('--focused',action='store_true'); group.add_argument('--continuous',action='store_true'); group.add_argument('--modes',action='store_true'); group.add_argument('--pulses',action='store_true'); group.add_argument('--reads',action='store_true')
+    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads)
