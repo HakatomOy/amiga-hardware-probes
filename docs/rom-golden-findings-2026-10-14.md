@@ -115,6 +115,8 @@ busy-poll detection times must not be conflated.
 
 ## Remaining constraints
 
+**Superseded interpretation:** The CPU/DIVU timing figures below are retained as historical raw readings. Their horizontal conversion doubled the VHPOSR low byte and their launch phases were not aligned; see [ROM timing isolation, 14 October 2026](rom-timing-isolation-2026-10-14.md) for corrected, provenance-checked phase-matched analysis.
+
 The 64-iteration DIVU row with six bitplanes measures 5015 clocks on hardware
 versus 4824 in Copperline. With zero planes, hardware 4526–4530 overlaps
 Copperline 4522–4526. A trial moving the DIVU prefetch after its internal

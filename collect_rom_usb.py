@@ -5,11 +5,11 @@ from pathlib import Path
 import rom_results
 ROOT=Path(__file__).resolve().parent
 
-def collect(onerom,out,timeout):
+def collect(onerom,out,timeout,manifest=None):
     out.mkdir(parents=True,exist_ok=False)
     transcript=out/'usb.txt'
     manifest_path=out/'build-manifest.json'
-    manifest_path.write_bytes((ROOT/'build/rom/manifest.json').read_bytes())
+    manifest_path.write_bytes((manifest or ROOT/'build/rom/manifest.json').read_bytes())
     command=[str(onerom),'console','--output',str(transcript)]
     (out/'invocation.json').write_text(json.dumps(dict(command=command,timeout_seconds=timeout),indent=2))
     log=(out/'console.log').open('wb')
@@ -30,4 +30,4 @@ def collect(onerom,out,timeout):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--onerom',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
-    p.add_argument('--timeout',type=int,default=480);a=p.parse_args();collect(a.onerom.resolve(),a.out.resolve(),a.timeout)
+    p.add_argument('--timeout',type=int,default=480);p.add_argument('--manifest',type=Path);a=p.parse_args();collect(a.onerom.resolve(),a.out.resolve(),a.timeout,a.manifest.resolve() if a.manifest else None)

@@ -155,3 +155,28 @@ repeatable timer and ICR differences, capture provenance and the ROM footer fix.
 cover repeated FORCE LOAD, stopped/polling blitter duration, DIVU display
 contention and Copper polling phase. `build_golden_rom.py` wraps the committed
 Copperline RAM programs; `compare_golden_rom.py` validates and compares captures.
+
+Focused standalone ROM matrices for aligned CPU/DMA, observer and interrupt
+timing are built with `build_rom.py`. These commands build the native and
+Copper-generated STOP/IRQ trials and the line-mode BZERO plus destination-memory
+matrix (2,560 rows):
+
+```powershell
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --irq-paths
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --bzero-line
+```
+
+Archive each generated ROM and its source snapshot before collecting hardware
+data. Compare validated hardware and emulator capture folders with:
+
+```powershell
+python compare_timing_sweeps.py captures/rom-amiga500-irq-paths2 captures/rom-copperline-irq-paths2 --out captures/irq-paths-a500-vs-copperline.json
+```
+
+The analyzer checks RBCP checksums, matching source IDs/descriptors and exact
+launch positions. Kind 24 additionally compares the destination OR reduction
+and three selected words after blitter completion. See
+[`rom-timing-isolation-2026-10-14.md`](docs/rom-timing-isolation-2026-10-14.md)
+for provenance, comparison limits and current findings.
+
+The final [comparison and detailed remaining measurement plan](docs/rom-timing-wrapup-2026-10-14.md) records verified fixes, incomplete native IRQ/line BZERO work, and the restored Kickstart hash.

@@ -28,6 +28,10 @@ boot:
         even
 payload:
         incbin "experiment.bin"
+        ifd EDGE_ROM_KERNEL
+        dcb.b $10000-(*-$f80000),0
+        incbin "rom_kernel.bin"
+        endif
         dcb.b $7fc00-(*-$f80000),0
         ; Interrupt acknowledge reads at $FFFFF0 + level*2 must return
         ; the standard 68000 vector number. Commands use addresses only,

@@ -1,5 +1,6 @@
 ; SPDX-License-Identifier: MIT
-; All measured code and data reside in RAM. No RBCP commands during collection.
+; Legacy timing kernels and data reside in RAM; edge sweeps use immutable ROM
+; alignment/measurement stubs where recorded. No RBCP commands run in collection.
         include "rom_layout.i"
         include "rbcp_config.s"
         include "rbcp_defs.s"
@@ -96,6 +97,20 @@ main:
         clr.w EVLEVEL2(a5)
         cmpi.w #10,(a4)
         beq .interrupt
+        cmpi.w #21,(a4)
+        beq .channels
+        cmpi.w #22,(a4)
+        beq .channels
+        cmpi.w #23,(a4)
+        beq .irq_paths
+        cmpi.w #24,(a4)
+        beq .bzero_line
+        cmpi.w #20,(a4)
+        beq .divirq
+        cmpi.w #19,(a4)
+        beq .edges
+        cmpi.w #18,(a4)
+        beq .cpu
         cmpi.w #17,(a4)
         beq .blits
         cmpi.w #16,(a4)
@@ -117,6 +132,24 @@ main:
         cmpi.w #5,(a4)
         beq .stop_only
         bsr timer_trial
+        bra.s .recorded
+.channels:
+        bsr channels_trial
+        bra.s .recorded
+.irq_paths:
+        bsr irq_paths_trial
+        bra.s .recorded
+.bzero_line:
+        bsr bzero_line_trial
+        bra.s .recorded
+.divirq:
+        bsr divirq_trial
+        bra.s .recorded
+.edges:
+        bsr edges_trial
+        bra.s .recorded
+.cpu:
+        bsr cpu_trial
         bra.s .recorded
 .blits:
         bsr blits_trial
@@ -233,6 +266,479 @@ delay_end: rts
 ; Reload an already-running timer. Variant 0 is START only (control);
 ; variant 1 is START+LOAD. Counter is live low byte, aux is frozen count.
 ; Blitter duration: target D-only/AD fill/line; variant STOP/nice-poll/nasty-poll.
+; Raw VHPOSR endpoints plus independent CIA-B timer B. No doubled hpos.
+; target=plane count; variant=normal/zero/overflow DIVU, MULU, 126-clock NOP/EXG.
+; ROM-resident snapshot stream: no chip-RAM opcode fetches during the blit.
+; target=D-only/AD copy/AD fill/line/software IRQ; variant=words or pixels.
+; A Copper interrupt inside one ROM-resident divide identifies its IPL poll.
+; All normal USE masks and all D-enabled fill masks. One observable per run.
+channels_trial:
+        lea $10000,a0
+        lea $15000,a1
+        lea $16000,a2
+        moveq #63,d0
+.clear: clr.w (a0)+
+        move.w #$ffff,(a1)+
+        move.w #$ffff,(a2)+
+        dbra d0,.clear
+        cmpi.w #22,(a4)
+        bne.s .sources_ready
+        move.w 2(a4),d0
+        cmpi.w #32,d0
+        bcc.s .sources_ready
+        btst #3,d0
+        beq.s .sources_ready
+        move.w 4(a4),d1
+        andi.w #$00ff,d1
+        beq.s .sources_ready
+        cmpi.w #16,d0
+        bcs.s .ascending_sources
+        lea $1502a,a0
+        bra.s .zero_sources
+.ascending_sources:
+        lea $15000,a0
+.zero_sources:
+        subq.w #1,d1
+.zero_source:
+        clr.w (a0)
+        cmpi.w #16,2(a4)
+        bcc.s .descending_source
+        addq.w #2,a0
+        bra.s .next_source
+.descending_source:
+        subq.w #2,a0
+.next_source:
+        dbra d1,.zero_source
+.sources_ready:
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        clr.w $42(a6)
+        clr.w $60(a6)
+        clr.w $62(a6)
+        clr.w $64(a6)
+        clr.w $66(a6)
+        move.l #$15000,$50(a6)
+        move.l #$16000,$4c(a6)
+        move.l #$17000,$48(a6)
+        move.l #$10000,$54(a6)
+        move.w 2(a4),d0
+        andi.w #15,d0
+        lsl.w #8,d0
+        cmpi.w #22,(a4)
+        bne.s .normal_minterm
+        ori.w #$00f0,d0
+        bra.s .store_minterm
+.normal_minterm:
+        ori.w #$00ff,d0
+.store_minterm:
+        move.w d0,$40(a6)
+        move.w 4(a4),d5
+        cmpi.w #22,(a4)
+        bne.s .variable_size
+        move.w #$0056,d5
+        move.w 4(a4),d0
+        btst #8,d0
+        beq.s .size_ready
+        move.w #$0041,d5
+        bra.s .size_ready
+.variable_size:
+        ori.w #$40,d5
+.size_ready:
+        lea $1002a,a0
+        cmpi.w #16,2(a4)
+        bcs.w .configured
+        cmpi.w #32,2(a4)
+        bcc.s .line
+        move.w #$0012,$42(a6)
+        move.l #$1502a,$50(a6)
+        move.l #$1602a,$4c(a6)
+        move.l #$1702a,$48(a6)
+        move.l #$1002a,$54(a6)
+        lea $10000,a0
+        bra.w .configured
+.line:
+        move.w #$0bca,d0
+        cmpi.w #33,2(a4)
+        bne.s .not_b
+        ori.w #$0400,d0
+.not_b:
+        move.w d0,$40(a6)
+        move.w #$0001,$42(a6)
+        move.w #-280,$64(a6)
+        move.w #120,$62(a6)
+        move.l #-80,$50(a6)
+        move.w #$8000,$74(a6)
+        move.w #$ffff,$72(a6)
+        move.l #$10000,$48(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        cmpi.w #22,(a4)
+        bne.s .variable_line_size
+        move.w #$0582,d5
+        move.w 4(a4),d0
+        btst #8,d0
+        beq.s .line_size_ready
+        move.w #$0042,d5
+        bra.s .line_size_ready
+.variable_line_size:
+        move.w 4(a4),d5
+        lsl.w #6,d5
+        ori.w #2,d5
+.line_size_ready:
+        lea $10000,a0
+.configured:
+        cmpi.w #22,(a4)
+        bne.s .priority_setup
+        cmpi.w #32,2(a4)
+        bcc.s .priority_setup
+        move.w #$ffff,$74(a6)
+.priority_setup:
+        btst #2,11(a4)
+        beq.s .priority_off
+        move.w #$8400,$96(a6)
+.priority_off:
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        cmpi.w #34,2(a4)
+        bne.s .not_software
+        lea $9c(a6),a1
+        move.w #$8040,d5
+.not_software:
+        move.w 10(a4),d0
+        andi.w #3,d0
+        tst.w d0
+        bne.s .not_busy
+        lea $02(a6),a0
+.not_busy:
+        cmpi.w #1,d0
+        bne.s .selected
+        lea $1e(a6),a0
+.selected:
+        btst #0,7(a4)
+        beq.s .even
+        exg d0,d1
+        bra.s .phase
+.even: nop
+        nop
+.phase:
+        cmpi.w #22,(a4)
+        bne.s .primary_stub
+        moveq #0,d0
+        move.w 6(a4),d0
+        andi.w #1,d0
+        lsl.w #8,d0
+        lsl.w #4,d0
+        addi.l #$fd0000,d0
+        moveq #0,d1
+        move.w 8(a4),d1
+        lsl.w #8,d1
+        add.l d1,d0
+        bra.s .stub_ready
+.primary_stub:
+        moveq #0,d0
+        move.w 8(a4),d0
+        lsl.w #8,d0
+        addi.l #$fa0000,d0
+.stub_ready:
+        move.l d0,a2
+        jsr (a2)
+        rts
+divirq_trial:
+        move.l #divirq_handler,$6c
+        move.l #$12345678,d2
+        move.w #$789a,d3
+        cmpi.w #1,2(a4)
+        bne.s .not_zero
+        moveq #0,d2
+        moveq #1,d3
+.not_zero:
+        cmpi.w #2,2(a4)
+        bne.s .operands
+        moveq #-1,d2
+        moveq #1,d3
+.operands:
+        moveq #0,d4
+        lea $6000,a0
+        move.l #$4141fffe,(a0)+
+        move.l #$009c8010,(a0)+
+        move.l #$fffffffe,(a0)+
+        move.l #$6000,$80(a6)
+        move.w #0,$88(a6)
+        move.w #$8280,$96(a6)
+        move.w #$c010,$9a(a6)
+        bsr sync_beam
+        lea $f94000,a0
+        cmpi.w #3,2(a4)
+        bne.s .selected
+        lea $f94800,a0
+.selected:
+        jsr (a0)
+        move.w #$2700,sr
+        move.w 6(a6),16(a4)
+        move.l d0,20(a4)
+        move.l #irq3,$6c
+        rts
+irq_paths_trial:
+        jsr $fe4000
+        move.l #irq1,$64
+        move.l #irq3,$6c
+        rts
+bzero_line_trial:
+        lea $10000,a0
+        move.w #1023,d0
+.clear_line: clr.w (a0)+
+        dbra d0,.clear_line
+        lea $16000,a0
+        move.w 4(a4),d1
+        andi.w #$00ff,d1
+        beq.s .line_pattern_zero
+        cmpi.w #1,d1
+        beq.s .line_pattern_one
+        cmpi.w #4,d1
+        beq.s .line_pattern_four
+        cmpi.w #8,d1
+        beq.s .line_pattern_eight
+        move.w #$ffff,d1
+        bra.s .line_pattern_ready
+.line_pattern_zero:
+        moveq #0,d1
+        bra.s .line_pattern_ready
+.line_pattern_one:
+        move.w #$8000,d1
+        bra.s .line_pattern_ready
+.line_pattern_four:
+        move.w #$1000,d1
+        bra.s .line_pattern_ready
+.line_pattern_eight:
+        move.w #$0100,d1
+.line_pattern_ready:
+        move.w d1,(a0)
+        btst #0,4(a4)
+        bne.s .line_bdat_ready
+        move.w d1,$72(a6)
+.line_bdat_ready:
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #$0bca,$40(a6)
+        cmpi.w #33,2(a4)
+        bne.s .line_b_off
+        move.w #$0fca,$40(a6)
+.line_b_off:
+        move.w #$0001,$42(a6)
+        btst #0,4(a4)
+        beq.s .line_control_ready
+        move.w d1,$72(a6)
+.line_control_ready:
+        move.w #-280,$64(a6)
+        clr.w $62(a6)
+        move.l #-80,$50(a6)
+        move.l #$16000,$4c(a6)
+        move.l #$10000,$48(a6)
+        move.l #$10000,$54(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.w #$8000,$74(a6)
+        move.w #$0582,d5
+        move.w #$7fff,$96(a6)
+        move.w #$7fff,$9c(a6)
+        move.w #$8240,$96(a6)
+        btst #2,11(a4)
+        beq.s .line_priority_ready
+        move.w #$8640,$96(a6)
+.line_priority_ready:
+        bsr sync_beam
+        lea $58(a6),a1
+        moveq #0,d0
+        move.w 6(a4),d0
+        andi.w #1,d0
+        lsl.w #8,d0
+        lsl.w #5,d0
+        addi.l #$fe5000,d0
+        moveq #0,d1
+        move.w 8(a4),d1
+        lsl.w #8,d1
+        add.l d1,d0
+        move.l d0,a2
+        jmp (a2)
+divirq_handler:
+        move.w 6(a6),24(a4)
+        move.l 2(sp),28(a4)
+        move.w d4,34(a4)
+        move.w #1,DONE(a5)
+        move.w #$0010,$9c(a6)
+        rte
+edges_trial:
+        lea $10000,a0
+        lea $15000,a1
+        moveq #63,d0
+.clear: clr.w (a0)+
+        move.w #$ffff,(a1)+
+        dbra d0,.clear
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #$01ff,$40(a6)
+        clr.w $42(a6)
+        clr.w $64(a6)
+        clr.w $66(a6)
+        move.l #$10000,$54(a6)
+        move.l #$15000,$50(a6)
+        move.w 4(a4),d5
+        ori.w #$40,d5
+        move.w 4(a4),d0
+        subq.w #1,d0
+        add.w d0,d0
+        lea $10000,a0
+        adda.w d0,a0
+        tst.w 2(a4)
+        beq.w .configured
+        move.w #$09f0,$40(a6)
+        cmpi.w #2,2(a4)
+        bne.s .not_fill
+        move.w #$0012,$42(a6)
+        move.l a0,$54(a6)
+        lea $15000,a1
+        adda.w d0,a1
+        move.l a1,$50(a6)
+        lea $10000,a0
+.not_fill:
+        cmpi.w #3,2(a4)
+        bne.w .configured
+        move.w #$0bca,$40(a6)
+        move.w #$0001,$42(a6)
+        move.w #-280,$64(a6)
+        move.w #120,$62(a6)
+        move.l #-80,$50(a6)
+        move.w #$8000,$74(a6)
+        move.w #$ffff,$72(a6)
+        move.l #$10000,$48(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.w 4(a4),d5
+        lsl.w #6,d5
+        ori.w #2,d5
+        lea $10000,a0
+.configured:
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        cmpi.w #4,2(a4)
+        bne.s .blitter
+        lea $9c(a6),a1
+        move.w #$8040,d5
+.blitter:
+        btst #0,7(a4)
+        beq.s .even
+        exg d0,d1
+        bra.s .phase
+.even: nop
+        nop
+.phase:
+        moveq #0,d0
+        move.w 8(a4),d0
+        lsl.w #8,d0
+        addi.l #$f90000,d0
+        move.l d0,a2
+        jsr (a2)
+        rts
+cpu_trial:
+        lea $bfd000,a0
+        move.l a0,REF
+        move.b #$ff,$600(a0)
+        move.b #$ff,$700(a0)
+        move.b #$11,$f00(a0)
+        move.w #$2c81,$8e(a6)
+        move.w #$2cc1,$90(a6)
+        move.w #$38,$92(a6)
+        move.w #$d0,$94(a6)
+        clr.w $108(a6)
+        clr.w $10a(a6)
+        lea $e0(a6),a0
+        moveq #5,d0
+.pointers: move.l #$10000,(a0)+
+        dbra d0,.pointers
+        move.w 2(a4),d0
+        lsl.w #8,d0
+        lsl.w #4,d0
+        move.w d0,$100(a6)
+        move.w #$8300,$96(a6)
+        move.l #$12345678,d2
+        move.w #$789a,d3
+        cmpi.w #1,4(a4)
+        bne.s .not_zero
+        moveq #0,d2
+        moveq #1,d3
+.not_zero:
+        cmpi.w #2,4(a4)
+        bne.s .operands
+        moveq #-1,d2
+        moveq #1,d3
+.operands:
+        move.w 8(a4),d5
+        subq.w #1,d5
+        move.w #$789a,$15000
+        lea $15000,a0
+        move.w 4(a4),d0
+        add.w d0,d0
+        lea cpu_offsets(pc),a2
+        move.w 0(a2,d0.w),d0
+        lea cpu_div(pc),a2
+        adda.w d0,a2
+        move.l a2,$30a0
+        bsr sync_beam
+        bsr read_reference
+        move.w d0,14(a4)
+        jsr $fb0000
+        move.l $30a0,a2
+        move.w 6(a6),12(a4)
+        jsr (a2)
+        move.w 6(a6),16(a4)
+        move.w #$7fff,$96(a6)
+        move.l d0,20(a4)
+        clr.b $bfdf00
+        rept 16
+        nop
+        endr
+        bsr read_reference
+        move.w d0,18(a4)
+        move.l d2,36(a4)
+        rts
+cpu_offsets:
+        dc.w 0,0,0,cpu_mul-cpu_div,cpu_nops-cpu_div
+        dc.w cpu_divs-cpu_div,cpu_divimm-cpu_div,cpu_divmem-cpu_div
+cpu_div:
+.loop:  move.l d2,d0
+        divu.w d3,d0
+        dbra d5,.loop
+        rts
+cpu_divs:
+.loop:  move.l d2,d0
+        divs.w d3,d0
+        dbra d5,.loop
+        rts
+cpu_divimm:
+.loop:  move.l d2,d0
+        divu.w #$789a,d0
+        dbra d5,.loop
+        rts
+cpu_divmem:
+.loop:  move.l d2,d0
+        divu.w (a0),d0
+        dbra d5,.loop
+        rts
+cpu_mul:
+.loop:  move.l d2,d0
+        mulu.w d3,d0
+        dbra d5,.loop
+        rts
+cpu_nops:
+.loop:  move.l d2,d0
+        rept 30
+        nop
+        endr
+        exg d0,d1
+        dbra d5,.loop
+        rts
 blits_trial:
         move.l #blit_irq,$6c
         move.w #$ffff,$44(a6)

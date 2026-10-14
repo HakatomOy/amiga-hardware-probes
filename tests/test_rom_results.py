@@ -86,6 +86,71 @@ class RomFormatTests(unittest.TestCase):
         for bad in (packet(source=1),packet(variant=4),packet(status=1)):
             with self.assertRaises(ValueError):compare_continuous.compare(packet(),bad)
 
+    def test_aligned_channel_priority_repeat_matrix(self):
+        normal=build_rom.trials(channels=True,observe=0)
+        priority=build_rom.trials(priority=True,observe=0)
+        self.assertEqual(len(normal),3456)
+        self.assertEqual(len(priority),3456)
+        self.assertEqual({r[5] for r in normal},{0})
+        self.assertEqual({r[5] for r in priority},{4})
+        self.assertEqual({(r[0],r[1],r[2],r[3],r[4]) for r in normal},
+                         {(r[0],r[1],r[2],r[3],r[4]) for r in priority})
+        for observer in range(3):
+            self.assertEqual({r[5] for r in build_rom.trials(priority=True,observe=observer)},
+                             {observer|4})
+    def test_bzero_trial_matrix_coverage_and_ram_bound(self):
+        rows=build_rom.trials(bzero=True)
+        targets=[*range(32),32,33]
+        expected=set()
+        for target in targets:
+            variants=(0,1,4) if target<32 and target&8 else (0,)
+            if target in (0,1,9,15,25,32):
+                variants=(*variants,0x100)
+            expected.update((22,target,variant,phase,delay,repeat)
+                            for variant in variants for phase in range(2)
+                            for delay in range(16) for repeat in (0,4))
+        self.assertEqual(len(rows),4608)
+        self.assertEqual(len(rows),len(set(rows)))
+        self.assertEqual(set(rows),expected)
+        self.assertNotIn(34,{row[1] for row in rows})
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+
+    def test_irq_paths_trial_matrix_coverage(self):
+        rows=build_rom.trials(irq_paths=True)
+        self.assertEqual(len(rows),896)
+        self.assertEqual(len(set(rows)),896)
+        self.assertEqual({r[0] for r in rows},{23})
+        self.assertEqual({r[1] for r in rows},set(range(7)))
+        self.assertEqual({r[2] for r in rows},{0,1})
+        self.assertEqual({r[3] for r in rows},{0,1})
+        self.assertEqual({r[4] for r in rows},set(range(16)))
+        self.assertEqual({r[5] for r in rows},{0,4})
+
+    def test_line_bzero_matrix_coverage(self):
+        rows=build_rom.trials(bzero_line=True)
+        self.assertEqual(len(rows),2560)
+        self.assertEqual(len(set(rows)),2560)
+        self.assertEqual({r[0] for r in rows},{24})
+        self.assertEqual({r[1] for r in rows},{32,33})
+        self.assertEqual({r[2] for r in rows},{0,1,4,8,16,0x100,0x101,0x104,0x108,0x110})
+        self.assertEqual({r[3] for r in rows},{0,1})
+        self.assertEqual({r[4] for r in rows},set(range(32)))
+        self.assertEqual({r[5] for r in rows},{0,4})
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        self.assertNotRegex(source,r'(?im)^\s*(?:ori|andi|eori)\.w\s+[^\n]*\$40\(a6\)')
+
+
+    def test_cpu_trial_coverage(self):
+        rows=build_rom.trials(cpu=True)
+        self.assertEqual(len(rows),1792)
+        self.assertEqual(len(set(rows)),1792)
+        self.assertEqual({r[0] for r in rows},{18})
+        self.assertEqual({r[1] for r in rows},set(range(7)))
+        self.assertEqual({r[2] for r in rows},set(range(8)))
+        self.assertEqual({r[3] for r in rows},set(range(8)))
+        self.assertEqual({r[4] for r in rows},{1,2,16,64})
+
     def test_focused_trial_coverage(self):
         rows=build_rom.trials(focused=True)
         self.assertEqual(len(rows),576)

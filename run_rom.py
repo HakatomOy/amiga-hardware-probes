@@ -5,17 +5,18 @@ from pathlib import Path
 import rom_results
 ROOT=Path(__file__).resolve().parent
 
-def run(binary,out,config=None):
+def run(binary,out,config=None,romdir=None):
+    romdir=romdir or ROOT/'build/rom'
     out.mkdir(parents=True,exist_ok=False)
     manifest_path=out/'build-manifest.json'
-    manifest_path.write_bytes((ROOT/'build/rom/manifest.json').read_bytes())
+    manifest_path.write_bytes((romdir/'manifest.json').read_bytes())
     manifest=json.loads(manifest_path.read_text())
     info=out/'control.json'
     command=[str(binary),'--factory','--model','A500','--cpu','68000','--chip','512K',
              '--slow','512K','--fast','0','--no-jit','--noaudio','--control',':0',
              '--control-info',str(info)]
     if config: command+=['--config',str(config)]
-    command.append(str(ROOT/'build/rom/a500-timing-rom.bin'))
+    command.append(str(romdir/'a500-timing-rom.bin'))
     env={k:v for k,v in os.environ.items() if not k.startswith('COPPERLINE_')}
     with (out/'run.log').open('w') as log:
         proc=subprocess.Popen(command,cwd=out,env=env,stdout=log,stderr=subprocess.STDOUT)
@@ -62,4 +63,4 @@ def run(binary,out,config=None):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--binary',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
-    p.add_argument('--config',type=Path);a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None)
+    p.add_argument('--config',type=Path);p.add_argument('--romdir',type=Path);a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None,a.romdir.resolve() if a.romdir else None)
