@@ -1110,6 +1110,49 @@ def _compare_line_c_tomography(pairs):
         note=f'Kind40 varies first C word and all A shifts under LF=C0, fixed A data 8000, B=0, BSHIFT{shift}; second C word and C data are zero. Includes full USEB/USEC controls on zero/full-word patterns.')
 
 
+def _compare_line_c_onset(pairs):
+    shifts={key[2] for key,_,_ in pairs}
+    if len(shifts)!=1 or not 0<=next(iter(shifts),-1)<=15:
+        raise ValueError('Invalid kind41 BSHIFT descriptor set')
+    shift=next(iter(shifts))
+    expected={tuple(row) for row in build_rom.trials(line_c_onset=True,
+        line_c_onset_shift=shift)}
+    presets=build_rom.line_c_onset_presets(shift);seen=set();output=[]
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected: raise ValueError(f'Invalid kind41 descriptor {key}')
+        if key in seen: raise ValueError(f'Duplicate kind41 descriptor {key}')
+        seen.add(key)
+        _,target,variant,phase,delay,repeat=key
+        if target not in range(len(presets)) or variant!=shift or phase not in (0,1) or delay not in range(17) or repeat!=0:
+            raise ValueError(f'Invalid kind41 profile/observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind41 launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        preset=presets[target]
+        output.append(dict(target=target,profile=preset['profile'],
+            a_data=f"0x{preset['a_data']:04x}",b_data=f"0x{preset['b_data']:04x}",
+            bshift=shift,ashift=preset['ashift'],c_first=f"0x{preset['c_first']:04x}",
+            c_second=f"0x{preset['c_second']:04x}",cdat=f"0x{preset['cdat']:04x}",
+            minterm=f"0x{preset['minterm']:02x}",usea=bool(preset['usea']),
+            useb=bool(preset['useb']),usec=bool(preset['usec']),used=bool(preset['used']),
+            pixels=preset['pixels'],bltcon0=f"0x{preset['bltcon0']:04x}",
+            bltcon1=f"0x{preset['bltcon1']:04x}",bltsize=f"0x{preset['bltsize']:04x}",
+            phase=phase,delay=delay,observer_address=0xff0000+(phase<<13)+(delay<<8),
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x2000),emulator_bzero=bool(emu['counter']&0x2000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw))
+    if seen!=expected:
+        raise ValueError(f'Incomplete kind41 descriptor matrix; missing {sorted(expected-seen)[:3]}')
+    return dict(kind=41,bshift=shift,groups=sorted(output,key=lambda row:row['target']),
+        note=f'Kind41 maps BZERO onset over phase and delay for zero/full/one-cold first C words and A data 0000/8000; B=0, BSHIFT{shift}, C second word and CDAT zero.')
+
+
 def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emulator_sha256=None):
     provenance = capture_provenance(emu_folder, expected_emulator_binary, expected_emulator_sha256)
     hm, hr = load(hw_folder)
@@ -1119,7 +1162,7 @@ def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emula
     pairs = _paired_rows(hr, er)
     kinds = {key[0] for key, _, _ in pairs}
     reports = []
-    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup, 28: _compare_line_pipeline, 29: _compare_line_truth_table, 30: _compare_line_stage, 31: lambda rows: _compare_line_b_hold(rows,0), 32: lambda rows: _compare_line_b_hold(rows,1), 33: _compare_line_b_mask, 34: _compare_line_b_prime, 35: _compare_line_word_control, 36: _compare_line_shift_truth, 37: _compare_line_wrap, 38: _compare_line_c_cross, 39: _compare_line_c_words, 40: _compare_line_c_tomography}
+    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup, 28: _compare_line_pipeline, 29: _compare_line_truth_table, 30: _compare_line_stage, 31: lambda rows: _compare_line_b_hold(rows,0), 32: lambda rows: _compare_line_b_hold(rows,1), 33: _compare_line_b_mask, 34: _compare_line_b_prime, 35: _compare_line_word_control, 36: _compare_line_shift_truth, 37: _compare_line_wrap, 38: _compare_line_c_cross, 39: _compare_line_c_words, 40: _compare_line_c_tomography, 41: _compare_line_c_onset}
     for kind in sorted(kinds):
         if kind not in funcs:
             raise ValueError(f'Unsupported experiment kind {kind}')

@@ -939,6 +939,80 @@ class RomFormatTests(unittest.TestCase):
             compare_timing_sweeps._compare_line_c_tomography(pairs[:-1])
 
 
+    def test_kind41_c_onset_one_cold_matrix_and_dispatch(self):
+        presets=build_rom.line_c_onset_presets()
+        rows=build_rom.trials(line_c_onset=True)
+        self.assertEqual((len(presets),len(rows)),(76,2584))
+        self.assertEqual(len(set(rows)),2584)
+        self.assertEqual({r[0] for r in rows},{41})
+        self.assertEqual({r[1] for r in rows},set(range(76)))
+        self.assertEqual({r[2] for r in rows},{4})
+        self.assertEqual({(r[3],r[4],r[5]) for r in rows},
+                         {(phase,delay,0) for phase in (0,1) for delay in range(17)})
+        cold={0,0xffff,*[0xffff^(1<<bit) for bit in range(16)]}
+        primary=presets[:72]
+        self.assertEqual({p['c_first'] for p in primary},cold)
+        self.assertEqual({p['a_data'] for p in primary},{0,0x8000})
+        self.assertEqual({p['pixels'] for p in primary},{1,2})
+        self.assertEqual({p['minterm'] for p in primary},{0xcc})
+        controls=presets[72:]
+        self.assertEqual(len(controls),4)
+        self.assertEqual({(p['c_first'],p['minterm']) for p in controls},
+                         {(0,0x0c),(0,0xc0),(0xffff,0x0c),(0xffff,0xc0)})
+        for p in presets:
+            self.assertEqual((p['b_data'],p['cdat'],p['c_second'],p['ashift']),
+                             (0,0,0,0))
+            self.assertEqual((p['usea'],p['useb'],p['usec'],p['used']),(1,0,1,1))
+            self.assertEqual(p['bltcon1'],0x4001)
+            self.assertEqual(p['bltsize'],(p['pixels']<<6)|2)
+            self.assertEqual(p['bltcon0'],0x0b00|p['minterm'])
+        self.assertEqual({p['bshift'] for p in build_rom.line_c_onset_presets(6)},{6})
+        self.assertEqual({r[2] for r in build_rom.trials(line_c_onset=True,
+            line_c_onset_shift=6)},{6})
+        manifest=json.loads((Path(__file__).resolve().parents[1]/'build/rom/manifest.json').read_text())
+        if 'line_c_onset_presets' in manifest:
+            active_shift=manifest['line_c_onset_observer']['bshift']
+            active_presets=build_rom.line_c_onset_presets(active_shift)
+            self.assertEqual(manifest['line_c_onset_presets'],active_presets)
+            self.assertEqual(manifest['line_c_onset_observer']['table_word3'],'a_data')
+            root=Path(__file__).resolve().parents[1]/'build/rom'
+            literal=[[int(word,16) for word in re.findall(r'\$([0-9a-fA-F]{4})',line)]
+                for line in (root/'line_c_onset_presets.i').read_text().splitlines()[1:]]
+            expected=[[p[k]&0xffff for k in
+                ('c_first','c_second','a_data','bltsize','bltcon1','bltcon0')]
+                for p in active_presets]
+            self.assertEqual(literal,expected)
+            kernel=(root/'rom_kernel.bin').read_bytes()
+            raw=(root/'a500-timing-rom.bin').read_bytes()
+            self.assertEqual(raw[0x10000:0x10000+len(kernel)],kernel)
+        asm=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        dispatch=asm.split('main:',1)[1].split('.recorded:',1)[0]
+        self.assertRegex(dispatch,r'cmpi\.w #41,\(a4\)\s+beq(?:\.s)?\s+\.line_wrap')
+        routine=asm.split('line_wrap_trial:',1)[1].split('line_stage_trial:',1)[0]
+        for snippet in ('cmpi.w #41,(a4)','movea.l #line_c_onset_presets,a0',
+            'move.w d5,$74(a6)','move.w #0,$72(a6)','move.w #0,$70(a6)',
+            'move.w d3,$11000','move.w d4,$11050','addi.l #$ff0000,d0'):
+            self.assertIn(snippet,routine)
+        onset_setup=routine.split('.wrap_data_onset:',1)[1].split('.wrap_data_ready:',1)[0]
+        self.assertNotIn('move.w d3,$74(a6)',onset_setup)
+        self.assertNotIn('move.w d4,$72(a6)',onset_setup)
+        pairs=[]
+        for desc in rows:
+            _,target,variant,phase,delay,_=desc
+            rec=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x2000 if target==0 else 0,
+                icr=target,irq_beam=phase,irq_level=delay,saved_pc_offset=target<<16,
+                aux=target+1,second_counter_or_beam=target+2,second_icr_or_level=target+3)
+            pairs.append((tuple(desc),rec,rec.copy()))
+        report=compare_timing_sweeps._compare_line_c_onset(pairs)
+        self.assertEqual((report['kind'],report['bshift'],len(report['groups'])),(41,4,2584))
+        self.assertEqual(report['groups'][0]['observer_address'],0xff0000)
+        self.assertTrue(report['groups'][0]['hardware_bzero'])
+        with self.assertRaisesRegex(ValueError,'Invalid kind41 descriptor'):
+            compare_timing_sweeps._compare_line_c_onset([((41,76,4,0,0,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind41 descriptor matrix'):
+            compare_timing_sweeps._compare_line_c_onset(pairs[:-1])
+
+
     def test_cpu_trial_coverage(self):
         rows=build_rom.trials(cpu=True)
         self.assertEqual(len(rows),1792)

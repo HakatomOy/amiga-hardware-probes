@@ -137,6 +137,8 @@ main:
         beq .line_wrap
         cmpi.w #40,(a4)
         beq .line_wrap
+        cmpi.w #41,(a4)
+        beq .line_wrap
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -1187,6 +1189,8 @@ line_wrap_trial:
         add.w d1,d0
         cmpi.w #40,(a4)
         beq.s .wrap_c_tomography
+        cmpi.w #41,(a4)
+        beq.s .wrap_c_onset
         cmpi.w #39,(a4)
         beq.s .wrap_c_words
         cmpi.w #38,(a4)
@@ -1201,6 +1205,9 @@ line_wrap_trial:
         bra.s .wrap_table_ready
 .wrap_c_tomography:
         movea.l #line_c_tomography_presets,a0
+        bra.s .wrap_table_ready
+.wrap_c_onset:
+        movea.l #line_c_onset_presets,a0
 .wrap_table_ready:
         adda.w d0,a0
         move.w (a0)+,d3
@@ -1211,6 +1218,8 @@ line_wrap_trial:
         move.w (a0)+,d2
         cmpi.w #40,(a4)
         beq.s .wrap_data_tomography
+        cmpi.w #41,(a4)
+        beq.s .wrap_data_onset
         cmpi.w #39,(a4)
         beq.s .wrap_data_c_words
         move.w d3,$74(a6)
@@ -1224,6 +1233,11 @@ line_wrap_trial:
         bra.s .wrap_data_ready
 .wrap_data_tomography:
         move.w #$8000,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+        bra.s .wrap_data_ready
+.wrap_data_onset:
+        move.w d5,$74(a6)
         move.w #0,$72(a6)
         move.w #0,$70(a6)
 .wrap_data_ready:
@@ -1242,7 +1256,10 @@ line_wrap_trial:
         move.w #1023,d1
 .wrap_fill_c:
         cmpi.w #39,(a4)
+        beq.s .wrap_fill_c_zero
+        cmpi.w #41,(a4)
         bne.s .wrap_fill_c_data
+.wrap_fill_c_zero:
         clr.w (a0)+
         bra.s .wrap_fill_c_next
 .wrap_fill_c_data:
@@ -1252,6 +1269,8 @@ line_wrap_trial:
         cmpi.w #39,(a4)
         beq.s .wrap_store_c_words
         cmpi.w #40,(a4)
+        beq.s .wrap_store_c_words
+        cmpi.w #41,(a4)
         bne.s .wrap_sources_ready
 .wrap_store_c_words:
         move.w d3,$11000
@@ -1278,6 +1297,21 @@ line_wrap_trial:
         move.l #$ff7000,a2
         bra.s .wrap_observer_ready
 .wrap_c_observer:
+        cmpi.w #41,(a4)
+        bne.s .wrap_fixed_observer
+        moveq #0,d0
+        move.w 8(a4),d0
+        lsl.w #8,d0
+        moveq #0,d1
+        move.w 6(a4),d1
+        andi.w #1,d1
+        lsl.w #5,d1
+        lsl.w #8,d1
+        add.l d1,d0
+        addi.l #$ff0000,d0
+        move.l d0,a2
+        bra.s .wrap_observer_ready
+.wrap_fixed_observer:
         move.l #$ff3000,a2
 .wrap_observer_ready:
         move.w d6,d5
@@ -2555,4 +2589,5 @@ header:
         include "line_c_cross_presets.i"
         include "line_c_word_presets.i"
         include "line_c_tomography_presets.i"
+        include "line_c_onset_presets.i"
         even

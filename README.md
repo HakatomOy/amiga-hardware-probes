@@ -302,6 +302,14 @@ second C word and BLTCDAT stay zero. Zero/full-word controls cross all
 USEB/USEC settings. `--line-c-tomography-shift N` selects BSHIFT 0-15 for
 separate repeat ROMs; the shift is included in descriptors and provenance.
 
+`--line-c-onset` builds kind 41 (2,584 trials). It maps phase 0/1 and delay
+0-16 across C-first-word zero, full, and one-cold patterns, with A data zero
+and `$8000` crossed on the LF=`$CC` cases. Four two-pixel LF=`$0C`/`$C0`
+controls use zero/full C words. B and C data registers and the second C word
+stay zero. The observer address is `$FF0000 + phase*$2000 + delay*$100`;
+`--line-c-onset-shift N` selects BSHIFT 0-15 for separate repeat ROMs. The
+kind41 table's third word is A data (CDAT remains zero).
+
 Archive each generated ROM and its source snapshot before collecting hardware
 data. Compare validated hardware and emulator capture folders with:
 
