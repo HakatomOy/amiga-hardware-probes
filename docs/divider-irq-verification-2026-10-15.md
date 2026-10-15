@@ -161,3 +161,34 @@ pass. m68k's four contribution checks passed in the preceding source review.
    focused experiments/tests. These paths are not established by this sweep.
 5. Keep the existing prefetch-order PR narrowly worded and disclose the
    remaining IPL limitation unless it is resolved and independently verified.
+
+## Follow-up m68k correction and replay
+
+m68k commit `275b2e6` preserves the MC68000 destination and sets overflow for
+`$80000000 / -1`, and exposes the two-clock-earlier DIVS poll through an
+explicit internal sample-and-hold bus hook. Copperline implements that hook.
+The bus prefetch position and total instruction duration remain unchanged.
+All four m68k contribution checks pass, including new clocked-bus IRQ tests
+for operand signs, addressing modes and interrupt arrivals on each side of
+the early sample, plus overflow-result regressions.
+
+Replaying the accepted v3 ROM with the rebuilt Copperline gives zero division
+result mismatches in 2,560 identical-launch pairs. Capture:
+`captures/divider-irq-copperline-fixed-v3`; comparison:
+`captures/divider-irq-a500-v3-fixed-comparison.json`. Packet SHA-256:
+`8a1f0991a8b8fec991f7935f4053835ccbad0c955d36904f977d148a2d2b10ae`.
+Saved-PC/handler-beam mismatches are 452 (446 before), including 40 DIV/marker
+boundary mismatches (34 before). The corrected sign-dependent sample removes
+an accidental cancellation in six cases; it does not fix the common
+recognition discrepancy. Do not describe the complete Copperline IRQ path
+as matching A500 yet. All final marker values still agree. There are no
+excluded launches, timeouts or skips.
+
+The waiting-loop TST poll also needs isolation: WinUAE's memory TST handler
+polls before the operand read, while m68k's current handler leaves polling
+to the final bus access. Separate this from the DIV boundary and host IRQ
+propagation before changing general latency. In the next hardware probes,
+move SR unmasking outside the timed window and measure Copper INTREQ raw
+readback separately from CPU IRQ recognition to discriminate source-event,
+poll-phase and visibility-delay differences. Preserve the passing STOP
+controls when testing a common IRQ-pipeline correction.
