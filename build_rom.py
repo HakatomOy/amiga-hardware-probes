@@ -229,6 +229,20 @@ def line_c_onset_presets(bshift=4):
     return presets
 
 
+def line_c_read_sequence_presets():
+    """Kind42 samples DMACONR eight consecutive times during one line blit."""
+    words=(('zero',0),('ones',0xffff),('cold_bit0',0xfffe),
+           ('cold_bit14',0xbfff),('cold_bit8',0xfeff))
+    presets=[]
+    for name,value in words:
+        for a_data in (0,0x8000):
+            presets.append(dict(index=len(presets),profile=name,c_first=value,c_second=0,
+                a_data=a_data,b_data=0,cdat=0,bshift=4,ashift=0,usea=1,useb=0,
+                usec=1,used=1,minterm=0xcc,pixels=2,bltsize=0x0082,
+                bltcon1=0x4001,bltcon0=0x0bcc,bltapt=-80))
+    return presets
+
+
 def line_stage_profiles():
     """Kind30 pairs of first/second C words crossed with USEB off/on."""
     source_profiles=(('zero_zero',0x0000,0x0000),('zero_full',0x0000,0xffff),
@@ -366,7 +380,11 @@ def line_word_control_delays():
             for index,delay in enumerate((0,1,2,4,16))]
 
 
-def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4):
+def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4,line_c_read_sequence=False):
+    if line_c_read_sequence:
+        return [(42,preset['index'],observer,0,0,repeat)
+                for preset in line_c_read_sequence_presets() for observer in (0,1)
+                for repeat in range(8)]
     if line_c_onset:
         return [(41,preset['index'],line_c_onset_shift,phase,delay,0)
                 for preset in line_c_onset_presets(line_c_onset_shift)
@@ -524,17 +542,17 @@ def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,l
                             rows.append((10,source,kernel,phase,dma+memory*4,repeat))
     return rows
 
-def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4):
+def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4,line_c_read_sequence=False):
     hold_mode=line_b_hold or line_b_hold_dma
     hold_useb=1 if line_b_hold_dma else 0
     edge_kernel=any((edges,channels,cpu,priority,bzero,irq_paths,bzero_line,line_logic,
         line_logic_fine,line_logic_followup,line_pipeline,line_truth_table,line_stage,
-        hold_mode,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_onset))
+        hold_mode,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_onset,line_c_read_sequence))
     if not 0 <= line_c_tomography_shift <= 15:
         raise ValueError('line_c_tomography_shift must be 0..15')
     if not 0 <= line_c_onset_shift <= 15:
         raise ValueError('line_c_onset_shift must be 0..15')
-    rows=trials(focused,continuous,modes,pulses,reads,loads,blits,cpu,edges,channels,observe,priority,bzero,irq_paths,bzero_line,line_logic,line_logic_fine,line_logic_followup,line_pipeline,line_truth_table,line_stage,line_b_hold,line_b_hold_dma,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_tomography_shift,line_c_onset,line_c_onset_shift)
+    rows=trials(focused,continuous,modes,pulses,reads,loads,blits,cpu,edges,channels,observe,priority,bzero,irq_paths,bzero_line,line_logic,line_logic_fine,line_logic_followup,line_pipeline,line_truth_table,line_stage,line_b_hold,line_b_hold_dma,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_tomography_shift,line_c_onset,line_c_onset_shift,line_c_read_sequence)
     build=ROOT/'build/rom'; build.mkdir(parents=True,exist_ok=True)
     sources=sorted([ROOT/'build_rom.py',*list((ROOT/'src/rom').glob('*')),*list((ROOT/'vendor/rbcp').glob('*'))])
     h=hashlib.sha256()
@@ -564,6 +582,8 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
         h.update(json.dumps(line_c_tomography_presets(line_c_tomography_shift),sort_keys=True).encode())
     if line_c_onset:
         h.update(json.dumps(line_c_onset_presets(line_c_onset_shift),sort_keys=True).encode())
+    if line_c_read_sequence:
+        h.update(json.dumps(line_c_read_sequence_presets(),sort_keys=True).encode())
     if line_truth_table:
         h.update(json.dumps(line_truth_profiles(),sort_keys=True).encode())
     if line_stage:
@@ -624,6 +644,12 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
         onset_table.append('        dc.w '+','.join(f'${preset[key]&0xffff:04x}'
             for key in ('c_first','c_second','a_data','bltsize','bltcon1','bltcon0')))
     (build/'line_c_onset_presets.i').write_text('\n'.join(onset_table)+'\n')
+    read_table=['line_c_read_sequence_presets:']
+    read_rows=line_c_read_sequence_presets() if line_c_read_sequence else [line_c_read_sequence_presets()[0]]
+    for preset in read_rows:
+        read_table.append('        dc.w '+','.join(f'${preset[key]&0xffff:04x}'
+            for key in ('c_first','c_second','a_data','bltsize','bltcon1','bltcon0')))
+    (build/'line_c_read_sequence_presets.i').write_text('\n'.join(read_table)+'\n')
     stage_table=['line_stage_profiles:']
     for profile in line_stage_profiles():
         stage_table.append('        dc.w '+','.join(f'${profile[key]&0xffff:04x}' for key in ('c_first','c_second','useb')))
@@ -734,6 +760,13 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
             delay_stride=0x100,phases=[0,1],delays=list(range(17)),
             bshift=line_c_onset_shift,a_data_values=[0,0x8000],ashift=0,b_data=0,
             c_second=0,cdat=0,table_word3='a_data',first_c_address=0x11000)
+    if line_c_read_sequence:
+        manifest['line_c_read_sequence_presets']=line_c_read_sequence_presets()
+        manifest['line_c_read_sequence_observer']=dict(early=0xff7400,postbusy=0xff7500,
+            first_c_address=0x11000,c_second=0,cdat=0,bshift=4,
+            samples=dict(offset=20,count=8,stride=2,source='DMACONR'),
+            launch_beam=12,presample_beam=36,postread_beam=16,postbusy_beam=38,
+            sample6_offset32='status',wait_bbusy_bit=6)
     if line_truth_table:
         manifest['line_truth_profiles']=line_truth_profiles()
     if line_stage:
@@ -751,4 +784,5 @@ if __name__=='__main__':
     p.add_argument('--line-c-tomography-shift',type=int,default=4,help='kind40 BSHIFT 0..15 for separate repeat ROMs')
     p.add_argument('--line-c-onset',action='store_true',help='kind41 C first-word one-cold BZERO onset map')
     p.add_argument('--line-c-onset-shift',type=int,default=4,help='kind41 BSHIFT 0..15 for separate repeat ROMs')
-    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads,a.loads,a.blits,a.cpu,a.edges,a.channels,['busy','irq','memory'].index(a.observe),a.priority,a.bzero,a.irq_paths,a.bzero_line,a.line_logic,a.line_logic_fine,a.line_logic_followup,a.line_pipeline,a.line_truth_table,a.line_stage,a.line_b_hold,a.line_b_hold_dma,a.line_b_mask,a.line_b_prime,a.line_word_control,a.line_shift_truth,a.line_wrap,a.line_c_cross,a.line_c_words,a.line_c_tomography,a.line_c_tomography_shift,a.line_c_onset,a.line_c_onset_shift)
+    p.add_argument('--line-c-read-sequence',action='store_true',help='kind42 eight consecutive DMACONR samples within one line blit')
+    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads,a.loads,a.blits,a.cpu,a.edges,a.channels,['busy','irq','memory'].index(a.observe),a.priority,a.bzero,a.irq_paths,a.bzero_line,a.line_logic,a.line_logic_fine,a.line_logic_followup,a.line_pipeline,a.line_truth_table,a.line_stage,a.line_b_hold,a.line_b_hold_dma,a.line_b_mask,a.line_b_prime,a.line_word_control,a.line_shift_truth,a.line_wrap,a.line_c_cross,a.line_c_words,a.line_c_tomography,a.line_c_tomography_shift,a.line_c_onset,a.line_c_onset_shift,a.line_c_read_sequence)

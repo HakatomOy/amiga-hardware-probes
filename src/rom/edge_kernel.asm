@@ -604,3 +604,55 @@ line_wrap_observer:
         move.w d0,20(a4)
         move.w d1,16(a4)
         bra.w line_word_capture
+
+; Kind42 reads DMACONR eight times consecutively inside one line blit. The
+; launch beam is stored before BLTSIZE; offset 36 is the presample beam, the
+; eight raw DMACONR words occupy offsets 20..34, offset 16 is post-read beam,
+; and offset 38 is the beam after BBUSY clears. Offset 32 is sample six.
+        dcb.b $ff7400-*,0
+line_c_read_early:
+        move.l d7,-(sp)
+        jsr $fb0000
+        move.w 6(a6),12(a4)
+        move.w d5,(a1)
+        move.w 6(a6),36(a4)
+        move.w $02(a6),d0
+        move.w $02(a6),d1
+        move.w $02(a6),d2
+        move.w $02(a6),d3
+        move.w $02(a6),d4
+        move.w $02(a6),d5
+        move.w $02(a6),d6
+        move.w $02(a6),d7
+        movem.w d0-d7,20(a4)
+        move.w 6(a6),16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.w 6(a6),38(a4)
+        move.l (sp)+,d7
+        rts
+
+        dcb.b $ff7500-*,0
+line_c_read_postbusy:
+        move.l d7,-(sp)
+        jsr $fb0000
+        move.w 6(a6),12(a4)
+        move.w d5,(a1)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.w 6(a6),36(a4)
+        move.w $02(a6),d0
+        move.w $02(a6),d1
+        move.w $02(a6),d2
+        move.w $02(a6),d3
+        move.w $02(a6),d4
+        move.w $02(a6),d5
+        move.w $02(a6),d6
+        move.w $02(a6),d7
+        movem.w d0-d7,20(a4)
+        move.w 6(a6),16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.w 6(a6),38(a4)
+        move.l (sp)+,d7
+        rts

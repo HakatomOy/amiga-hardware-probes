@@ -139,6 +139,8 @@ main:
         beq .line_wrap
         cmpi.w #41,(a4)
         beq .line_wrap
+        cmpi.w #42,(a4)
+        beq .line_c_read_sequence
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -208,6 +210,9 @@ main:
         bra.w .recorded
 .line_wrap:
         bsr line_wrap_trial
+        bra.w .recorded
+.line_c_read_sequence:
+        bsr line_c_read_sequence_trial
         bra.w .recorded
 .divirq:
         bsr divirq_trial
@@ -2590,4 +2595,70 @@ header:
         include "line_c_word_presets.i"
         include "line_c_tomography_presets.i"
         include "line_c_onset_presets.i"
+; Kind42 uses the same six-word C preset layout as kind41. The third word is
+; ADAT; CDAT/BDAT are explicitly zero, and the C memory fill is independent.
+line_c_read_sequence_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.read_clear_d: move.w d0,(a0)+
+        dbra d7,.read_clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #2,d0
+        move.w d0,d1
+        lsl.w #1,d0
+        add.w d1,d0
+        movea.l #line_c_read_sequence_presets,a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w (a0)+,d6
+        move.w (a0)+,d7
+        move.w (a0)+,d2
+        move.w d5,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+        lea $16000,a0
+        move.w #1023,d1
+.read_fill_b: clr.w (a0)+
+        dbra d1,.read_fill_b
+        lea $11000,a0
+        move.w #1023,d1
+.read_fill_c: clr.w (a0)+
+        dbra d1,.read_fill_c
+        move.w d3,$11000
+        move.w d4,$11050
+        move.w d2,$40(a6)
+        move.w d7,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        lea $58(a6),a1
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        move.w d6,d5
+        moveq #0,d0
+        move.w 4(a4),d0
+        beq.s .read_early
+        movea.l #$ff7500,a2
+        bra.s .read_observer_ready
+.read_early:
+        movea.l #$ff7400,a2
+.read_observer_ready:
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+
+        include "line_c_read_sequence_presets.i"
         even

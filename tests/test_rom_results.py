@@ -1013,6 +1013,90 @@ class RomFormatTests(unittest.TestCase):
             compare_timing_sweeps._compare_line_c_onset(pairs[:-1])
 
 
+    def test_kind42_in_blit_dmaconr_read_sequence(self):
+        presets=build_rom.line_c_read_sequence_presets()
+        rows=build_rom.trials(line_c_read_sequence=True)
+        self.assertEqual((len(presets),len(rows)),(10,160))
+        self.assertEqual(len(set(rows)),160)
+        self.assertEqual({r[0] for r in rows},{42})
+        self.assertEqual({r[1] for r in rows},set(range(10)))
+        self.assertEqual({r[2] for r in rows},{0,1})
+        self.assertEqual({r[3:5] for r in rows},{(0,0)})
+        self.assertEqual({r[5] for r in rows},set(range(8)))
+        self.assertEqual({p['c_first'] for p in presets},{0,0xffff,0xfffe,0xbfff,0xfeff})
+        self.assertEqual({p['a_data'] for p in presets},{0,0x8000})
+        self.assertEqual({p['profile']:p['c_first'] for p in presets if p['profile'].startswith('cold_')},
+                         {'cold_bit0':0xfffe,'cold_bit14':0xbfff,'cold_bit8':0xfeff})
+        for p in presets:
+            self.assertEqual((p['c_second'],p['b_data'],p['cdat'],p['bshift'],
+                              p['minterm'],p['bltsize'],p['bltcon1'],p['bltcon0']),
+                             (0,0,0,4,0xcc,0x0082,0x4001,0x0bcc))
+        manifest=json.loads((Path(__file__).resolve().parents[1]/'build/rom/manifest.json').read_text())
+        if 'line_c_read_sequence_presets' in manifest:
+            self.assertEqual(manifest['line_c_read_sequence_presets'],presets)
+            observer=manifest['line_c_read_sequence_observer']
+            self.assertEqual((observer['early'],observer['postbusy']),(0xff7400,0xff7500))
+            self.assertEqual(observer['samples'],dict(offset=20,count=8,stride=2,source='DMACONR'))
+            self.assertEqual(observer['sample6_offset32'],'status')
+            root=Path(__file__).resolve().parents[1]/'build/rom'
+            literal=[[int(word,16) for word in re.findall(r'\$([0-9a-fA-F]{4})',line)]
+                for line in (root/'line_c_read_sequence_presets.i').read_text().splitlines()[1:]]
+            expected=[[p[k]&0xffff for k in
+                ('c_first','c_second','a_data','bltsize','bltcon1','bltcon0')] for p in presets]
+            self.assertEqual(literal,expected)
+            kernel=(root/'rom_kernel.bin').read_bytes()
+            raw=(root/'a500-timing-rom.bin').read_bytes()
+            self.assertEqual(raw[0x10000:0x10000+len(kernel)],kernel)
+            for address in (0xff7400,0xff7500):
+                ro=0x10000+(address-0xf90000);ko=0x20000+(address-0xfb0000)
+                check_bytes=min(0x80,len(kernel)-ko)
+                self.assertEqual(raw[ro:ro+check_bytes],kernel[ko:ko+check_bytes])
+        asm=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        dispatch=asm.split('main:',1)[1].split('.recorded:',1)[0]
+        self.assertRegex(dispatch,r'cmpi\.w #42,\(a4\)\s+beq(?:\.s)?\s+\.line_c_read_sequence')
+        routine=asm.split('line_c_read_sequence_trial:',1)[1].split('include "line_c_read_sequence_presets.i"',1)[0]
+        for text in ('movea.l #line_c_read_sequence_presets,a0','move.w d5,$74(a6)',
+                     'move.w #0,$72(a6)','move.w #0,$70(a6)',
+                     'move.w d3,$11000','move.w d4,$11050','move.w d6,d5',
+                     'movea.l #$ff7400,a2','movea.l #$ff7500,a2','bsr sync_beam'):
+            self.assertIn(text,routine)
+        self.assertLess(routine.index('move.w #$8240,$96(a6)'),routine.index('bsr sync_beam'))
+        self.assertLess(routine.index('bsr sync_beam'),routine.index('movea.l #$ff7400,a2'))
+        edge=(Path(__file__).resolve().parents[1]/'src/rom/edge_kernel.asm').read_text()
+        for label in ('line_c_read_early:','line_c_read_postbusy:'):
+            body=edge.split(label,1)[1].split('\n        dcb.b $ff7',1)[0]
+            read_lines=[line.strip() for line in body.splitlines()
+                if re.fullmatch(r'move\.w \$02\(a6\),d[0-7]',line.strip())]
+            self.assertEqual(read_lines,[f'move.w $02(a6),d{i}' for i in range(8)])
+            self.assertIn('movem.w d0-d7,20(a4)',body)
+            self.assertIn('move.w 6(a6),36(a4)',body)
+            self.assertIn('move.w 6(a6),16(a4)',body)
+            self.assertIn('move.w 6(a6),38(a4)',body)
+            first=body.index('move.w $02(a6),d0')
+            last=body.index('move.w $02(a6),d7')
+            between=[line.strip() for line in body[first:last+len('move.w $02(a6),d7')].splitlines()]
+            self.assertEqual(between,[f'move.w $02(a6),d{i}' for i in range(8)])
+        pairs=[]
+        for desc in rows:
+            _,target,observer,phase,delay,repeat=desc
+            samples=[(target+repeat+i)&0xffff for i in range(8)]
+            samples[6]=0x2000 if target==0 else 0x4000
+            rec=dict(launch_beam=0x2010,end_beam=0x2020,counter=samples[0],icr=samples[1],
+                irq_beam=samples[2],irq_level=samples[3],saved_pc_offset=(samples[4]<<16)|samples[5],
+                status=samples[6],aux=samples[7],second_counter_or_beam=0x2030,
+                second_icr_or_level=0x2040)
+            pairs.append((tuple(desc),rec,rec.copy()))
+        report=compare_timing_sweeps._compare_line_c_read_sequence(pairs)
+        self.assertEqual((report['kind'],len(report['groups'])),(42,160))
+        self.assertEqual(report['groups'][0]['hardware_samples'][6],0x2000)
+        self.assertTrue(report['groups'][0]['hardware_sample6_bzero'])
+        self.assertEqual(report['record_layout']['presample_beam'],36)
+        with self.assertRaisesRegex(ValueError,'Invalid kind42 descriptor'):
+            compare_timing_sweeps._compare_line_c_read_sequence([((42,10,0,0,0,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind42 descriptor matrix'):
+            compare_timing_sweeps._compare_line_c_read_sequence(pairs[:-1])
+
+
     def test_cpu_trial_coverage(self):
         rows=build_rom.trials(cpu=True)
         self.assertEqual(len(rows),1792)

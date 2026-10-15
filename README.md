@@ -310,6 +310,15 @@ stay zero. The observer address is `$FF0000 + phase*$2000 + delay*$100`;
 `--line-c-onset-shift N` selects BSHIFT 0-15 for separate repeat ROMs. The
 kind41 table's third word is A data (CDAT remains zero).
 
+`--line-c-read-sequence` builds kind 42 (160 trials): five first-C words
+crossed with A data zero/`$8000`, early/post-BBUSY observers, and eight
+repeats. Each observer reads DMACONR eight times consecutively during one
+two-pixel line blit. In the standard 40-byte record, the eight samples occupy
+word offsets 20-34 (sample six is at offset 32, normally named `status`),
+launch beam is at 12, post-read beam at 16, presample beam at 36, and the beam
+after BBUSY clears at 38. The early and postbusy stubs are at `$FF7400` and
+`$FF7500`; their layout and literal C presets are recorded in the manifest.
+
 Archive each generated ROM and its source snapshot before collecting hardware
 data. Compare validated hardware and emulator capture folders with:
 

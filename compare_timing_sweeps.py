@@ -1153,6 +1153,42 @@ def _compare_line_c_onset(pairs):
         note=f'Kind41 maps BZERO onset over phase and delay for zero/full/one-cold first C words and A data 0000/8000; B=0, BSHIFT{shift}, C second word and CDAT zero.')
 
 
+def _compare_line_c_read_sequence(pairs):
+    expected={tuple(row) for row in build_rom.trials(line_c_read_sequence=True)}
+    presets=build_rom.line_c_read_sequence_presets();seen=set();output=[]
+    samples=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['saved_pc_offset']&0xffff,row['status'],row['aux'])
+    for key,hw,emu in pairs:
+        if key not in expected: raise ValueError(f'Invalid kind42 descriptor {key}')
+        if key in seen: raise ValueError(f'Duplicate kind42 descriptor {key}')
+        seen.add(key)
+        _,target,observer,phase,delay,repeat=key
+        if target not in range(len(presets)) or observer not in (0,1) or (phase,delay)!=(0,0) or repeat not in range(8):
+            raise ValueError(f'Invalid kind42 profile/observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind42 launch position differs for {key}')
+        preset=presets[target]
+        hseq,eseq=samples(hw),samples(emu)
+        output.append(dict(target=target,repeat=repeat,observer=('early','postbusy')[observer],
+            profile=preset['profile'],a_data=f"0x{preset['a_data']:04x}",
+            c_first=f"0x{preset['c_first']:04x}",bshift=4,minterm='0xcc',
+            pixels=2,launch_beam=hw['launch_beam'],end_beam=hw['end_beam'],
+            presample_beam=hw['second_counter_or_beam'],postbusy_beam=hw['second_icr_or_level'],
+            hardware_samples=list(hseq),emulator_samples=list(eseq),
+            hardware_sample6_bzero=bool(hseq[6]&0x2000),
+            emulator_sample6_bzero=bool(eseq[6]&0x2000),
+            raw_mismatch=(hseq!=eseq or hw['launch_beam']!=emu['launch_beam'] or
+                hw['end_beam']!=emu['end_beam'] or
+                hw['second_counter_or_beam']!=emu['second_counter_or_beam'] or
+                hw['second_icr_or_level']!=emu['second_icr_or_level'])))
+    if seen!=expected:
+        raise ValueError(f'Incomplete kind42 descriptor matrix; missing {sorted(expected-seen)[:3]}')
+    return dict(kind=42,groups=sorted(output,key=lambda row:(row['target'],row['observer'],row['repeat'])),
+        record_layout=dict(launch_beam=12,samples_offset=20,sample_count=8,sample6_offset32=32,
+            presample_beam=36,postread_beam=16,postbusy_beam=38),
+        note='Kind42 reads DMACONR eight times consecutively inside one blit; early and post-BBUSY observer slots are repeated eight times per preset.')
+
+
 def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emulator_sha256=None):
     provenance = capture_provenance(emu_folder, expected_emulator_binary, expected_emulator_sha256)
     hm, hr = load(hw_folder)
@@ -1162,7 +1198,7 @@ def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emula
     pairs = _paired_rows(hr, er)
     kinds = {key[0] for key, _, _ in pairs}
     reports = []
-    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup, 28: _compare_line_pipeline, 29: _compare_line_truth_table, 30: _compare_line_stage, 31: lambda rows: _compare_line_b_hold(rows,0), 32: lambda rows: _compare_line_b_hold(rows,1), 33: _compare_line_b_mask, 34: _compare_line_b_prime, 35: _compare_line_word_control, 36: _compare_line_shift_truth, 37: _compare_line_wrap, 38: _compare_line_c_cross, 39: _compare_line_c_words, 40: _compare_line_c_tomography, 41: _compare_line_c_onset}
+    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup, 28: _compare_line_pipeline, 29: _compare_line_truth_table, 30: _compare_line_stage, 31: lambda rows: _compare_line_b_hold(rows,0), 32: lambda rows: _compare_line_b_hold(rows,1), 33: _compare_line_b_mask, 34: _compare_line_b_prime, 35: _compare_line_word_control, 36: _compare_line_shift_truth, 37: _compare_line_wrap, 38: _compare_line_c_cross, 39: _compare_line_c_words, 40: _compare_line_c_tomography, 41: _compare_line_c_onset, 42: _compare_line_c_read_sequence}
     for kind in sorted(kinds):
         if kind not in funcs:
             raise ValueError(f'Unsupported experiment kind {kind}')
