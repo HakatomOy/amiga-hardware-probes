@@ -1,6 +1,6 @@
 import importlib.util,struct,unittest
 from pathlib import Path
-import build_rom,rom_results,compare_phase,compare_continuous
+import build_rom,rom_results,compare_phase,compare_continuous,compare_timing_sweeps
 
 class RomFormatTests(unittest.TestCase):
     def test_running_load_and_blitter_sweep_coverage(self):
@@ -158,7 +158,7 @@ class RomFormatTests(unittest.TestCase):
         self.assertEqual({(v>>6)&3 for v in variants},{0,1,2})
         self.assertLess(0x40000+64+len(rows)*40,0x7e000)
         source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
-        routine=source.split('line_logic_trial:',1)[1].split('divirq_handler:',1)[0]
+        routine=source.split('line_logic_trial:',1)[1].split('line_pipeline_trial:',1)[0]
         self.assertNotRegex(routine,r'(?im)^\s*(?:ori|andi|eori|add|sub|clr|neg|not|bset|bclr|bchg)\.w?\s+[^\n]*\$(?:40|42|44|46|60|62|64|66|70|72|74)\(a6\)')
         c_setup=routine.split('.c_ready:',1)[1].split('move.w #1023,d7',1)[0]
         self.assertIn('move.w d0,$70(a6)',c_setup)
@@ -214,6 +214,430 @@ class RomFormatTests(unittest.TestCase):
         self.assertIn('btst #0,11(a4)',routine)
         self.assertIn('dc.w 0,$0001,$0002,$0004,$8000,$1000,$ffff',routine)
         self.assertIn('dc.w 0,$8000,$ffff',routine)
+
+    def test_kind28_pipeline_matrix_encodes_every_axis_and_explicit_controls(self):
+        rows=build_rom.trials(line_pipeline=True)
+        presets=build_rom.line_pipeline_presets()
+        self.assertEqual(len(rows),len(presets)*34)
+        self.assertLessEqual(len(rows),4096)
+        self.assertEqual(len(rows),3060)
+        self.assertEqual(len(set(rows)),3060)
+        self.assertEqual(len(presets),90)
+        self.assertEqual({r[0] for r in rows},{28})
+        self.assertEqual({r[1] for r in rows},set(range(len(presets))))
+        self.assertEqual({r[2] for r in rows},{0})
+        self.assertEqual({r[3] for r in rows},{0,1})
+        self.assertEqual({r[4] for r in rows},set(range(17)))
+        self.assertEqual({r[5] for r in rows},{0})
+        for field,expected in [('a',set(range(4))),('ashift',{0,1,8,15}),
+                ('b',set(range(6))),('bshift',{0,1,8,15}),('c',set(range(4))),
+                ('minterm',set(range(9))),('use',set(range(8))),('used',{0,1}),
+                ('sing',{0,1}),('sign',{0,1}),('error',set(range(4))),
+                ('size',{0,1,2}),('seed_order',{0,1})]:
+            self.assertEqual({p[field] for p in presets},expected,field)
+        for a in (0,1):
+            for minterm in (2,4):
+                for use in (5,7):
+                    selected=[p for p in presets if p['a']==a and p['b']==0 and p['c']==0
+                              and p['ashift']==0 and p['bshift']==0 and p['minterm']==minterm
+                              and p['use']==use and p['used']==1 and p['sing']==0 and p['sign']==0
+                              and p['error']==0]
+                    self.assertEqual({p['size'] for p in selected},{0,1,2})
+        baseline=next(p for p in presets if p['a']==1 and p['b']==0 and p['c']==0
+                      and p['minterm']==2 and p['use']==5 and p['used']==1
+                      and p['sing']==0 and p['sign']==0 and p['error']==0 and p['size']==1)
+        self.assertEqual((baseline['bltcon0'],baseline['bltcon1'],baseline['bltapt'],baseline['bltsize']),
+                         (0x0bca,0x0001,-80,0x0082))
+        self.assertTrue(any(p['a']==2 and p['ashift']==1 for p in presets))
+        self.assertTrue(any(p['a']==2 and p['ashift']==15 for p in presets))
+        for b in (1,3,4):
+            self.assertEqual({p['bshift'] for p in presets if p['b']==b and p['use']==7},
+                             {0,1,8,15})
+        self.assertTrue(any(p['sing']==1 and p['sign']==1 and p['error']==0 for p in presets))
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        self.assertIn('cmpi.w #28,(a4)',source)
+        pipeline=source.split('line_pipeline_trial:',1)[1].split('line_truth_trial:',1)[0]
+        self.assertIn('moveq #0,d1\n        move.w 6(a4),d1',pipeline)
+        truth=source.split('line_truth_trial:',1)[1].split('line_truth_profiles:',1)[0]
+        self.assertIn('move.w #$0b00,d0',truth)
+        self.assertIn('move.w #$ffff,$72(a6)\n        clr.w $72(a6)',source)
+        self.assertIn('clr.w $72(a6)\n        move.w #$ffff,$72(a6)',source)
+        kernel=(Path(__file__).resolve().parents[1]/'src/rom/edge_kernel.asm').read_text()
+        for snippet in ('dcb.b $ff0000-*,0','lea $10000,a0','lea $11000,a0',
+                        'move.w d2,34(a4)','move.w $11000,30(a4)',
+                        'move.w $11050,36(a4)','move.w $110a0,38(a4)'):
+            self.assertIn(snippet,kernel)
+
+    def test_kind28_comparator_preserves_complete_raw_pipeline_trace(self):
+        pairs=[]
+        for descriptor in build_rom.trials(line_pipeline=True):
+            _,preset,_,phase,delay,_=descriptor
+            row=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|(delay&0x1f),
+                     icr=delay,irq_beam=preset,irq_level=phase,saved_pc_offset=(delay<<16)|0x1234,
+                     aux=delay+1,second_counter_or_beam=delay+2,second_icr_or_level=delay+3)
+            pairs.append((tuple(descriptor),row,row.copy()))
+        report=compare_timing_sweeps._compare_line_pipeline(pairs)
+        self.assertEqual(report['kind'],28)
+        self.assertEqual(len(report['groups']),len(build_rom.line_pipeline_presets())*2)
+        first=report['groups'][0]
+        self.assertEqual(first['samples'],17)
+        self.assertEqual(len(first['delay_trace']),17)
+        self.assertEqual(first['phase_pad'],'NOP')
+        self.assertEqual(first['raw_mismatches'],0)
+        self.assertIn('bltcon0',first)
+        self.assertEqual(first['delay_trace'][0]['hardware_cpt_words'][0],0x1234)
+        with self.assertRaisesRegex(ValueError,'Invalid kind28 descriptor'):
+            compare_timing_sweeps._compare_line_pipeline([((28,999,0,0,0,0),{}, {})])
+        for bad in ((28,0,1,0,0,0),(28,0,0,2,0,0),(28,0,0,0,17,0),(28,0,0,0,0,1)):
+            with self.subTest(descriptor=bad), self.assertRaisesRegex(ValueError,'Invalid kind28 descriptor'):
+                compare_timing_sweeps._compare_line_pipeline([(bad,{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind28 descriptor matrix'):
+            compare_timing_sweeps._compare_line_pipeline(pairs[:-1])
+
+    def test_kind29_covers_all_8bit_minterms_for_five_profiles_and_two_sizes(self):
+        profiles=build_rom.line_truth_profiles()
+        rows=build_rom.trials(line_truth_table=True)
+        self.assertEqual(len(profiles),10)
+        self.assertEqual(len(rows),2560)
+        self.assertEqual(len(set(rows)),2560)
+        self.assertEqual({r[0] for r in rows},{29})
+        self.assertEqual({r[1] for r in rows},set(range(10)))
+        self.assertEqual({r[2] for r in rows},set(range(256)))
+        self.assertEqual({r[3] for r in rows},{0})
+        self.assertEqual({r[4] for r in rows},{16})
+        self.assertEqual({r[5] for r in rows},{0})
+        self.assertEqual([(p['profile'],p['size']) for p in profiles],
+            [('zero',0),('zero',1),('a_first',0),('a_first',1),
+             ('b_full',0),('b_full',1),('c_full',0),('c_full',1),
+             ('a_zero_c_full',0),('a_zero_c_full',1)])
+        self.assertEqual({p['bltcon0'] for p in profiles},{0x0b00})
+        self.assertEqual({(p['a'],p['b'],p['c']) for p in profiles},
+            {(0,0,0),(0x8000,0,0),(0x8000,0xffff,0),
+             (0x8000,0,0xffff),(0,0,0xffff)})
+        pairs=[]
+        for descriptor in rows:
+            _,target,minterm,_,_,_=descriptor
+            record=dict(launch_beam=0x2010,end_beam=0x2020,counter=minterm,
+                icr=minterm,irq_beam=target,irq_level=minterm,
+                saved_pc_offset=(target<<16)|minterm,aux=minterm,
+                second_counter_or_beam=minterm^0x55,second_icr_or_level=minterm^0xaa)
+            pairs.append((tuple(descriptor),record,record.copy()))
+        report=compare_timing_sweeps._compare_line_truth_table(pairs)
+        self.assertEqual(report['kind'],29)
+        self.assertEqual(len(report['groups']),10)
+        self.assertEqual(len(report['groups'][0]['minterm_trace']),256)
+        with self.assertRaisesRegex(ValueError,'Invalid kind29 descriptor'):
+            compare_timing_sweeps._compare_line_truth_table([((29,10,0,0,16,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind29 descriptor matrix'):
+            compare_timing_sweeps._compare_line_truth_table(pairs[:-1])
+
+    def test_kind30_stage_profiles_and_strict_dual_memory_comparison(self):
+        rows=build_rom.trials(line_stage=True)
+        profiles=build_rom.line_stage_profiles()
+        self.assertEqual(len(rows),2380)
+        self.assertEqual(len(set(rows)),2380)
+        self.assertEqual({row[0] for row in rows},{30})
+        self.assertEqual({row[2] for row in rows},{0x04,0x08,0x40,0x80,0x48})
+        self.assertEqual({row[3] for row in rows},{0,1})
+        self.assertEqual({row[4] for row in rows},set(range(17)))
+        self.assertEqual(len(profiles),14)
+        self.assertEqual([(p['c_first'],p['c_second'],p['useb']) for p in profiles],
+            [(c1,c2,useb) for c1,c2 in ((0,0),(0,0xffff),(0xffff,0),
+                (0x8000,0),(0x4000,0),(0x8000,0x8000),(0,0x8000))
+             for useb in (0,1)])
+        self.assertEqual({p['bltcon0'] for p in profiles},{0x0b00,0x0f00})
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        stage=source.split('line_stage_trial:',1)[1].split('divirq_handler:',1)[0]
+        for snippet in ('move.w d3,$11000','move.w d4,$11050','move.w #$8000,$74(a6)',
+                        'move.w #$0b00,d0','ori.w #$0400,d0',
+                        'moveq #0,d1\n        move.w 6(a4),d1'):
+            self.assertIn(snippet,stage)
+        pairs=[]
+        for descriptor in rows:
+            _,target,minterm,phase,delay,_=descriptor
+            row=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|minterm,
+                icr=delay,irq_beam=target,irq_level=phase,
+                saved_pc_offset=(delay<<16)|minterm,aux=delay+1,
+                second_counter_or_beam=delay+2,second_icr_or_level=delay+3)
+            pairs.append((tuple(descriptor),row,row.copy()))
+        report=compare_timing_sweeps._compare_line_stage(pairs)
+        self.assertEqual(report['kind'],30)
+        self.assertEqual(len(report['groups']),14*5*2)
+        first=report['groups'][0]
+        self.assertEqual(first['samples'],17)
+        self.assertEqual(first['delay_trace'][0]['hardware_cpt_words'],[0x04,2,3])
+        with self.assertRaisesRegex(ValueError,'Invalid kind30 descriptor'):
+            compare_timing_sweeps._compare_line_stage([((30,14,0x04,0,0,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind30 descriptor matrix'):
+            compare_timing_sweeps._compare_line_stage(pairs[:-1])
+
+    def test_kind31_hidden_b_texture_shift_matrix_and_comparator(self):
+        rows=build_rom.trials(line_b_hold=True)
+        rows_dma=build_rom.trials(line_b_hold_dma=True)
+        presets=build_rom.line_b_hold_presets(0)
+        presets_dma=build_rom.line_b_hold_presets(1)
+        variants=build_rom.line_b_hold_variants()
+        self.assertEqual(len(presets),18*16+5)
+        self.assertEqual(len(presets_dma),18*16+5)
+        self.assertEqual(len(rows),2930)
+        self.assertEqual(len(rows_dma),2930)
+        self.assertEqual(len(set(rows)),2930)
+        self.assertEqual(len(set(rows_dma)),2930)
+        self.assertEqual({r[0] for r in rows},{31})
+        self.assertEqual({r[0] for r in rows_dma},{32})
+        self.assertEqual({r[2] for r in rows},{0,1})
+        self.assertEqual({r[3] for r in rows},{1})
+        self.assertEqual({r[4] for r in rows},{0,1,2,4,16})
+        self.assertEqual({p['b_word'] for p in presets},
+            {0,0xffff,*{1<<bit for bit in range(16)}})
+        self.assertEqual({p['bshift'] for p in presets},set(range(16)))
+        self.assertEqual({p['useb'] for p in presets},{0})
+        self.assertEqual({p['useb'] for p in presets_dma},{1})
+        for mode_presets in (presets,presets_dma):
+            emitted=build_rom.line_b_hold_table(mode_presets)[1:]
+            self.assertEqual(len(emitted),len(mode_presets))
+            decoded=[[int(word.strip().lstrip('$'),16) for word in line.split('dc.w',1)[1].split(',')]
+                     for line in emitted]
+            for preset,words in zip(mode_presets,decoded):
+                self.assertEqual(words,[preset['b_word'],preset['bltcon1'],
+                    preset['useb'],int(preset['bdat_order']=='early')])
+                self.assertEqual(words[1],(preset['bshift']<<12)|1)
+        self.assertEqual(build_rom.line_b_hold_table(presets)[1:3],
+                         ['        dc.w $0000,$0001,$0000,$0000',
+                          '        dc.w $0000,$1001,$0000,$0000'])
+        self.assertEqual(sum(p['bdat_order']=='early' for p in presets),5)
+        self.assertEqual(sum(p['bdat_order']=='late' for p in presets),288)
+        self.assertEqual([(v['a_data'],v['minterm']) for v in variants],[(0,0xcc),(0x8000,0xca)])
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        hold=source.split('line_b_hold_trial:',1)[1].split('divirq_handler:',1)[0]
+        self.assertLess(hold.index('move.w d4,$42(a6)'),hold.index('move.w d3,$72(a6)'))
+        early=hold.split('.hold_early_bdat:',1)[1].split('.hold_bdat_ready:',1)[0]
+        self.assertLess(early.index('move.w d3,$72(a6)'),early.index('move.w d4,$42(a6)'))
+        for snippet in ('move.w d1,d0','move.w 4(a4),d6','move.w d2,$74(a6)',
+                        'move.w #$ffff,$44(a6)','move.w #$ffff,$46(a6)',
+                        'move.w #-280,$64(a6)','move.l #$16000,$4c(a6)',
+                        'moveq #0,d1\n        move.w 6(a4),d1'):
+            self.assertIn(snippet,hold)
+        for mode_rows,useb,kind in ((rows,0,31),(rows_dma,1,32)):
+            pairs=[]
+            for descriptor in mode_rows:
+                _,target,variant,phase,delay,_=descriptor
+                row=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|delay,
+                    icr=target,irq_beam=variant,irq_level=phase,
+                    saved_pc_offset=(delay<<16)|target,aux=delay+1,
+                    second_counter_or_beam=delay+2,second_icr_or_level=delay+3)
+                pairs.append((tuple(descriptor),row,row.copy()))
+            report=compare_timing_sweeps._compare_line_b_hold(pairs,useb)
+            self.assertEqual(report['kind'],kind)
+            self.assertEqual(len(report['groups']),586)
+            self.assertEqual(report['groups'][0]['samples'],5)
+            self.assertEqual(report['groups'][0]['delay_trace'][0]['hardware_cpt_words'],[0,2,3])
+            with self.assertRaisesRegex(ValueError,f'Invalid kind{kind} descriptor'):
+                compare_timing_sweeps._compare_line_b_hold([(tuple((kind,293,0,1,0,0)),{}, {})],useb)
+            with self.assertRaisesRegex(ValueError,f'Incomplete kind{kind} descriptor matrix'):
+                compare_timing_sweeps._compare_line_b_hold(pairs[:-1],useb)
+
+    def test_kind33_b_mask_matrix_uses_pipeline_table_and_strict_descriptors(self):
+        rows=build_rom.trials(line_b_mask=True)
+        presets=build_rom.line_b_mask_presets()
+        self.assertEqual(len(rows),1024)
+        self.assertEqual(len(set(rows)),1024)
+        self.assertEqual(len(presets),1024)
+        self.assertEqual({r[0] for r in rows},{33})
+        self.assertEqual({r[2] for r in rows},{0})
+        self.assertEqual({r[3] for r in rows},{1})
+        self.assertEqual({r[4] for r in rows},{16})
+        self.assertEqual({p['ashift'] for p in presets},set(range(16)))
+        self.assertEqual({p['bshift'] for p in presets},set(range(16)))
+        self.assertEqual({p['use'] for p in presets},{5,7})
+        self.assertEqual({p['size'] for p in presets},{0,1})
+        self.assertEqual({p['a_word'] for p in presets},{0x8000})
+        self.assertEqual({p['b_word'] for p in presets},{0})
+        self.assertEqual({p['minterm_word'] for p in presets},{0xca})
+        self.assertEqual({p['bltcon0']&0x0fff for p in presets},{0x0bca,0x0fca})
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        self.assertIn('cmpi.w #33,(a4)\n        beq .line_pipeline',source)
+        pipeline=source.split('line_pipeline_trial:',1)[1].split('.pipeline_a:',1)[0]
+        self.assertIn('lea line_pipeline_presets(pc),a0',pipeline)
+        self.assertIn('moveq #0,d1\n        move.w 6(a4),d1',pipeline)
+        pairs=[]
+        for descriptor in rows:
+            _,target,_,phase,delay,_=descriptor
+            row=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|target,
+                icr=target,irq_beam=phase,irq_level=delay,
+                saved_pc_offset=(target<<16)|delay,aux=target+1,
+                second_counter_or_beam=target+2,second_icr_or_level=target+3)
+            pairs.append((tuple(descriptor),row,row.copy()))
+        report=compare_timing_sweeps._compare_line_b_mask(pairs)
+        self.assertEqual(report['kind'],33)
+        self.assertEqual(len(report['groups']),1024)
+        self.assertEqual(report['groups'][0]['bltcon0'],'0x0bca')
+        self.assertEqual(report['groups'][0]['hardware_cpt_words'],[16,2,3])
+        with self.assertRaisesRegex(ValueError,'Invalid kind33 descriptor'):
+            compare_timing_sweeps._compare_line_b_mask([((33,1024,0,1,16,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind33 descriptor matrix'):
+            compare_timing_sweeps._compare_line_b_mask(pairs[:-1])
+
+    def test_kind34_normal_b_prime_matrix_and_ordering(self):
+        rows=build_rom.trials(line_b_prime=True)
+        presets=build_rom.line_b_prime_presets()
+        modes=build_rom.line_b_prime_modes()
+        self.assertEqual(len(presets),256)
+        self.assertEqual(len(rows),1024)
+        self.assertEqual(len(set(rows)),1024)
+        self.assertEqual({r[0] for r in rows},{34})
+        self.assertEqual({r[1] for r in rows},set(range(256)))
+        self.assertEqual({r[2] for r in rows},set(range(4)))
+        self.assertEqual({r[3] for r in rows},{1})
+        self.assertEqual({r[4] for r in rows},{16})
+        self.assertEqual({p['ashift'] for p in presets},set(range(16)))
+        self.assertEqual({p['bshift'] for p in presets},{0,1,8,15})
+        self.assertEqual({p['use'] for p in presets},{5,7})
+        self.assertEqual({p['size'] for p in presets},{0,1})
+        self.assertEqual([(m['kind'],m.get('bltbdat')) for m in modes[:2]],
+                         [('none',None),('register',0)])
+        self.assertEqual([m['bltbdat'] for m in modes[2:]],[0,0xffff])
+        source=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        prime=source.split('line_b_prime_trial:',1)[1].split('divirq_handler:',1)[0]
+        for snippet in ('move.w #0,$42(a6)','move.w #0,$72(a6)',
+                        'move.w #$05cc,$40(a6)','move.l #$18000,$4c(a6)',
+                        'move.l #$19000,$54(a6)','move.w #$8240,$96(a6)',
+                        'move.w #$0042,$58(a6)',
+                        '.prime_busy: btst #6,$02(a6)','rept 8',
+                        'bsr line_pipeline_trial'):
+            self.assertIn(snippet,prime)
+        self.assertLess(prime.index('move.w #$8240,$96(a6)'),
+                        prime.index('move.w #$0042,$58(a6)'))
+        self.assertLess(prime.index('.prime_busy:'),prime.index('bsr line_pipeline_trial'))
+        pairs=[]
+        for descriptor in rows:
+            _,target,prime_mode,phase,delay,_=descriptor
+            row=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|prime_mode,
+                icr=target,irq_beam=phase,irq_level=delay,
+                saved_pc_offset=(target<<16)|prime_mode,aux=target+1,
+                second_counter_or_beam=target+2,second_icr_or_level=target+3)
+            pairs.append((tuple(descriptor),row,row.copy()))
+        report=compare_timing_sweeps._compare_line_b_prime(pairs)
+        self.assertEqual(report['kind'],34)
+        self.assertEqual(len(report['groups']),1024)
+        self.assertEqual(report['groups'][0]['prime_mode']['name'],'none')
+        self.assertEqual(report['groups'][0]['hardware_cpt_words'],[0,2,3])
+        with self.assertRaisesRegex(ValueError,'Invalid kind34 descriptor'):
+            compare_timing_sweeps._compare_line_b_prime([((34,256,0,1,16,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind34 descriptor matrix'):
+            compare_timing_sweeps._compare_line_b_prime(pairs[:-1])
+
+    def test_kind35_equal_cycle_instruction_word_matrix(self):
+        presets=build_rom.line_word_control_presets()
+        variants=build_rom.line_word_control_variants()
+        delays=build_rom.line_word_control_delays()
+        rows=build_rom.trials(line_word_control=True)
+        self.assertEqual(len(presets),128)
+        self.assertEqual(len(rows),1920)
+        self.assertEqual(len(set(rows)),1920)
+        self.assertEqual({r[0] for r in rows},{35})
+        self.assertEqual({r[1] for r in rows},set(range(128)))
+        self.assertEqual({r[2] for r in rows},{0,1,2})
+        self.assertEqual({r[3] for r in rows},{0})
+        self.assertEqual({r[4] for r in rows},{0,1,2,4,16})
+        self.assertEqual({r[5] for r in rows},{0})
+        self.assertEqual([(v['name'],v['opcode'],v['cpu_cycles'],v['cck_cycles'])
+            for v in variants],[('NOP',0x4e71,4,2),('MOVEQ_0_D6',0x7c00,4,2),
+                                ('MOVEQ_m1_D6',0x7cff,4,2)])
+        self.assertEqual([d['delay'] for d in delays],[0,1,2,4,16])
+        self.assertEqual([p['profile'] for p in presets[::32]],
+                         ['A0_CC','A8000_CA','A8000_ASH5_CA','A8000_ASH15_CA'])
+        self.assertEqual({p['bshift'] for p in presets},set(range(16)))
+        self.assertEqual({p['use'] for p in presets},{5,7})
+        for p in presets:
+            self.assertEqual(p['b_word'],0)
+            self.assertEqual(p['c_word'],0)
+            self.assertEqual(p['bltcon1'],(p['bshift']<<12)|1)
+            expected_lf=(0xcc if p['profile']=='A0_CC' else 0xca)
+            self.assertEqual(p['minterm_word'],expected_lf)
+            self.assertEqual(p['bltsize'],0x0082)
+            use_hw=((p['use']&1)<<11)|((p['use']&2)<<9)|((p['use']&4)<<7)
+            self.assertEqual(p['bltcon0'],(p['ashift']<<12)|use_hw|0x0100|expected_lf)
+        source_root=Path(__file__).resolve().parents[1]/'src/rom'
+        experiment=(source_root/'experiment.asm').read_text()
+        pipeline=experiment.split('line_pipeline_trial:',1)[1].split('line_truth_trial:',1)[0]
+        for snippet in ('cmpi.w #35,(a4)','#$ff4000','cmpi.w #16,d0',
+                        'move.w 4(a4),d1','lsl.w #4,d1'):
+            self.assertIn(snippet,pipeline)
+        observer=(source_root/'edge_kernel.asm').read_text()
+        word_observer=observer.split('; Kind35 keeps',1)[1]
+        for snippet in ('$ff4000+line_word_variant*$1000+line_word_slot*$100',
+                        'moveq #0,d6','moveq #-1,d6','rept line_word_delay',
+                        'move.w $11050,36(a4)','dcb.b $ff6500-*,0'):
+            self.assertIn(snippet,word_observer)
+        pairs=[]
+        for descriptor in rows:
+            _,target,variant,phase,delay,_=descriptor
+            row=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|variant,
+                icr=target,irq_beam=phase,irq_level=delay,
+                saved_pc_offset=target<<16,aux=target+1,
+                second_counter_or_beam=target+2,second_icr_or_level=target+3)
+            pairs.append((tuple(descriptor),row,row.copy()))
+        report=compare_timing_sweeps._compare_line_word_control(pairs)
+        self.assertEqual(report['kind'],35)
+        self.assertEqual(len(report['groups']),1920)
+        self.assertEqual(report['groups'][0]['instruction']['opcode'],0x4e71)
+        self.assertEqual(report['groups'][0]['equal_cpu_cycles'],4)
+        with self.assertRaisesRegex(ValueError,'Invalid kind35 descriptor'):
+            compare_timing_sweeps._compare_line_word_control([((35,128,0,0,0,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind35 descriptor matrix'):
+            compare_timing_sweeps._compare_line_word_control(pairs[:-1])
+
+    def test_kind36_shifted_full_truth_matrix_and_literal_table(self):
+        profiles=build_rom.line_shift_truth_profiles()
+        rows=build_rom.trials(line_shift_truth=True)
+        self.assertEqual(len(profiles),16)
+        self.assertEqual(len(rows),4096)
+        self.assertEqual(len(set(rows)),4096)
+        self.assertEqual({r[0] for r in rows},{36})
+        self.assertEqual({r[1] for r in rows},set(range(16)))
+        self.assertEqual({r[2] for r in rows},set(range(256)))
+        self.assertEqual({(r[3],r[4],r[5]) for r in rows},{(1,16,0)})
+        self.assertEqual([p['bshift'] for p in profiles[:5]],[0,1,4,8,15])
+        self.assertEqual([p['a'] for p in profiles],[0]*5+[0x8000]*10+[0])
+        self.assertEqual([p['c'] for p in profiles],[0]*10+[0xffff]*5+[0])
+        self.assertEqual([p['size'] for p in profiles], [1]*15+[0])
+        for p in profiles:
+            self.assertEqual(p['b'],0)
+            self.assertEqual(p['useb'],0)
+            self.assertEqual(p['bltcon0'],0x0b00)
+            self.assertEqual(p['bltcon1'],(p['bshift']<<12)|1)
+            self.assertEqual(p['bltsize'],0x0082 if p['size'] else 0x0042)
+        build_root=Path(__file__).resolve().parents[1]/'build/rom'
+        table=(build_root/'line_shift_truth_profiles.i').read_text()
+        self.assertIn('dc.w $0000,$0000,$0000,$0082,$0001',table)
+        self.assertIn('dc.w $8000,$0000,$0000,$0082,$f001',table)
+        src=Path(__file__).resolve().parents[1]/'src/rom/experiment.asm'
+        asm=src.read_text()
+        routine=asm.split('line_shift_truth_trial:',1)[1].split('line_stage_trial:',1)[0]
+        for snippet in ('lsl.w #2,d0','add.w d1,d0','move.w d7,$42(a6)',
+                        'move.l #$ff3000,a2','move.w d6,d5',
+                        'include "line_shift_truth_profiles.i"'):
+            self.assertIn(snippet,routine)
+        pairs=[]
+        for desc in rows:
+            _,target,minterm,phase,delay,_=desc
+            row=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|minterm,
+                icr=target,irq_beam=phase,irq_level=delay,saved_pc_offset=target<<16,
+                aux=target+1,second_counter_or_beam=target+2,
+                second_icr_or_level=target+3)
+            pairs.append((tuple(desc),row,row.copy()))
+        report=compare_timing_sweeps._compare_line_shift_truth(pairs)
+        self.assertEqual(report['kind'],36)
+        self.assertEqual(len(report['groups']),4096)
+        self.assertEqual(report['groups'][0]['bltcon1'],'0x0001')
+        self.assertEqual(report['groups'][-1]['minterm'],255)
+        with self.assertRaisesRegex(ValueError,'Invalid kind36 descriptor'):
+            compare_timing_sweeps._compare_line_shift_truth([((36,16,0,1,16,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind36 descriptor matrix'):
+            compare_timing_sweeps._compare_line_shift_truth(pairs[:-1])
+
 
 
     def test_cpu_trial_coverage(self):

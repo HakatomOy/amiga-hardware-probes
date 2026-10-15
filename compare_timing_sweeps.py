@@ -9,6 +9,7 @@ from pathlib import Path
 
 import compare_golden_rom
 import rom_results
+import build_rom
 
 
 def load(folder):
@@ -532,6 +533,419 @@ def _compare_line_logic_followup(pairs):
         note='Line-mode BZERO follow-up: minterm $CA, BLTAPT=-80; A=0/$8000/$ffff, C=0/$ffff, B=0/1/2/4/$8000/$1000/$ffff, USEB off/on, 2/22 pixels. Repeat 0/1 loads BLTBDAT late/early while all other blitter registers are initialized directly. Five consecutive NOP delays 0-4 are paired with NOP/EXG phase; capture reads full DMACONR and beam first, then destination OR/selected words after BBUSY clears.')
 
 
+def _compare_line_pipeline(pairs):
+    """Validate kind28's compact preset/delay matrix and retain its raw trace."""
+    expected={tuple(row) for row in build_rom.trials(line_pipeline=True)}
+    presets=build_rom.line_pipeline_presets()
+    seen=set()
+    grouped=collections.defaultdict(dict)
+    for key,hw,emu in pairs:
+        if key not in expected:
+            raise ValueError(f'Invalid kind28 descriptor {key}')
+        if key in seen:
+            raise ValueError(f'Duplicate kind28 descriptor {key}')
+        seen.add(key)
+        _,preset,variant,phase,delay,repeat=key
+        if variant!=0 or repeat!=0 or phase not in (0,1) or delay not in range(17):
+            raise ValueError(f'Invalid kind28 phase/delay descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind28 launch position differs for {key}')
+        captured=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+            row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+            row['second_counter_or_beam'],row['second_icr_or_level'])
+        hmem,emem=captured(hw),captured(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        grouped[(preset,phase)][delay]=dict(
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hmem[2:5]),emulator_dpt_words=list(emem[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hmem[6:]),emulator_cpt_words=list(emem[6:]),
+            raw_mismatch=hmem!=emem,elapsed_mismatch=helapsed!=eelapsed)
+    if seen!=expected:
+        missing=sorted(expected-seen)[:3]
+        raise ValueError(f'Incomplete kind28 descriptor matrix; missing {missing}')
+    size_pixels=(1,2,22)
+    names=('A','B','C')
+    output=[]
+    for (index,phase),by_delay in sorted(grouped.items()):
+        preset=presets[index]
+        trace=[dict(delay=d,**by_delay[d]) for d in range(17)]
+        output.append(dict(preset=index,phase=phase,phase_pad='NOP' if phase==0 else 'EXG',
+            a_data=f'0x{preset["a_word"]:04x}',a_shift=preset['ashift'],
+            b_texture=f'0x{preset["b_word"]:04x}',b_shift=preset['bshift'],
+            c_data=f'0x{preset["c_word"]:04x}',
+            minterm=f'0x{preset["minterm_word"]:02x}',
+            useabc=[name for bit,name in ((0,'A'),(1,'B'),(2,'C')) if preset['use']&(1<<bit)],
+            used=bool(preset['used']),sing=bool(preset['sing']),sign=bool(preset['sign']),
+            initial_error=preset['bltapt'],size_pixels=size_pixels[preset['size']],
+            bltcon0=f'0x{preset["bltcon0"]:04x}',bltcon1=f'0x{preset["bltcon1"]:04x}',
+            bltapt=preset['bltapt'],bltsize=f'0x{preset["bltsize"]:04x}',
+            bdat_preseed_order='0_then_ffff' if preset['seed_order'] else 'ffff_then_0',
+            samples=len(trace),delay_trace=trace,
+            raw_mismatches=sum(row['raw_mismatch'] for row in trace),
+            elapsed_mismatches=sum(row['elapsed_mismatch'] for row in trace)))
+    return dict(kind=28,groups=output,
+        note='Each preset carries raw DMACONR in counter, post-first-read beam in end_beam, DPT OR/words in icr/irq_beam/irq_level/saved_pc_hi, and CPT OR/words in aux/pc_lo/second_counter_or_beam/second_icr_or_level. Delay is 0-16 NOPs; phase selects NOP/EXG. The complete preset catalog is required at both phases and every delay.')
+
+
+def _compare_line_truth_table(pairs):
+    """Validate kind29's complete 8-bit line minterm truth-table sweep."""
+    expected={tuple(row) for row in build_rom.trials(line_truth_table=True)}
+    profiles=build_rom.line_truth_profiles()
+    seen=set()
+    grouped=collections.defaultdict(dict)
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected:
+            raise ValueError(f'Invalid kind29 descriptor {key}')
+        if key in seen:
+            raise ValueError(f'Duplicate kind29 descriptor {key}')
+        seen.add(key)
+        _,target,minterm,phase,delay,repeat=key
+        if not 0<=minterm<=0xff or phase!=0 or delay!=16 or repeat!=0:
+            raise ValueError(f'Invalid kind29 minterm/observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind29 launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        grouped[target][minterm]=dict(
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw,elapsed_mismatch=helapsed!=eelapsed)
+    if seen!=expected:
+        missing=sorted(expected-seen)[:3]
+        raise ValueError(f'Incomplete kind29 descriptor matrix; missing {missing}')
+    output=[]
+    for target,by_minterm in sorted(grouped.items()):
+        profile=profiles[target]
+        trace=[dict(minterm=f'0x{m:02x}',**by_minterm[m]) for m in range(256)]
+        output.append(dict(target=target,profile=profile['profile'],size_pixels=(1,2)[profile['size']],
+            bltcon0=f'0x{profile["bltcon0"]:04x}',bltcon1=f'0x{profile["bltcon1"]:04x}',
+            bltapt=profile['bltapt'],bltsize=f'0x{profile["bltsize"]:04x}',
+            a_data=f'0x{profile["a"]:04x}',b_data=f'0x{profile["b"]:04x}',
+            c_data=f'0x{profile["c"]:04x}',samples=len(trace),minterm_trace=trace,
+            raw_mismatches=sum(row['raw_mismatch'] for row in trace),
+            elapsed_mismatches=sum(row['elapsed_mismatch'] for row in trace)))
+    return dict(kind=29,groups=output,
+        note='Every raw 8-bit minterm is tested for five A/B/C profiles at 1 and 2 pixels. Each record retains DMACONR/beam plus raw DPT and CPT OR/selected-word observations from the kind28 dual-memory observer.')
+
+
+def _compare_line_stage(pairs):
+    """Validate kind30 C-stage predicate sweep and preserve both memory paths."""
+    expected={tuple(row) for row in build_rom.trials(line_stage=True)}
+    profiles=build_rom.line_stage_profiles()
+    minterms=(0x04,0x08,0x40,0x80,0x48)
+    seen=set()
+    grouped=collections.defaultdict(dict)
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected:
+            raise ValueError(f'Invalid kind30 descriptor {key}')
+        if key in seen:
+            raise ValueError(f'Duplicate kind30 descriptor {key}')
+        seen.add(key)
+        _,target,minterm,phase,delay,repeat=key
+        if minterm not in minterms or phase not in (0,1) or delay not in range(17) or repeat!=0:
+            raise ValueError(f'Invalid kind30 stage/observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind30 launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        grouped[(target,minterm,phase)][delay]=dict(
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw,elapsed_mismatch=helapsed!=eelapsed)
+    if seen!=expected:
+        missing=sorted(expected-seen)[:3]
+        raise ValueError(f'Incomplete kind30 descriptor matrix; missing {missing}')
+    output=[]
+    for (target,minterm,phase),by_delay in sorted(grouped.items()):
+        profile=profiles[target]
+        trace=[dict(delay=d,**by_delay[d]) for d in range(17)]
+        output.append(dict(target=target,profile=profile['profile'],
+            c_first=f'0x{profile["c_first"]:04x}',c_second=f'0x{profile["c_second"]:04x}',
+            useb=bool(profile['useb']),a_data=f'0x{profile["a_data"]:04x}',
+            b_data=f'0x{profile["b_data"]:04x}',c_data=f'0x{profile["c_data"]:04x}',
+            minterm=f'0x{minterm:02x}',phase=phase,phase_pad='NOP' if phase==0 else 'EXG',
+            bltcon0=f'0x{profile["bltcon0"]|minterm:04x}',bltcon1=f'0x{profile["bltcon1"]:04x}',
+            bltapt=profile['bltapt'],bltsize=f'0x{profile["bltsize"]:04x}',
+            samples=len(trace),delay_trace=trace,
+            raw_mismatches=sum(row['raw_mismatch'] for row in trace),
+            elapsed_mismatches=sum(row['elapsed_mismatch'] for row in trace)))
+    return dict(kind=30,groups=output,
+        note='Kind30 holds A=$8000, B data and C data registers at zero, and writes profile C words at source addresses $11000 and $11050. Presets cross first/second C words with USEB off/on; each minterm and phase is sampled at all delays 0-16. DPT/CPT raw ORs and selected words are retained.')
+
+
+def _compare_line_b_hold(pairs,useb):
+    """Validate one kind31/32 USEB half of the hidden B matrix."""
+    kind=32 if useb else 31
+    expected={tuple(row) for row in build_rom.trials(line_b_hold_dma=bool(useb),line_b_hold=not useb)}
+    presets=build_rom.line_b_hold_presets(useb)
+    variants=build_rom.line_b_hold_variants()
+    delays=(0,1,2,4,16)
+    seen=set()
+    grouped=collections.defaultdict(dict)
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected:
+            raise ValueError(f'Invalid kind{kind} descriptor {key}')
+        if key in seen:
+            raise ValueError(f'Duplicate kind{kind} descriptor {key}')
+        seen.add(key)
+        _,target,variant,phase,delay,repeat=key
+        if variant not in (0,1) or phase!=1 or delay not in delays or repeat!=0:
+            raise ValueError(f'Invalid kind{kind} variant/phase/delay descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind{kind} launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        grouped[(target,variant)][delay]=dict(
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw,elapsed_mismatch=helapsed!=eelapsed)
+    if seen!=expected:
+        missing=sorted(expected-seen)[:3]
+        raise ValueError(f'Incomplete kind{kind} descriptor matrix; missing {missing}')
+    output=[]
+    for (target,variant_index),by_delay in sorted(grouped.items()):
+        preset=presets[target]
+        variant=variants[variant_index]
+        bltcon0=variant['bltcon0']|(0x0400 if preset['useb'] else 0)
+        trace=[dict(delay=d,**by_delay[d]) for d in delays]
+        output.append(dict(target=target,texture=preset['texture'],
+            b_word=f'0x{preset["b_word"]:04x}',bshift=preset['bshift'],useb=bool(preset['useb']),
+            a_data=f'0x{variant["a_data"]:04x}',c_data='0x0000',minterm=f'0x{variant["minterm"]:02x}',
+            variant=variant['name'],phase=1,phase_pad='EXG',bltcon0=f'0x{bltcon0:04x}',
+            bltcon1=f'0x{preset["bltcon1"]:04x}',bdat_order=preset['bdat_order'],
+            bltapt=preset['bltapt'],
+            bltsize=f'0x{preset["bltsize"]:04x}',samples=len(trace),delay_trace=trace,
+            raw_mismatches=sum(row['raw_mismatch'] for row in trace),
+            elapsed_mismatches=sum(row['elapsed_mismatch'] for row in trace)))
+    return dict(kind=kind,groups=output,
+        note=f'Kind{kind} crosses all 16 B shifts with zero, each one-hot B texture bit and $ffff, USEB={useb}, and two discriminator variants: A=0/LF=$CC and A=$8000/LF=$CA. Selected B patterns also compare BDAT written before target BSHIFT (after setting BSHIFT=0) against BDAT written after target BSHIFT. Phase is EXG; delays are 0,1,2,4,16. The manifest records literal preset and variant register words, and each group preserves DPT/CPT raw traces.')
+
+
+def _compare_line_b_mask(pairs):
+    """Strictly validate kind33's A/B shift and line-length matrix."""
+    expected={tuple(row) for row in build_rom.trials(line_b_mask=True)}
+    presets=build_rom.line_b_mask_presets()
+    seen=set()
+    output=[]
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected:
+            raise ValueError(f'Invalid kind33 descriptor {key}')
+        if key in seen:
+            raise ValueError(f'Duplicate kind33 descriptor {key}')
+        seen.add(key)
+        _,target,variant,phase,delay,repeat=key
+        if variant!=0 or phase!=1 or delay!=16 or repeat!=0:
+            raise ValueError(f'Invalid kind33 observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind33 launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        preset=presets[target]
+        output.append(dict(target=target,a_shift=preset['ashift'],b_shift=preset['bshift'],
+            a_data=f'0x{preset["a_word"]:04x}',b_texture=f'0x{preset["b_word"]:04x}',
+            c_data=f'0x{preset["c_word"]:04x}',useabc=[name for bit,name in ((0,'A'),(1,'B'),(2,'C')) if preset['use']&(1<<bit)],
+            used=bool(preset['used']),minterm=f'0x{preset["minterm_word"]:02x}',
+            size_pixels=(1,2)[preset['size']],phase=phase,phase_pad='EXG',delay=delay,
+            bltcon0=f'0x{preset["bltcon0"]:04x}',bltcon1=f'0x{preset["bltcon1"]:04x}',
+            bltapt=preset['bltapt'],bltsize=f'0x{preset["bltsize"]:04x}',
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw,elapsed_mismatch=helapsed!=eelapsed))
+    if seen!=expected:
+        missing=sorted(expected-seen)[:3]
+        raise ValueError(f'Incomplete kind33 descriptor matrix; missing {missing}')
+    return dict(kind=33,groups=sorted(output,key=lambda row:row['target']),
+        note='Kind33 fixes A=$8000, B=C=0, LF=$CA and crosses ASHIFT 0-15, BSHIFT 0-15, USEB off/on and 1/2-pixel lines. One EXG-phase, delay-16 observer sample is recorded for each configuration.')
+
+
+def _compare_line_b_prime(pairs):
+    """Validate kind34's normal-B priming modes before line operation."""
+    expected={tuple(row) for row in build_rom.trials(line_b_prime=True)}
+    presets=build_rom.line_b_prime_presets()
+    modes=build_rom.line_b_prime_modes()
+    seen=set()
+    output=[]
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected:
+            raise ValueError(f'Invalid kind34 descriptor {key}')
+        if key in seen:
+            raise ValueError(f'Duplicate kind34 descriptor {key}')
+        seen.add(key)
+        _,target,prime,phase,delay,repeat=key
+        if prime not in range(4) or phase!=1 or delay!=16 or repeat!=0:
+            raise ValueError(f'Invalid kind34 prime/observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind34 launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        preset=presets[target]
+        output.append(dict(target=target,prime=prime,prime_mode=modes[prime],
+            a_shift=preset['ashift'],b_shift=preset['bshift'],useb=bool(preset['use']&2),
+            size_pixels=(1,2)[preset['size']],a_data=f'0x{preset["a_word"]:04x}',
+            b_texture=f'0x{preset["b_word"]:04x}',c_data=f'0x{preset["c_word"]:04x}',
+            minterm=f'0x{preset["minterm_word"]:02x}',bltcon0=f'0x{preset["bltcon0"]:04x}',
+            bltcon1=f'0x{preset["bltcon1"]:04x}',bltapt=preset['bltapt'],
+            bltsize=f'0x{preset["bltsize"]:04x}',phase=phase,phase_pad='EXG',delay=delay,
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw,elapsed_mismatch=helapsed!=eelapsed))
+    if seen!=expected:
+        missing=sorted(expected-seen)[:3]
+        raise ValueError(f'Incomplete kind34 descriptor matrix; missing {missing}')
+    return dict(kind=34,groups=sorted(output,key=lambda row:(row['target'],row['prime'])),
+        note='Kind34 crosses ASHIFT0-15, BSHIFT0/1/8/15, USEB off/on, line size1/2 and four normal-B priming modes. It records one EXG-phase delay16 sample per full descriptor and retains both DPT/CPT readbacks.')
+
+
+def _compare_line_word_control(pairs):
+    """Validate kind35's equal-cycle instruction-word observer matrix."""
+    expected={tuple(row) for row in build_rom.trials(line_word_control=True)}
+    presets=build_rom.line_word_control_presets()
+    variants=build_rom.line_word_control_variants()
+    delays={item['delay']:item for item in build_rom.line_word_control_delays()}
+    seen=set()
+    output=[]
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected:
+            raise ValueError(f'Invalid kind35 descriptor {key}')
+        if key in seen:
+            raise ValueError(f'Duplicate kind35 descriptor {key}')
+        seen.add(key)
+        _,target,variant,phase,delay,repeat=key
+        if variant not in range(3) or phase!=0 or delay not in delays or repeat!=0:
+            raise ValueError(f'Invalid kind35 instruction/observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind35 launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        preset=presets[target]
+        instruction=variants[variant]
+        output.append(dict(target=target,profile=preset['profile'],variant=variant,
+            instruction=instruction,phase=phase,delay=delay,delay_slot=delays[delay]['observer_slot'],
+            equal_cpu_cycles=instruction['cpu_cycles'],equal_cck_cycles=instruction['cck_cycles'],
+            a_data=f'0x{preset["a_word"]:04x}',a_shift=preset['ashift'],
+            b_texture=f'0x{preset["b_word"]:04x}',b_shift=preset['bshift'],
+            c_data=f'0x{preset["c_word"]:04x}',useb=bool(preset['use']&2),
+            minterm=f'0x{preset["minterm_word"]:02x}',bltcon0=f'0x{preset["bltcon0"]:04x}',
+            bltcon1=f'0x{preset["bltcon1"]:04x}',bltapt=preset['bltapt'],
+            bltsize=f'0x{preset["bltsize"]:04x}',
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw,elapsed_mismatch=helapsed!=eelapsed))
+    if seen!=expected:
+        missing=sorted(expected-seen)[:3]
+        raise ValueError(f'Incomplete kind35 descriptor matrix; missing {missing}')
+    return dict(kind=35,groups=sorted(output,key=lambda row:(row['target'],row['variant'],row['delay'])),
+        note='Kind35 crosses four A/LF profiles, BSHIFT0-15, USEB off/on, three equal-four-cycle one-word opcodes, and delays0/1/2/4/16. All rows use the phase-zero private observer and retain DPT/CPT readbacks.')
+
+
+def _compare_line_shift_truth(pairs):
+    """Strictly compare kind36's shifted-B full truth-table closure."""
+    expected={tuple(row) for row in build_rom.trials(line_shift_truth=True)}
+    profiles=build_rom.line_shift_truth_profiles()
+    seen=set(); output=[]
+    capture=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['aux'],row['saved_pc_offset']&0xffff,
+        row['second_counter_or_beam'],row['second_icr_or_level'])
+    for key,hw,emu in pairs:
+        if key not in expected: raise ValueError(f'Invalid kind36 descriptor {key}')
+        if key in seen: raise ValueError(f'Duplicate kind36 descriptor {key}')
+        seen.add(key)
+        _,target,minterm,phase,delay,repeat=key
+        if target not in range(len(profiles)) or minterm not in range(256) or phase!=1 or delay!=16 or repeat!=0:
+            raise ValueError(f'Invalid kind36 profile/minterm/observer descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind36 launch position differs for {key}')
+        hraw,eraw=capture(hw),capture(emu)
+        helapsed=_beam_elapsed(hw['launch_beam'],hw['end_beam'],False)
+        eelapsed=_beam_elapsed(emu['launch_beam'],emu['end_beam'],False)
+        profile=profiles[target]
+        output.append(dict(target=target,profile=profile['profile'],minterm=minterm,
+            phase=phase,delay=delay,a_data=f"0x{profile['a']:04x}",
+            b_data=f"0x{profile['b']:04x}",c_data=f"0x{profile['c']:04x}",
+            b_shift=profile['bshift'],size=profile['size'],useb=False,
+            bltcon0=f"0x{(profile['bltcon0']|minterm):04x}",
+            bltcon1=f"0x{profile['bltcon1']:04x}",bltsize=f"0x{profile['bltsize']:04x}",
+            hardware_counter=hw['counter'],emulator_counter=emu['counter'],
+            hardware_bzero=bool(hw['counter']&0x4000),emulator_bzero=bool(emu['counter']&0x4000),
+            hardware_end_beam=hw['end_beam'],emulator_end_beam=emu['end_beam'],
+            hardware_elapsed_cck=helapsed,emulator_elapsed_cck=eelapsed,
+            hardware_dpt_or=hw['icr'],emulator_dpt_or=emu['icr'],
+            hardware_dpt_words=list(hraw[2:5]),emulator_dpt_words=list(eraw[2:5]),
+            hardware_cpt_or=hw['aux'],emulator_cpt_or=emu['aux'],
+            hardware_cpt_words=list(hraw[6:]),emulator_cpt_words=list(eraw[6:]),
+            raw_mismatch=hraw!=eraw,elapsed_mismatch=helapsed!=eelapsed))
+    if seen!=expected:
+        raise ValueError(f'Incomplete kind36 descriptor matrix; missing {sorted(expected-seen)[:3]}')
+    return dict(kind=36,groups=sorted(output,key=lambda row:(row['target'],row['minterm'])),
+        note='Kind36 measures all 256 raw minterms for 15 A/C/BSH two-pixel profiles plus a one-pixel control, with USEB off and the phase-one delay-16 observer.')
+
+
 def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emulator_sha256=None):
     provenance = capture_provenance(emu_folder, expected_emulator_binary, expected_emulator_sha256)
     hm, hr = load(hw_folder)
@@ -541,7 +955,7 @@ def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emula
     pairs = _paired_rows(hr, er)
     kinds = {key[0] for key, _, _ in pairs}
     reports = []
-    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup}
+    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup, 28: _compare_line_pipeline, 29: _compare_line_truth_table, 30: _compare_line_stage, 31: lambda rows: _compare_line_b_hold(rows,0), 32: lambda rows: _compare_line_b_hold(rows,1), 33: _compare_line_b_mask, 34: _compare_line_b_prime, 35: _compare_line_word_control, 36: _compare_line_shift_truth}
     for kind in sorted(kinds):
         if kind not in funcs:
             raise ValueError(f'Unsupported experiment kind {kind}')

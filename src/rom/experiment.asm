@@ -111,6 +111,24 @@ main:
         beq .line_logic_fine
         cmpi.w #27,(a4)
         beq .line_logic_followup
+        cmpi.w #28,(a4)
+        beq .line_pipeline
+        cmpi.w #29,(a4)
+        beq .line_truth
+        cmpi.w #30,(a4)
+        beq .line_stage
+        cmpi.w #31,(a4)
+        beq .line_b_hold
+        cmpi.w #32,(a4)
+        beq .line_b_hold
+        cmpi.w #33,(a4)
+        beq .line_pipeline
+        cmpi.w #34,(a4)
+        beq .line_b_prime
+        cmpi.w #35,(a4)
+        beq .line_word_control
+        cmpi.w #36,(a4)
+        beq .line_shift_truth
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -138,25 +156,46 @@ main:
         cmpi.w #5,(a4)
         beq .stop_only
         bsr timer_trial
-        bra.s .recorded
+        bra.w .recorded
 .channels:
         bsr channels_trial
-        bra.s .recorded
+        bra.w .recorded
 .irq_paths:
         bsr irq_paths_trial
-        bra.s .recorded
+        bra.w .recorded
 .bzero_line:
         bsr bzero_line_trial
-        bra.s .recorded
+        bra.w .recorded
 .line_logic:
         bsr line_logic_trial
-        bra.s .recorded
+        bra.w .recorded
 .line_logic_fine:
         bsr line_logic_trial
-        bra.s .recorded
+        bra.w .recorded
 .line_logic_followup:
         bsr line_logic_trial
-        bra.s .recorded
+        bra.w .recorded
+.line_pipeline:
+        bsr line_pipeline_trial
+        bra.w .recorded
+.line_truth:
+        bsr line_truth_trial
+        bra.w .recorded
+.line_stage:
+        bsr line_stage_trial
+        bra.w .recorded
+.line_b_hold:
+        bsr line_b_hold_trial
+        bra.w .recorded
+.line_b_prime:
+        bsr line_b_prime_trial
+        bra.w .recorded
+.line_word_control:
+        bsr line_pipeline_trial
+        bra.w .recorded
+.line_shift_truth:
+        bsr line_shift_truth_trial
+        bra.w .recorded
 .divirq:
         bsr divirq_trial
         bra.s .recorded
@@ -810,6 +849,520 @@ line_logic_trial:
         dc.w 0,$0001,$0002,$0004,$8000,$1000,$ffff
 .line_a_patterns:
         dc.w 0,$8000,$ffff
+; Kind 28 uses a compact, generated preset table (three words per entry).
+; target is the zero-based preset index; phase is NOP/EXG; delay selects one
+; of the 17 existing fine observer slots. variant/repeat remain zero.
+line_pipeline_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.clear_d: move.w d0,(a0)+
+        dbra d7,.clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        move.w d0,d1
+        lsl.w #2,d0
+        add.w d1,d1
+        add.w d1,d0
+        lea line_pipeline_presets(pc),a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        ; Explicit BLTBDAT preseed pair in both orders. The final selected B
+        ; value is installed below, just before the operation is armed.
+        btst #14,d5
+        bne.s .seed_zero_first
+        move.w #$ffff,$72(a6)
+        clr.w $72(a6)
+        bra.s .seed_done
+.seed_zero_first:
+        clr.w $72(a6)
+        move.w #$ffff,$72(a6)
+.seed_done:
+        ; A data and A shift (table patterns: 0000, 8000, 0001, ffff).
+        move.w d3,d0
+        andi.w #3,d0
+        add.w d0,d0
+        lea .pipeline_a(pc),a0
+        move.w 0(a0,d0.w),$74(a6)
+        ; B texture and shift; fill chip source so both DMA and data-register
+        ; paths receive the same repeated word texture.
+        move.w d3,d1
+        lsr.w #6,d1
+        andi.w #7,d1
+        add.w d1,d1
+        lea .pipeline_b(pc),a0
+        move.w 0(a0,d1.w),d1
+        move.w d1,$72(a6)
+        lea $16000,a0
+        move.w #1023,d7
+.fill_b: move.w d1,(a0)+
+        dbra d7,.fill_b
+        ; C texture and its source memory.
+        move.w d4,d2
+        andi.w #3,d2
+        add.w d2,d2
+        lea .pipeline_c(pc),a0
+        move.w 0(a0,d2.w),d2
+        move.w d2,$70(a6)
+        lea $11000,a0
+        move.w #1023,d7
+.fill_c: move.w d2,(a0)+
+        dbra d7,.fill_c
+        ; Compose A shift, USEA/B/C, USED and one of nine minterms.
+        move.w d5,d0
+        andi.w #$00ff,d0
+        move.w d4,d1
+        lsr.w #2,d1
+        andi.w #7,d1
+        lsl.w #8,d1
+        lsl.w #1,d1
+        or.w d1,d0
+        move.w d4,d1
+        btst #5,d1
+        beq.s .d_disabled
+        ori.w #$0100,d0
+.d_disabled:
+        move.w d3,d1
+        lsr.w #2,d1
+        andi.w #15,d1
+        lsl.w #8,d1
+        lsl.w #4,d1
+        or.w d1,d0
+        move.w d0,$40(a6)
+        move.w d3,d1
+        lsr.w #8,d1
+        lsr.w #1,d1
+        andi.w #15,d1
+        lsl.w #8,d1
+        lsl.w #4,d1
+        btst #8,d5
+        beq.s .sing_ready
+        ori.w #$0002,d1
+.sing_ready:
+        btst #9,d5
+        beq.s .sign_ready
+        ori.w #$0040,d1
+.sign_ready:
+        ori.w #1,d1
+        move.w d1,$42(a6)
+        move.w d5,d0
+        lsr.w #8,d0
+        lsr.w #2,d0
+        andi.w #3,d0
+        lsl.w #2,d0
+        lea .pipeline_errors(pc),a0
+        move.l 0(a0,d0.w),$50(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #$10000,$54(a6)
+        move.w d5,d0
+        lsr.w #8,d0
+        lsr.w #4,d0
+        andi.w #3,d0
+        beq.s .size_one
+        cmpi.w #1,d0
+        beq.s .size_two
+        move.w #$0582,d5
+        bra.s .size_ready
+.size_one: move.w #$0042,d5
+        bra.s .size_ready
+.size_two: move.w #$0082,d5
+.size_ready:
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        cmpi.w #35,(a4)
+        beq.w .word_control_observer
+        moveq #0,d0
+        move.w 8(a4),d0
+        lsl.w #8,d0
+        moveq #0,d1
+        move.w 6(a4),d1
+        andi.w #1,d1
+        lsl.w #5,d1
+        lsl.w #8,d1
+        add.l d1,d0
+        addi.l #$ff0000,d0
+        move.l d0,a2
+        bra.w .observer_ready
+.word_control_observer:
+        ; Kind35 delay values map onto five private ROM slot indices.
+        moveq #0,d0
+        move.w 8(a4),d0
+        cmpi.w #0,d0
+        beq.s .word_delay_zero
+        cmpi.w #1,d0
+        beq.s .word_delay_one
+        cmpi.w #2,d0
+        beq.s .word_delay_two
+        cmpi.w #4,d0
+        beq.s .word_delay_four
+        cmpi.w #16,d0
+        beq.s .word_delay_sixteen
+        moveq #0,d0
+        bra.s .word_delay_ready
+.word_delay_zero: moveq #0,d0
+        bra.s .word_delay_ready
+.word_delay_one: moveq #1,d0
+        bra.s .word_delay_ready
+.word_delay_two: moveq #2,d0
+        bra.s .word_delay_ready
+.word_delay_four: moveq #3,d0
+        bra.s .word_delay_ready
+.word_delay_sixteen: moveq #4,d0
+.word_delay_ready:
+        lsl.w #8,d0
+        moveq #0,d1
+        move.w 4(a4),d1
+        lsl.w #8,d1
+        lsl.w #4,d1
+        add.l d1,d0
+        addi.l #$ff4000,d0
+        move.l d0,a2
+.observer_ready:
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+.pipeline_a: dc.w 0,$8000,$0001,$ffff
+.pipeline_b: dc.w 0,$0001,$0002,$8000,$1000,$ffff
+.pipeline_c: dc.w 0,$ffff,$8000,$aaaa
+.pipeline_errors: dc.l -80,-1,0,80
+.pipeline_minterms: dc.w $0000,$00ff,$00ca,$00f0,$00cc,$00aa,$003c,$005a,$000f
+        include "line_pipeline.i"
+; Kind29 target selects one of five input profiles and 1/2-pixel size;
+; variant is the raw 8-bit minterm. It uses the kind28 dual-memory observer.
+line_truth_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.clear_d: move.w d0,(a0)+
+        dbra d7,.clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #3,d0
+        lea line_truth_profiles(pc),a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w (a0)+,d6
+        move.w d3,$74(a6)
+        move.w d4,$72(a6)
+        lea $16000,a0
+        move.w #1023,d7
+.truth_b: move.w d4,(a0)+
+        dbra d7,.truth_b
+        move.w d5,$70(a6)
+        lea $11000,a0
+        move.w #1023,d7
+.truth_c: move.w d5,(a0)+
+        dbra d7,.truth_c
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #$0b00,d0
+        move.w 4(a4),d1
+        andi.w #$00ff,d1
+        or.w d1,d0
+        move.w d0,$40(a6)
+        move.w #$0001,$42(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        moveq #0,d0
+        move.w 8(a4),d0
+        lsl.w #8,d0
+        addi.l #$ff0000,d0
+        move.l d0,a2
+        move.w d6,d5
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+        include "line_truth_profiles.i"
+; Kind36 crosses the full raw minterm byte with selected BSHIFT states. The
+; table is five literal words per row: A/B/C data, BLTSIZE, BLTCON1.
+line_shift_truth_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.shift_clear_d: move.w d0,(a0)+
+        dbra d7,.shift_clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #1,d0
+        move.w d0,d1
+        lsl.w #2,d0
+        add.w d1,d0
+        lea line_shift_truth_profiles(pc),a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w (a0)+,d6
+        move.w (a0)+,d7
+        move.w d3,$74(a6)
+        move.w d4,$72(a6)
+        move.w d5,$70(a6)
+        lea $16000,a0
+        move.w #1023,d2
+.shift_fill_b: move.w d4,(a0)+
+        dbra d2,.shift_fill_b
+        lea $11000,a0
+        move.w #1023,d2
+.shift_fill_c: move.w d5,(a0)+
+        dbra d2,.shift_fill_c
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #$0b00,d0
+        moveq #0,d1
+        move.w 4(a4),d1
+        andi.w #$00ff,d1
+        or.w d1,d0
+        move.w d0,$40(a6)
+        move.w d7,$42(a6)
+        move.w #-280,$64(a6)
+        clr.w $62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        move.l #$ff3000,a2
+        move.w d6,d5
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+        include "line_shift_truth_profiles.i"
+; Kind30 holds A at $8000 and B at zero, varying the two C source words
+; fetched by a 2-pixel line operation. The target table selects C first/
+; second plus USEB; variant is one of five raw minterms.
+line_stage_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.stage_clear_d: move.w d0,(a0)+
+        dbra d7,.stage_clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #1,d0
+        move.w d0,d1
+        lsl.w #1,d0
+        add.w d1,d0
+        lea line_stage_profiles(pc),a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w #$8000,$74(a6)
+        clr.w $72(a6)
+        clr.w $70(a6)
+        lea $16000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.stage_fill_b: move.w d0,(a0)+
+        dbra d7,.stage_fill_b
+        lea $11000,a0
+        move.w #1023,d7
+.stage_fill_c: move.w d0,(a0)+
+        dbra d7,.stage_fill_c
+        move.w d3,$11000
+        move.w d4,$11050
+        move.w #$0b00,d0
+        tst.w d5
+        beq.s .stage_use_ready
+        ori.w #$0400,d0
+.stage_use_ready:
+        moveq #0,d1
+        move.w 4(a4),d1
+        andi.w #$00ff,d1
+        or.w d1,d0
+        move.w d0,$40(a6)
+        move.w #1,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        moveq #0,d0
+        move.w 8(a4),d0
+        lsl.w #8,d0
+        moveq #0,d1
+        move.w 6(a4),d1
+        andi.w #1,d1
+        lsl.w #5,d1
+        lsl.w #8,d1
+        add.l d1,d0
+        addi.l #$ff0000,d0
+        move.l d0,a2
+        move.w #$0082,d5
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+        include "line_stage_profiles.i"
+; Kind31 isolates B texture/shifting with B-only CC and an A-sensitive CA
+; discriminator. Target indexes texture/BSHIFT/USEB; variant selects A/LF.
+; BLTCON1 is programmed before BLTBDAT.
+line_b_hold_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.hold_clear_d: move.w d0,(a0)+
+        dbra d7,.hold_clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #3,d0
+        lea line_b_hold_presets(pc),a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w (a0)+,d6
+        clr.w $70(a6)
+        move.w #1,$42(a6)
+        tst.w d6
+        bne.s .hold_early_bdat
+        move.w d4,$42(a6)
+        move.w d3,$72(a6)
+        bra.s .hold_bdat_ready
+.hold_early_bdat:
+        move.w d3,$72(a6)
+        move.w d4,$42(a6)
+.hold_bdat_ready:
+        lea $16000,a0
+        move.w #1023,d7
+.hold_fill_b: move.w d3,(a0)+
+        dbra d7,.hold_fill_b
+        lea $11000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.hold_fill_c: move.w d0,(a0)+
+        dbra d7,.hold_fill_c
+        moveq #0,d6
+        move.w 4(a4),d6
+        lsl.w #2,d6
+        lea line_b_hold_variants(pc),a0
+        adda.w d6,a0
+        move.w (a0)+,d2
+        move.w (a0)+,d1
+        move.w d2,$74(a6)
+        move.w d1,d0
+        tst.w d5
+        beq.s .hold_use_ready
+        ori.w #$0400,d0
+.hold_use_ready:
+        move.w d0,$40(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        moveq #0,d0
+        move.w 8(a4),d0
+        lsl.w #8,d0
+        moveq #0,d1
+        move.w 6(a4),d1
+        andi.w #1,d1
+        lsl.w #5,d1
+        lsl.w #8,d1
+        add.l d1,d0
+        addi.l #$ff0000,d0
+        move.l d0,a2
+        move.w #$0082,d5
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+        include "line_b_hold_presets.i"
+        include "line_b_hold_variants.i"
+; Kind34 primes the normal B path before the shared kind28 line driver.
+; variant 0 does nothing; 1 writes normal BLTCON1/BLTBDAT; 2/3 run a two-word
+; normal B+D copy from $18000 to $19000 with zero/$ffff B source data.
+line_b_prime_trial:
+        move.l d7,-(sp)
+        moveq #0,d6
+        move.w 4(a4),d6
+        tst.w d6
+        beq.w .prime_done
+        move.w #0,$42(a6)
+        move.w #0,$72(a6)
+        cmpi.w #1,d6
+        beq.w .prime_done
+        moveq #0,d0
+        cmpi.w #3,d6
+        bne.s .prime_value_ready
+        move.w #$ffff,d0
+.prime_value_ready:
+        lea $18000,a0
+        move.w d0,(a0)+
+        move.w d0,(a0)+
+        lea $19000,a0
+        clr.w (a0)+
+        clr.w (a0)+
+        move.w d0,$72(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #$05cc,$40(a6)
+        clr.w $60(a6)
+        clr.w $62(a6)
+        clr.w $64(a6)
+        clr.w $66(a6)
+        move.l #$18000,$4c(a6)
+        move.l #$19000,$54(a6)
+        move.w #$8240,$96(a6)
+        move.w #$0042,$58(a6)
+.prime_busy: btst #6,$02(a6)
+        bne.s .prime_busy
+        rept 8
+        nop
+        endr
+.prime_done:
+        move.l (sp)+,d7
+        bsr line_pipeline_trial
+        rts
 divirq_handler:
         move.w 6(a6),24(a4)
         move.l 2(sp),28(a4)

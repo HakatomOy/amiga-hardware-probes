@@ -444,3 +444,143 @@ line_logic_fine_slot set line_logic_fine_slot+1
         endr
 line_logic_fine_phase set line_logic_fine_phase+1
         endr
+
+; Kind28 gets a private observer so the two line-mode DMA streams are both
+; covered. DPT moves to $11050/$110a0 after the first pixel; retain raw ORs
+; and samples for DPT=$10000 and CPT=$11000 in unused record words.
+        dcb.b $ff0000-*,0
+line_pipeline_phase set 0
+        rept 2
+line_pipeline_slot set 0
+line_pipeline_delay set 0
+        rept 17
+        dcb.b $ff0000+line_pipeline_phase*$2000+line_pipeline_slot*$100-*,0
+        move.l d7,-(sp)
+        jsr $fb0000
+        move.w 6(a6),d7
+        move.w d5,(a1)
+        ifne line_pipeline_phase
+        exg d0,d1
+        else
+        nop
+        endc
+        rept line_pipeline_delay
+        nop
+        endr
+        move.w $02(a6),d0
+        move.w $06(a6),d1
+        move.w d7,12(a4)
+        move.w d0,20(a4)
+        move.w d1,16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.l d2,-(sp)
+        moveq #0,d2
+        lea $10000,a0
+        move.w #1023,d0
+        or.w (a0)+,d2
+        dbra d0,*-2
+        move.w d2,22(a4)
+        move.w $10000,24(a4)
+        move.w $10050,26(a4)
+        move.w $100a0,28(a4)
+        moveq #0,d2
+        lea $11000,a0
+        move.w #1023,d0
+        or.w (a0)+,d2
+        dbra d0,*-2
+        move.w d2,34(a4)
+        move.w $11000,30(a4)
+        move.w $11050,36(a4)
+        move.w $110a0,38(a4)
+        move.l (sp)+,d2
+        move.l (sp)+,d7
+        rts
+line_pipeline_delay set line_pipeline_delay+1
+line_pipeline_slot set line_pipeline_slot+1
+        endr
+line_pipeline_phase set line_pipeline_phase+1
+        endr
+
+; Kind35 keeps the kind28 dual-memory observer and the same aligned sample,
+; but replaces every pad word (including the phase word) with one of three
+; equal-length, four-cycle CPU instructions. Address = $ff4000 + variant*$1000
+; + delay-slot*$100; variant 0/1/2 is NOP/MOVEQ #0,D6/MOVEQ #-1,D6.
+line_word_variant set 0
+        rept 3
+line_word_slot set 0
+        rept 5
+        dcb.b $ff4000+line_word_variant*$1000+line_word_slot*$100-*,0
+        move.l d7,-(sp)
+        jsr $fb0000
+        move.w 6(a6),d7
+        move.w d5,(a1)
+        ifeq line_word_variant
+        nop
+        else
+        ifeq line_word_variant-1
+        moveq #0,d6
+        else
+        moveq #-1,d6
+        endc
+        endc
+line_word_delay set 0
+        ifeq line_word_slot-1
+line_word_delay set 1
+        endc
+        ifeq line_word_slot-2
+line_word_delay set 2
+        endc
+        ifeq line_word_slot-3
+line_word_delay set 4
+        endc
+        ifeq line_word_slot-4
+line_word_delay set 16
+        endc
+        rept line_word_delay
+        ifeq line_word_variant
+        nop
+        else
+        ifeq line_word_variant-1
+        moveq #0,d6
+        else
+        moveq #-1,d6
+        endc
+        endc
+        endr
+        move.w $02(a6),d0
+        move.w $06(a6),d1
+        move.w d7,12(a4)
+        move.w d0,20(a4)
+        move.w d1,16(a4)
+        bra.w line_word_capture
+line_word_slot set line_word_slot+1
+        endr
+line_word_variant set line_word_variant+1
+        endr
+        dcb.b $ff6500-*,0
+line_word_capture:
+        btst #6,$02(a6)
+        bne.s *-6
+        move.l d2,-(sp)
+        moveq #0,d2
+        lea $10000,a0
+        move.w #1023,d0
+        or.w (a0)+,d2
+        dbra d0,*-2
+        move.w d2,22(a4)
+        move.w $10000,24(a4)
+        move.w $10050,26(a4)
+        move.w $100a0,28(a4)
+        moveq #0,d2
+        lea $11000,a0
+        move.w #1023,d0
+        or.w (a0)+,d2
+        dbra d0,*-2
+        move.w d2,34(a4)
+        move.w $11000,30(a4)
+        move.w $11050,36(a4)
+        move.w $110a0,38(a4)
+        move.l (sp)+,d2
+        move.l (sp)+,d7
+        rts

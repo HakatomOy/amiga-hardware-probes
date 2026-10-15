@@ -167,6 +167,12 @@ python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/
 python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic
 python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic-fine
 python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic-followup
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-pipeline
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-truth-table
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-stage
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-b-hold
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-b-hold-dma
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-b-mask
 ```
 
 `--line-logic` builds kind 25 (3,456 trials): line minterms `$00/$ff/$ca/$f0`,
@@ -192,6 +198,77 @@ It pairs NOP/EXG phase pads with delays of 0 through 4 NOPs. Descriptor repeat
 writes; this is an ordering probe, while the selected B-pattern value remains
 the same. Every trial reads complete valid DMACONR and beam position before
 waiting for BBUSY, then records the destination OR and selected words.
+
+`--line-pipeline` builds kind 28 (3,060 trials) from 90 explicit presets,
+each observed with NOP/EXG phase pads and 0-16 NOP read delays. The 24 core
+controls cross A=`$0000/$8000`, minterm `$CA/$CC`, USEB off/on and 1/2/22
+pixels over a baseline of B=C=0, USEA+USEC+USED, and BLTAPT=`-80`. Other
+presets change one input at a time: A data and shifts `0/1/8/15`, B textures
+`0/1/2/$8000/$1000/$ffff` and shifts `0/1/8/15`, C data, all nine minterms
+`$00/$ff/$ca/$f0/$cc/$aa/$3c/$5a/$0f`, USEABC masks, USED, SING, SIGN and
+BLTAPT values `-80/-1/0/80`. A few B=0 controls repeat with the two BLTBDAT
+preseed writes reversed. USEABC mask bits are A=bit 0, B=bit 1, C=bit 2.
+The descriptor target is the preset index; its complete configuration and
+literal BLTCON0, BLTCON1, BLTAPT and BLTSIZE values are written to the build
+manifest. Variant and repeat are zero, phase is the phase pad, and delay is
+the read delay.
+
+The first observer reads complete DMACONR and beam position before waiting for
+BBUSY. Kind28 has its own fine observer because line-mode DPT advances after
+the first pixel. It retains raw DMACONR in `counter`, the post-read beam in
+`end_beam`, DPT OR in `icr` and selected DPT words in `irq_beam`, `irq_level`
+and the high half of `saved_pc_offset`. CPT OR is in `aux`; selected CPT words
+are in the low half of `saved_pc_offset`, `second_counter_or_beam` and
+`second_icr_or_level`. `compare_timing_sweeps.py` validates all 3,060 descriptors and
+preserves both raw per-delay memory traces alongside the decoded preset.
+
+`--line-truth-table` builds kind 29 (2,560 trials): five explicit A/B/C data profiles, each at 1 and 2 pixels, crossed with every raw 8-bit minterm. It holds USEA+USEC+USED on and USEB off, with observer phase 0 and delay 16, to isolate which minterm truth-table bits the line pipeline encounters. The profile register words are included in the manifest; the kind28 dual-memory observer records the same DPT and CPT raw samples. The comparator requires the complete profile/size/minterm descriptor matrix.
+
+`--line-stage` builds kind 30 (2,380 trials) to distinguish the C word present
+before a line pixel from the word fetched for the next pixel. It fixes A data
+at `$8000`, B/C data registers at zero, A pointer at `-80`, and line size at
+2 pixels. Seven pairs of C source words at `$11000/$11050` are crossed with
+USEB off/on and minterms `$04/$08/$40/$80/$48`; NOP/EXG phases and delays
+0-16 sample each case with the kind28 dual-memory observer. The manifest
+contains each pair of C words and the literal BLTCON0/1, BLTAPT and BLTSIZE
+values. Strict comparison requires the complete descriptor matrix.
+
+`--line-b-hold` builds kind 31 (2,930 trials, USEB off); `--line-b-hold-dma`
+builds kind 32 (2,930 trials, USEB on). Each crosses every BSHIFT with zero,
+each single-bit B texture and `$ffff`, phase EXG, and delays 0/1/2/4/16.
+Variant 0 uses A=0/LF=`$CC`; variant 1 uses A=`$8000`/LF=`$CA`. Five
+selected profiles repeat with BDAT written at BSHIFT=0 before target BSHIFT,
+alongside the standard target BSHIFT-before-BDAT order. The manifest records
+texture, shift, USEB, ordering and variant register values, and the strict
+comparator checks every descriptor and preserves DPT/CPT raw traces.
+
+`--line-b-mask` builds kind 33 (1,024 trials), holding A=`$8000`, B=C=0 and
+LF=`$CA` while crossing ASHIFT and BSHIFT 0-15, USEB off/on and 1/2-pixel
+lines. The kind28 line driver uses one EXG-phase, delay-16 observer sample per
+literal preset; the manifest retains its BLTCON0/1, BLTAPT and BLTSIZE words.
+The strict comparator requires every preset and retains the DPT/CPT trace.
+
+`--line-b-prime` builds kind 34 (1,024 trials), crossing the kind28 line
+configuration controls (ASHIFT, BSHIFT, USEB, and 1/2 pixels) with four
+normal-B priming modes: none, BLTCON1/BLTBDAT register writes, and a two-word
+normal B+D copy with zero or `$ffff` source data. Each trial records the prime
+mode and literal line preset in the manifest. The strict comparator requires
+the full matrix and preserves the two-memory observer trace.
+
+`--line-word-control` builds kind 35 (1,920 trials) from four A/ASHIFT/LF
+profiles, BSHIFT 0-15, USEB off/on, three one-word opcodes (NOP, `MOVEQ #0,D6`,
+and `MOVEQ #-1,D6`), and delay lengths 0/1/2/4/16. The phase instruction and
+each delay word use the selected opcode; all three are four CPU cycles and
+two CCKs. A separate phase-zero observer region records the same raw DPT/CPT
+flags and memory readbacks. The manifest stores the literal opcodes, register
+controls, and observer slot map, and the comparator requires all descriptors.
+
+`--line-shift-truth` builds kind 36 (4,096 trials), crossing every raw
+8-bit minterm with 15 two-pixel profiles (A=0 or `$8000`, C=0 or `$ffff`,
+and BSHIFT 0/1/4/8/15) plus a one-pixel A=0/C=0/BSHIFT=8 control. B data is
+zero, USEB is off, and the observer is phase 1/delay 16. Its literal profile
+table is included in the manifest; strict comparison requires all profile/
+minterm descriptors and retains DPT/CPT readbacks.
 
 Archive each generated ROM and its source snapshot before collecting hardware
 data. Compare validated hardware and emulator capture folders with:
