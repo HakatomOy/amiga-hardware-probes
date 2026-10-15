@@ -32,14 +32,14 @@ collection_done:
         move.l #RESULT,$3080
         move.l #RESULT+64+TRIAL_COUNT*40,$3084
         move.w #$0f0,CUSTOM+$180
-        bsr stream_results
+        jsr stream_results
         move.w #$0ff,CUSTOM+$180
 .idle:  stop #$2700
         bra.s .idle
 main:
         lea CUSTOM,a6
         lea VARS,a5
-        lea fault_vectors(pc),a0
+        movea.l #fault_vectors,a0
         lea 8,a1
         moveq #45,d1
 .vectors: move.l a0,(a1)+
@@ -57,13 +57,13 @@ main:
         move.l d0,(a0)
         tst.b slow_present
         beq.s .no_slow
-        lea kernels(pc),a0
+        movea.l #kernels,a0
         lea $c00000,a1
         move.w #(kernels_end-kernels)/2-1,d0
 .slow_copy: move.w (a0)+,(a1)+
         dbra d0,.slow_copy
 .no_slow:
-        lea header(pc),a0
+        movea.l #header,a0
         lea RESULT,a1
         moveq #15,d0
 .header: move.l (a0)+,(a1)+
@@ -74,7 +74,7 @@ main:
         andi.w #1,d0
         move.w d0,RESULT+60
         lea RESULT+64,a4
-        lea trials(pc),a3
+        movea.l #trials,a3
         move.w #TRIAL_COUNT-1,d7
 .trial:
         move.w #$2700,sr
@@ -129,6 +129,10 @@ main:
         beq .line_word_control
         cmpi.w #36,(a4)
         beq .line_shift_truth
+        cmpi.w #37,(a4)
+        beq .line_wrap
+        cmpi.w #38,(a4)
+        beq .line_wrap
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -195,6 +199,9 @@ main:
         bra.w .recorded
 .line_shift_truth:
         bsr line_shift_truth_trial
+        bra.w .recorded
+.line_wrap:
+        bsr line_wrap_trial
         bra.w .recorded
 .divirq:
         bsr divirq_trial
@@ -1158,6 +1165,74 @@ line_shift_truth_trial:
         move.l (sp)+,d7
         rts
         include "line_shift_truth_profiles.i"
+; Kind37 measures completed line lengths. Its six-word literal preset is
+; A/B/C data, BLTSIZE, BLTCON1 and BLTCON0; target is the table index.
+line_wrap_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.wrap_clear_d: move.w d0,(a0)+
+        dbra d7,.wrap_clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #2,d0
+        move.w d0,d1
+        lsl.w #1,d0
+        add.w d1,d0
+        cmpi.w #38,(a4)
+        beq.s .wrap_c_cross
+        lea line_wrap_presets(pc),a0
+        bra.s .wrap_table_ready
+.wrap_c_cross:
+        movea.l #line_c_cross_presets,a0
+.wrap_table_ready:
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w (a0)+,d6
+        move.w (a0)+,d7
+        move.w (a0)+,d2
+        move.w d3,$74(a6)
+        move.w d4,$72(a6)
+        move.w d5,$70(a6)
+        lea $16000,a0
+        move.w #1023,d1
+.wrap_fill_b: move.w d4,(a0)+
+        dbra d1,.wrap_fill_b
+        lea $11000,a0
+        move.w #1023,d1
+.wrap_fill_c: move.w d5,(a0)+
+        dbra d1,.wrap_fill_c
+        move.w d2,$40(a6)
+        move.w d7,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        clr.w $62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        bsr sync_beam
+        lea $58(a6),a1
+        cmpi.w #37,(a4)
+        bne.s .wrap_c_observer
+        move.l #$ff7000,a2
+        bra.s .wrap_observer_ready
+.wrap_c_observer:
+        move.l #$ff3000,a2
+.wrap_observer_ready:
+        move.w d6,d5
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+        include "line_wrap_presets.i"
 ; Kind30 holds A at $8000 and B at zero, varying the two C source words
 ; fetched by a 2-pixel line operation. The target table selects C first/
 ; second plus USEB; variant is one of five raw minterms.
@@ -2285,7 +2360,7 @@ fault:
         moveq #31,d0
 .vecdump: move.l (a0)+,(a1)+
         dbra d0,.vecdump
-        lea kernels(pc),a0
+        movea.l #kernels,a0
         lea $3200,a1
         moveq #31,d0
 .codedump: move.l (a0)+,(a1)+
@@ -2305,7 +2380,7 @@ fault:
         move.l #$3100,$3080
         move.l #$3300,$3084
         move.w #$f00,$dff180
-        bsr stream_results
+        jsr stream_results
 .halt:  bra.s .halt
 fault_vectors:
 fault_index set 2
@@ -2321,7 +2396,7 @@ slow_present: dc.b 0
 ; RBCP begins only after the complete, checksum-protected RAM capture exists.
 stream_results:
         move.w #$2700,sr
-        bsr quiet
+        jsr quiet
         lea CONFIG_RBCP_SCRATCH_BASE,a0
         moveq #7,d0
 .scratch: clr.l (a0)+
@@ -2425,4 +2500,5 @@ header:
         include "source_id.i"
         dc.w 0,0,0,0
         include "trials.i"
+        include "line_c_cross_presets.i"
         even

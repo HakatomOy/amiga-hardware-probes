@@ -1,4 +1,4 @@
-import importlib.util,struct,unittest
+import importlib.util,struct,unittest,json,re
 from pathlib import Path
 import build_rom,rom_results,compare_phase,compare_continuous,compare_timing_sweeps
 
@@ -613,6 +613,14 @@ class RomFormatTests(unittest.TestCase):
         table=(build_root/'line_shift_truth_profiles.i').read_text()
         self.assertIn('dc.w $0000,$0000,$0000,$0082,$0001',table)
         self.assertIn('dc.w $8000,$0000,$0000,$0082,$f001',table)
+        kernel=(build_root/'rom_kernel.bin').read_bytes()
+        raw=(build_root/'a500-timing-rom.bin').read_bytes()
+        kernel_offset=0x10000
+        self.assertEqual(raw[kernel_offset:kernel_offset+len(kernel)],kernel)
+        observer_offset=kernel_offset+(0xff3000-0xf90000)
+        kernel_observer_offset=0x20000+(0xff3000-0xfb0000)
+        self.assertEqual(raw[observer_offset:observer_offset+0x40],
+                         kernel[kernel_observer_offset:kernel_observer_offset+0x40])
         src=Path(__file__).resolve().parents[1]/'src/rom/experiment.asm'
         asm=src.read_text()
         routine=asm.split('line_shift_truth_trial:',1)[1].split('line_stage_trial:',1)[0]
@@ -637,6 +645,141 @@ class RomFormatTests(unittest.TestCase):
             compare_timing_sweeps._compare_line_shift_truth([((36,16,0,1,16,0),{}, {})])
         with self.assertRaisesRegex(ValueError,'Incomplete kind36 descriptor matrix'):
             compare_timing_sweeps._compare_line_shift_truth(pairs[:-1])
+
+    def test_kind37_length_wrap_matrix_literal_rom_table_and_observer(self):
+        presets=build_rom.line_wrap_presets()
+        rows=build_rom.trials(line_wrap=True)
+        self.assertEqual(len(presets),1152)
+        self.assertEqual(len(rows),1152)
+        self.assertEqual(len(set(rows)),1152)
+        self.assertEqual({r[0] for r in rows},{37})
+        self.assertEqual({r[1] for r in rows},set(range(1152)))
+        self.assertEqual({(r[2],r[3],r[4],r[5]) for r in rows},{(0,0,96,0)})
+        self.assertEqual({p['bshift'] for p in presets},set(range(16)))
+        self.assertEqual({p['pixels'] for p in presets},set(range(1,19)))
+        self.assertEqual({p['useb'] for p in presets},{0,1})
+        self.assertEqual({p['profile'] for p in presets},{'A0_CC','A8000_CA'})
+        for p in presets:
+            self.assertEqual(p['bltsize'],(p['pixels']<<6)|2)
+            self.assertEqual(p['bltcon1'],(p['bshift']<<12)|1)
+            self.assertEqual((p['a_data'],p['b_data'],p['c_data']),
+                (0 if p['profile']=='A0_CC' else 0x8000,0,0))
+            self.assertEqual(p['minterm'],0xcc if p['profile']=='A0_CC' else 0xca)
+            use=5|(p['useb']<<1)
+            use_hw=((use&1)<<11)|((use&2)<<9)|((use&4)<<7)
+            self.assertEqual(p['bltcon0'],use_hw|0x0100|p['minterm'])
+        root=Path(__file__).resolve().parents[1]/'build/rom'
+        manifest=json.loads((root/'manifest.json').read_text())
+        # The shared build directory contains only the most recent ROM mode.
+        # Keep functional kind37 descriptor/comparator checks above active
+        # on every run; inspect mode-specific artifacts only for kind37 builds.
+        if 'line_wrap_presets' in manifest:
+            self.assertEqual(manifest['line_wrap_presets'],presets)
+            literal=[]
+            for line in (root/'line_wrap_presets.i').read_text().splitlines()[1:]:
+                literal.append([int(word,16) for word in re.findall(r'\$([0-9a-fA-F]{4})',line)])
+            expected=[[p[k]&0xffff for k in ('a_data','b_data','c_data','bltsize','bltcon1','bltcon0')]
+                      for p in presets]
+            self.assertEqual(literal,expected)
+            encoded=[tuple(int(word) for word in re.findall(r'\d+',line))
+                     for line in (root/'trials.i').read_text().splitlines()[1:]]
+            self.assertEqual(encoded,[tuple(row) for row in rows])
+            kernel=(root/'rom_kernel.bin').read_bytes()
+            raw=(root/'a500-timing-rom.bin').read_bytes()
+            rom_offset=0x10000+(0xff7000-0xf90000)
+            kernel_offset=0x20000+(0xff7000-0xfb0000)
+            stub=kernel[kernel_offset:kernel_offset+0x100]
+            self.assertEqual(raw[rom_offset:rom_offset+len(stub)],stub)
+            self.assertEqual(raw[rom_offset+len(stub):rom_offset+0x100],bytes(0x100-len(stub)))
+            self.assertEqual(stub[:14],bytes.fromhex('2f074eb900fb00003e2e00063285'))
+            self.assertEqual(stub[14:14+97*2],bytes.fromhex('4e71'*97))
+            self.assertIn(bytes.fromhex('302e0002322e00063947000c3940001439410010'),stub)
+            self.assertTrue(stub[14+97*2:14+97*2+4].startswith(bytes.fromhex('302e0002')))
+        experiment=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        routine=experiment.split('line_wrap_trial:',1)[1].split('line_stage_trial:',1)[0]
+        self.assertIn('lsl.w #2,d0',routine)
+        self.assertIn('lsl.w #1,d0',routine)
+        self.assertIn('add.w d1,d0',routine)
+        self.assertIn('move.w d6,d5',routine)
+        pairs=[]
+        for desc in rows:
+            _,target,variant,phase,delay,_=desc
+            record=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|(target&0xff),
+                icr=target,irq_beam=phase,irq_level=delay,saved_pc_offset=target<<16,
+                aux=target+1,second_counter_or_beam=target+2,second_icr_or_level=target+3)
+            pairs.append((tuple(desc),record,record.copy()))
+        report=compare_timing_sweeps._compare_line_wrap(pairs)
+        self.assertEqual(report['kind'],37)
+        self.assertEqual(len(report['groups']),1152)
+        self.assertEqual(report['groups'][0]['pixels'],1)
+        self.assertEqual(report['groups'][-1]['b_shift'],15)
+        with self.assertRaisesRegex(ValueError,'Invalid kind37 descriptor'):
+            compare_timing_sweeps._compare_line_wrap([((37,1152,0,0,96,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind37 descriptor matrix'):
+            compare_timing_sweeps._compare_line_wrap(pairs[:-1])
+
+    def test_kind38_c_cross_matrix_and_literal_table(self):
+        presets=build_rom.line_c_cross_presets()
+        rows=build_rom.trials(line_c_cross=True)
+        self.assertEqual(len(presets),1536)
+        self.assertEqual(len(rows),1536)
+        self.assertEqual(len(set(rows)),1536)
+        self.assertEqual({r[0] for r in rows},{38})
+        self.assertEqual({r[1] for r in rows},set(range(1536)))
+        self.assertEqual({(r[2],r[3],r[4],r[5]) for r in rows},{(0,1,16,0)})
+        self.assertEqual({p['bshift'] for p in presets},set(range(16)))
+        self.assertEqual({p['c_data'] for p in presets},{0,0xffff,0x8000,1,0x5555,0xaaaa})
+        self.assertEqual({(p['useb'],p['usec']) for p in presets},
+                         {(0,0),(0,1),(1,0),(1,1)})
+        self.assertEqual({p['pixels'] for p in presets},{1,2})
+        self.assertEqual({p['a_data'] for p in presets},{0,0x8000})
+        for p in presets:
+            self.assertIn(p['a_data'],(0,0x8000))
+            self.assertEqual(p['b_data'],0)
+            self.assertEqual((p['usea'],p['used'],p['minterm']),(1,1,0xcc))
+            self.assertEqual(p['bltsize'],(p['pixels']<<6)|2)
+            self.assertEqual(p['bltcon1'],(p['bshift']<<12)|1)
+            use=1|8|(p['useb']<<1)|(p['usec']<<2)
+            use_hw=((use&1)<<11)|((use&2)<<9)|((use&4)<<7)|((use&8)<<5)
+            self.assertEqual(p['bltcon0'],use_hw|0x0100|0xcc)
+        root=Path(__file__).resolve().parents[1]/'build/rom'
+        manifest=json.loads((root/'manifest.json').read_text())
+        self.assertEqual(manifest['line_c_cross_presets'],presets)
+        literal=[]
+        for line in (root/'line_c_cross_presets.i').read_text().splitlines()[1:]:
+            literal.append([int(word,16) for word in re.findall(r'\$([0-9a-fA-F]{4})',line)])
+        expected=[[p[k]&0xffff for k in ('a_data','b_data','c_data','bltsize','bltcon1','bltcon0')]
+                  for p in presets]
+        self.assertEqual(literal,expected)
+        kernel=(root/'rom_kernel.bin').read_bytes()
+        raw=(root/'a500-timing-rom.bin').read_bytes()
+        self.assertEqual(raw[0x10000:0x10000+len(kernel)],kernel)
+        raw_obs=0x10000+(0xff3000-0xf90000)
+        kernel_obs=0x20000+(0xff3000-0xfb0000)
+        self.assertEqual(raw[raw_obs:raw_obs+0x40],kernel[kernel_obs:kernel_obs+0x40])
+        experiment=(Path(__file__).resolve().parents[1]/'src/rom/experiment.asm').read_text()
+        self.assertIn('moveq #5,d0',experiment)
+        self.assertIn('dbra d0,.desc',experiment)
+        routine=experiment.split('line_wrap_trial:',1)[1].split('line_stage_trial:',1)[0]
+        self.assertIn('cmpi.w #38,(a4)',routine)
+        self.assertIn('movea.l #line_c_cross_presets,a0',routine)
+        self.assertIn('move.l #$ff3000,a2',routine)
+        pairs=[]
+        for desc in rows:
+            _,target,variant,phase,delay,_=desc
+            rec=dict(launch_beam=0x2010,end_beam=0x2020,counter=0x4000|(target&0xff),
+                icr=target,irq_beam=phase,irq_level=delay,saved_pc_offset=target<<16,
+                aux=target+1,second_counter_or_beam=target+2,second_icr_or_level=target+3)
+            pairs.append((tuple(desc),rec,rec.copy()))
+        report=compare_timing_sweeps._compare_line_c_cross(pairs)
+        self.assertEqual(report['kind'],38)
+        self.assertEqual(len(report['groups']),1536)
+        self.assertEqual(report['groups'][0]['c_data'],'0x0000')
+        self.assertEqual(report['groups'][-1]['c_data'],'0xaaaa')
+        with self.assertRaisesRegex(ValueError,'Invalid kind38 descriptor'):
+            compare_timing_sweeps._compare_line_c_cross([((38,1536,0,1,16,0),{}, {})])
+        with self.assertRaisesRegex(ValueError,'Incomplete kind38 descriptor matrix'):
+            compare_timing_sweeps._compare_line_c_cross(pairs[:-1])
 
 
 

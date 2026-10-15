@@ -584,3 +584,23 @@ line_word_capture:
         move.l (sp)+,d2
         move.l (sp)+,d7
         rts
+
+; Kind37 takes one phase NOP plus 96 delay NOPs before sampling completed
+; line blits. The 232-byte body fits its dedicated $ff7000 slot and joins the
+; same dual-memory capture as the shorter kind28/35 observers.
+        dcb.b $ff7000-*,0
+line_wrap_observer:
+        move.l d7,-(sp)
+        jsr $fb0000
+        move.w 6(a6),d7
+        move.w d5,(a1)
+        nop
+        rept 96
+        nop
+        endr
+        move.w $02(a6),d0
+        move.w $06(a6),d1
+        move.w d7,12(a4)
+        move.w d0,20(a4)
+        move.w d1,16(a4)
+        bra.w line_word_capture

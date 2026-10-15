@@ -270,6 +270,22 @@ zero, USEB is off, and the observer is phase 1/delay 16. Its literal profile
 table is included in the manifest; strict comparison requires all profile/
 minterm descriptors and retains DPT/CPT readbacks.
 
+`--line-wrap` builds kind 37 (1,152 trials): BSHIFT 0-15, line lengths 1-18,
+USEB off/on, and A=0/LF=`$CC` or A=`$8000`/LF=`$CA`, with B=C=0. It samples
+DMACONR after a phase NOP plus 96 delay NOPs at FF7000, after all pixels in
+the selected line have completed. The manifest and generated table carry all
+six literal source/control/size words; the comparator requires every profile.
+
+`--line-c-cross` builds kind 38 (1,536 trials) to test A/C dependence under
+the B-only `$CC` minterm. It fixes B=0 and crosses A data `$0000/$8000`,
+BSHIFT 0-15, C data
+`$0000/$ffff/$8000/$0001/$5555/$aaaa`, USEB/USEC off/on, and 1/2 pixels.
+A and D stay enabled, and the existing FF3000 phase-one/delay-16 observer
+captures both DPT and CPT readbacks. The manifest records every literal
+BLTCON0/1 and BLTSIZE word; strict comparison requires the full matrix. Each
+trial retains the standard six-word descriptor, and each preset row records
+literal A/B/C data plus the three blitter control/size registers.
+
 Archive each generated ROM and its source snapshot before collecting hardware
 data. Compare validated hardware and emulator capture folders with:
 
