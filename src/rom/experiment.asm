@@ -139,6 +139,8 @@ main:
         beq .line_wrap
         cmpi.w #41,(a4)
         beq .line_wrap
+        cmpi.w #43,(a4)
+        beq .irq_focus
         cmpi.w #42,(a4)
         beq .line_c_read_sequence
         cmpi.w #20,(a4)
@@ -210,6 +212,9 @@ main:
         bra.w .recorded
 .line_wrap:
         bsr line_wrap_trial
+        bra.w .recorded
+.irq_focus:
+        jsr irq_focus_trial
         bra.w .recorded
 .line_c_read_sequence:
         jsr line_c_read_sequence_trial
@@ -2718,3 +2723,44 @@ line_c_read_sequence_trial:
 
         include "line_c_read_sequence_presets.i"
         even
+
+; Kind 43: masked Copper COPER request visibility and straight-line CPU IPL observations.
+irq_focus_trial:
+        move.l #divirq_handler,$6c
+        clr.l $3100
+        lea $3100,a1
+        moveq #0,d4
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #8,d0
+        lsl.w #2,d0
+        addi.l #$f95000,d0
+        move.l d0,a0
+        lea $6000,a2
+        move.l #$42c1fffe,(a2)+
+        move.l #$009c8010,(a2)+
+        move.l #$fffffffe,(a2)+
+        move.l #$6000,$80(a6)
+        move.w #$8280,$96(a6)
+        move.w #$c010,$9a(a6)
+        jsr sync_beam
+        move.w #0,$88(a6)
+        move.w #$0010,$9c(a6)
+        tst.w 2(a4)
+        beq.s .masked
+        move.w #$2000,sr
+.masked:
+        jsr $fb0000
+        jsr (a0)
+        move.w #$2700,sr
+        move.w d6,12(a4)
+        move.w 6(a6),16(a4)
+        move.w d4,38(a4)
+        tst.w 2(a4)
+        beq.s .done
+        tst.w DONE(a5)
+        bne.s .done
+        move.w #1,32(a4)
+.done:
+        move.l #irq3,$6c
+        rts

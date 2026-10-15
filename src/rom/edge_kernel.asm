@@ -75,6 +75,8 @@ divs_irq:
         beq.s .after_marker
         rts
 
+        include "irq_focus_kernel.i"
+
         dcb.b $fa0000-*,0
 single_index set 0
         rept 64

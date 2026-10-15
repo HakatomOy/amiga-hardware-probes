@@ -5,6 +5,25 @@ from pathlib import Path
 import rom_results
 ROOT=Path(__file__).resolve().parent
 
+def _sha256(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def _popen_with_binary_hash(binary, command, **kwargs):
+    # Capture provenance before launch: the build output can be replaced while
+    # the emulator is still using the image it opened.
+    binary_sha256=_sha256(binary)
+    proc=subprocess.Popen(command,**kwargs)
+    return proc,binary_sha256
+
+def _write_invocation(out,binary,command,binary_sha256,wall_seconds):
+    binary_changed=_sha256(binary)!=binary_sha256
+    invocation=dict(command=command,binary_sha256=binary_sha256,
+                    binary_changed_during_run=binary_changed,wall_seconds=wall_seconds)
+    (out/'invocation.json').write_text(json.dumps(invocation,indent=2))
+    if binary_changed:
+        raise RuntimeError('Emulator binary changed during the run; capture rejected '
+                           '(see invocation.json binary_changed_during_run).')
+
 def run(binary,out,config=None,romdir=None):
     romdir=romdir or ROOT/'build/rom'
     out.mkdir(parents=True,exist_ok=False)
@@ -19,7 +38,8 @@ def run(binary,out,config=None,romdir=None):
     command.append(str(romdir/'a500-timing-rom.bin'))
     env={k:v for k,v in os.environ.items() if not k.startswith('COPPERLINE_')}
     with (out/'run.log').open('w') as log:
-        proc=subprocess.Popen(command,cwd=out,env=env,stdout=log,stderr=subprocess.STDOUT)
+        proc,binary_sha256=_popen_with_binary_hash(
+            binary,command,cwd=out,env=env,stdout=log,stderr=subprocess.STDOUT)
         connection=None
         try:
             deadline=time.monotonic()+300
@@ -54,7 +74,7 @@ def run(binary,out,config=None,romdir=None):
             rom_results.extract(capture,out,manifest=manifest_path)
             rpc('step',dict(count=3))
             rpc('capture.screenshot',dict(path=str(out/'screen.png')))
-            (out/'invocation.json').write_text(json.dumps(dict(command=command,binary_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),wall_seconds=time.monotonic()-started),indent=2))
+            _write_invocation(out,binary,command,binary_sha256,time.monotonic()-started)
             rpc('shutdown',{})
             proc.wait(timeout=20)
         finally:
