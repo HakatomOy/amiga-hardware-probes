@@ -212,7 +212,7 @@ main:
         bsr line_wrap_trial
         bra.w .recorded
 .line_c_read_sequence:
-        bsr line_c_read_sequence_trial
+        jsr line_c_read_sequence_trial
         bra.w .recorded
 .divirq:
         bsr divirq_trial
@@ -517,6 +517,8 @@ channels_trial:
         jsr (a2)
         rts
 divirq_trial:
+        tst.w 4(a4)
+        bne divirq_sign_trial
         move.l #divirq_handler,$6c
         move.l #$12345678,d2
         move.w #$789a,d3
@@ -551,6 +553,60 @@ divirq_trial:
         move.l d0,20(a4)
         move.l #irq3,$6c
         rts
+; Nonzero kind-20 variants are the signed-divider IPL boundary experiment.
+; Keep operands and controller setup outside the ROM-aligned timed kernel.
+divirq_sign_trial:
+        move.l #divirq_handler,$6c
+        moveq #0,d0
+        move.w 4(a4),d0
+        subq.w #1,d0
+        lsl.w #3,d0
+        lea divirq_sign_operands(pc),a0
+        move.l 0(a0,d0.w),d2
+        move.w 4(a0,d0.w),d3
+        moveq #0,d4
+        lea $6000,a0
+        move.l #$4321fffe,(a0)+
+        move.l #$009c8010,(a0)+
+        move.l #$fffffffe,(a0)+
+        move.l #$6000,$80(a6)
+        move.w #0,$88(a6)
+        move.w #$8280,$96(a6)
+        move.w #$c010,$9a(a6)
+        bsr sync_beam
+        move.w #0,$88(a6)
+        jsr $fb0000
+        move.w #$0010,$9c(a6)
+        lea $f94000,a0
+        cmpi.w #3,2(a4)
+        bne.s .selected
+        lea $f94800,a0
+.selected:
+        jsr (a0)
+        move.w #$2700,sr
+        move.w 6(a6),16(a4)
+        move.l d0,20(a4)
+        move.w d4,38(a4)
+        move.l #irq3,$6c
+        rts
+; Eight-byte entries: signed 32-bit dividend, 16-bit divisor, padding.
+divirq_sign_operands:
+        dc.l 100
+        dc.w 3,0
+        dc.l 100
+        dc.w -3,0
+        dc.l -100
+        dc.w 3,0
+        dc.l -100
+        dc.w -3,0
+        dc.l 0
+        dc.w -3,0
+        dc.l 100000
+        dc.w -2,0
+        dc.l $10000000
+        dc.w -1,0
+        dc.l $80000000
+        dc.w -1,0
 irq_paths_trial:
         jsr $fe4000
         move.l #irq1,$64
@@ -2646,7 +2702,7 @@ line_c_read_sequence_trial:
         lea $58(a6),a1
         move.w #$7fff,$96(a6)
         move.w #$8240,$96(a6)
-        bsr sync_beam
+        jsr sync_beam
         move.w d6,d5
         moveq #0,d0
         move.w 4(a4),d0

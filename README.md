@@ -333,3 +333,7 @@ and three selected words after blitter completion. See
 for provenance, comparison limits and current findings.
 
 The final [comparison and detailed remaining measurement plan](docs/rom-timing-wrapup-2026-10-14.md) records verified fixes, incomplete native IRQ/line BZERO work, and the restored Kickstart hash.
+
+## Divider IRQ verification
+
+The [15 October A500/WinUAE divider IRQ verification](docs/divider-irq-verification-2026-10-15.md) records two identical physical One ROM captures, full WinUAE agreement, remaining Copperline boundaries, and reproduction commands. Build with `build_divider_irq_rom.py`; compare decoded captures with `compare_divider_irq.py`.

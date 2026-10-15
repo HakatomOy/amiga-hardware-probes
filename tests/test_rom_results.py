@@ -1058,10 +1058,10 @@ class RomFormatTests(unittest.TestCase):
         for text in ('movea.l #line_c_read_sequence_presets,a0','move.w d5,$74(a6)',
                      'move.w #0,$72(a6)','move.w #0,$70(a6)',
                      'move.w d3,$11000','move.w d4,$11050','move.w d6,d5',
-                     'movea.l #$ff7400,a2','movea.l #$ff7500,a2','bsr sync_beam'):
+                     'movea.l #$ff7400,a2','movea.l #$ff7500,a2','jsr sync_beam'):
             self.assertIn(text,routine)
-        self.assertLess(routine.index('move.w #$8240,$96(a6)'),routine.index('bsr sync_beam'))
-        self.assertLess(routine.index('bsr sync_beam'),routine.index('movea.l #$ff7400,a2'))
+        self.assertLess(routine.index('move.w #$8240,$96(a6)'),routine.index('jsr sync_beam'))
+        self.assertLess(routine.index('jsr sync_beam'),routine.index('movea.l #$ff7400,a2'))
         edge=(Path(__file__).resolve().parents[1]/'src/rom/edge_kernel.asm').read_text()
         for label in ('line_c_read_early:','line_c_read_postbusy:'):
             body=edge.split(label,1)[1].split('\n        dcb.b $ff7',1)[0]
