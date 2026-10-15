@@ -286,6 +286,22 @@ BLTCON0/1 and BLTSIZE word; strict comparison requires the full matrix. Each
 trial retains the standard six-word descriptor, and each preset row records
 literal A/B/C data plus the three blitter control/size registers.
 
+`--line-c-words` builds kind 39 (344 trials). With A=B=0, BSHIFT=4,
+LF=`$CC`, and BLTCDAT=0, it places isolated one-hot/zero/all-ones words at
+C memory addresses `$11000` and `$11050`, crossing USEB/USEC and 1/2-pixel
+lines. Separate controls hold C memory at zero while priming BLTCDAT with
+`$ffff/$5555/$aaaa/$8000/$0001`, and hold BLTCDAT at zero for uniform
+`$ffff/$5555/$aaaa` memory words. The manifest and literal table record both
+C memory words and the independent BLTCDAT value; strict comparison requires
+the full matrix.
+
+`--line-c-tomography` builds kind 40 (1,344 trials). It fixes A data at
+`$8000`, B at zero, uses the C0 minterm, and crosses all A shifts with zero,
+full, alternating, one-hot and one-cold first-C words at 1/2 pixels. The
+second C word and BLTCDAT stay zero. Zero/full-word controls cross all
+USEB/USEC settings. `--line-c-tomography-shift N` selects BSHIFT 0-15 for
+separate repeat ROMs; the shift is included in descriptors and provenance.
+
 Archive each generated ROM and its source snapshot before collecting hardware
 data. Compare validated hardware and emulator capture folders with:
 

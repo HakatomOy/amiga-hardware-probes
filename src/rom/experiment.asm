@@ -133,6 +133,10 @@ main:
         beq .line_wrap
         cmpi.w #38,(a4)
         beq .line_wrap
+        cmpi.w #39,(a4)
+        beq .line_wrap
+        cmpi.w #40,(a4)
+        beq .line_wrap
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -1165,8 +1169,9 @@ line_shift_truth_trial:
         move.l (sp)+,d7
         rts
         include "line_shift_truth_profiles.i"
-; Kind37 measures completed line lengths. Its six-word literal preset is
-; A/B/C data, BLTSIZE, BLTCON1 and BLTCON0; target is the table index.
+; Kind37 measures completed line lengths. Kind38/39 reuse this setup with
+; distinct literal preset tables; kind39 stores C words at $11000/$11050 and
+; loads BLTCDAT independently from the third table word.
 line_wrap_trial:
         move.l d7,-(sp)
         lea $10000,a0
@@ -1180,12 +1185,22 @@ line_wrap_trial:
         move.w d0,d1
         lsl.w #1,d0
         add.w d1,d0
+        cmpi.w #40,(a4)
+        beq.s .wrap_c_tomography
+        cmpi.w #39,(a4)
+        beq.s .wrap_c_words
         cmpi.w #38,(a4)
         beq.s .wrap_c_cross
         lea line_wrap_presets(pc),a0
         bra.s .wrap_table_ready
 .wrap_c_cross:
         movea.l #line_c_cross_presets,a0
+        bra.s .wrap_table_ready
+.wrap_c_words:
+        movea.l #line_c_word_presets,a0
+        bra.s .wrap_table_ready
+.wrap_c_tomography:
+        movea.l #line_c_tomography_presets,a0
 .wrap_table_ready:
         adda.w d0,a0
         move.w (a0)+,d3
@@ -1194,17 +1209,54 @@ line_wrap_trial:
         move.w (a0)+,d6
         move.w (a0)+,d7
         move.w (a0)+,d2
+        cmpi.w #40,(a4)
+        beq.s .wrap_data_tomography
+        cmpi.w #39,(a4)
+        beq.s .wrap_data_c_words
         move.w d3,$74(a6)
         move.w d4,$72(a6)
         move.w d5,$70(a6)
+        bra.s .wrap_data_ready
+.wrap_data_c_words:
+        move.w #0,$74(a6)
+        move.w #0,$72(a6)
+        move.w d5,$70(a6)
+        bra.s .wrap_data_ready
+.wrap_data_tomography:
+        move.w #$8000,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+.wrap_data_ready:
         lea $16000,a0
         move.w #1023,d1
-.wrap_fill_b: move.w d4,(a0)+
+.wrap_fill_b:
+        cmpi.w #39,(a4)
+        bne.s .wrap_fill_b_data
+        clr.w (a0)+
+        bra.s .wrap_fill_b_next
+.wrap_fill_b_data:
+        move.w d4,(a0)+
+.wrap_fill_b_next:
         dbra d1,.wrap_fill_b
         lea $11000,a0
         move.w #1023,d1
-.wrap_fill_c: move.w d5,(a0)+
+.wrap_fill_c:
+        cmpi.w #39,(a4)
+        bne.s .wrap_fill_c_data
+        clr.w (a0)+
+        bra.s .wrap_fill_c_next
+.wrap_fill_c_data:
+        move.w d5,(a0)+
+.wrap_fill_c_next:
         dbra d1,.wrap_fill_c
+        cmpi.w #39,(a4)
+        beq.s .wrap_store_c_words
+        cmpi.w #40,(a4)
+        bne.s .wrap_sources_ready
+.wrap_store_c_words:
+        move.w d3,$11000
+        move.w d4,$11050
+.wrap_sources_ready:
         move.w d2,$40(a6)
         move.w d7,$42(a6)
         move.w #$ffff,$44(a6)
@@ -2501,4 +2553,6 @@ header:
         dc.w 0,0,0,0
         include "trials.i"
         include "line_c_cross_presets.i"
+        include "line_c_word_presets.i"
+        include "line_c_tomography_presets.i"
         even
