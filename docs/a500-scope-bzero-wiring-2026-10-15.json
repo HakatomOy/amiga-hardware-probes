@@ -1,0 +1,143 @@
+{
+  "purpose": "A500 CPU custom-register read/write observation for line BZERO investigation",
+  "package_requirements": {
+    "cpu": "64-pin DIP MC68000-compatible pinout",
+    "gary": "48-pin DIP 5719 Gary"
+  },
+  "board_references": "Rev6A/7 schematic: CPU U1, Gary U5. Identify by chip markings and package, not board position.",
+  "channels": [
+    {
+      "scope_channel": "D0",
+      "signal": "CPU_CLK",
+      "chip": "68000",
+      "pin": 15
+    },
+    {
+      "scope_channel": "D1",
+      "signal": "CPU_AS_N",
+      "chip": "68000",
+      "pin": 6
+    },
+    {
+      "scope_channel": "D2",
+      "signal": "CPU_RW",
+      "chip": "68000",
+      "pin": 9
+    },
+    {
+      "scope_channel": "D3",
+      "signal": "CPU_UDS_N",
+      "chip": "68000",
+      "pin": 7
+    },
+    {
+      "scope_channel": "D4",
+      "signal": "CPU_DTACK_N",
+      "chip": "68000",
+      "pin": 10
+    },
+    {
+      "scope_channel": "D5",
+      "signal": "CPU_DATA14",
+      "chip": "68000",
+      "pin": 55
+    },
+    {
+      "scope_channel": "D6",
+      "signal": "CPU_A1",
+      "chip": "68000",
+      "pin": 29
+    },
+    {
+      "scope_channel": "D7",
+      "signal": "CPU_A2",
+      "chip": "68000",
+      "pin": 30
+    },
+    {
+      "scope_channel": "D8",
+      "signal": "CPU_DATA13",
+      "chip": "68000",
+      "pin": 56
+    },
+    {
+      "scope_channel": "D9",
+      "signal": "CPU_A3",
+      "chip": "68000",
+      "pin": 31
+    },
+    {
+      "scope_channel": "D10",
+      "signal": "CPU_A4",
+      "chip": "68000",
+      "pin": 32
+    },
+    {
+      "scope_channel": "D11",
+      "signal": "CPU_A5",
+      "chip": "68000",
+      "pin": 33
+    },
+    {
+      "scope_channel": "D12",
+      "signal": "CPU_A6",
+      "chip": "68000",
+      "pin": 34
+    },
+    {
+      "scope_channel": "D13",
+      "signal": "CPU_A7",
+      "chip": "68000",
+      "pin": 35
+    },
+    {
+      "scope_channel": "D14",
+      "signal": "CPU_A8",
+      "chip": "68000",
+      "pin": 36
+    },
+    {
+      "scope_channel": "D15",
+      "signal": "GARY_REGEN_N",
+      "chip": "Gary 5719",
+      "pin": 18
+    }
+  ],
+  "analog": {
+    "CH1": {
+      "chip": "68000",
+      "pin": 56,
+      "signal": "CPU_DATA13",
+      "probe_attenuation": 10,
+      "input_impedance_ohms": 1000000
+    }
+  },
+  "ground": {
+    "CPU_GND_pins": [
+      16,
+      53
+    ],
+    "note": "All probe grounds go only to Amiga ground; prefer short ground leads from each pod and CH1."
+  },
+  "scope_threshold_volts": 1.4,
+  "address_reconstruction": {
+    "1": 6,
+    "2": 7,
+    "3": 9,
+    "4": 10,
+    "5": 11,
+    "6": 12,
+    "7": 13,
+    "8": 14
+  },
+  "references": [
+    "https://www.nxp.com/docs/en/reference-manual/MC68000UM.pdf#page=171",
+    "https://amigawiki.org/dnl/schematics/A500_R6.pdf#page=3"
+  ],
+  "limitations": [
+    "BZERO and BBUSY describe data13/data14 only during a qualified DMACONR read; other cycles carry unrelated data.",
+    "This is CPU bus observation, not an internal Agnus-latch or chip-RAM-DMA trace.",
+    "Physical installation and initial live clock/strobe/custom-register-read validation completed 2026-10-16; not every pin identity independently established. See captures/a500-scope-validation-2026-10-16/README.md."
+  ],
+  "live_validation_capture": "captures/a500-scope-validation-2026-10-16"
+}

@@ -1096,6 +1096,84 @@ class RomFormatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'Incomplete kind42 descriptor matrix'):
             compare_timing_sweeps._compare_line_c_read_sequence(pairs[:-1])
 
+    def test_kind44_line_c_activity_descriptor_and_kernel(self):
+        presets=build_rom.line_c_activity_presets()
+        rows=build_rom.trials(line_c_activity=True)
+        self.assertEqual((len(presets),len(rows)),(10,320))
+        self.assertEqual(len(set(rows)),320)
+        self.assertEqual({row[0] for row in rows},{44})
+        self.assertEqual({row[1] for row in rows},set(range(10)))
+        self.assertEqual({row[2] for row in rows},{0,1})
+        self.assertEqual({row[3] for row in rows},{0})
+        self.assertEqual({row[4] for row in rows},{0,1})
+        self.assertEqual({row[5] for row in rows},set(range(8)))
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+
+        root=Path(__file__).resolve().parents[1]
+        asm=(root/'src/rom/experiment.asm').read_text()
+        dispatch=asm.split('main:',1)[1].split('.recorded:',1)[0]
+        self.assertRegex(dispatch,r'cmpi\.w #44,\(a4\)\s+beq(?:\.s)?\s+\.line_c_activity')
+        routine=asm.split('line_c_activity_trial:',1)[1].split('include "line_c_activity_presets.i"',1)[0]
+        self.assertLess(routine.index('move.w #$8240,$96(a6)'),
+                        routine.index('move.w #$0088,$58(a6)'))
+        fill_a=routine.index('.activity_fill_a:')
+        self.assertGreater(routine.rfind('moveq #0,d0',0,fill_a),
+                           routine.index('move.w (a0)+,d2'))
+        self.assertLess(routine.index('activity_prime_busy'),routine.index('activity_prime_done'))
+        self.assertLess(routine.index('.activity_unprimed:'),routine.index('move.w d5,$74(a6)'))
+        self.assertLess(routine.index('move.w d3,$11000'),routine.index('jsr sync_beam'))
+
+        edge=(root/'src/rom/edge_kernel.asm').read_text()
+        for label in ('line_c_activity_direct:','line_c_activity_poll:'):
+            body=edge.split(label,1)[1].split('\n        dcb.b $ff7',1)[0]
+            read_lines=[line.strip() for line in body.splitlines()
+                if re.fullmatch(r'move\.w \$02\(a6\),d[0-7]',line.strip())]
+            self.assertEqual(read_lines,[f'move.w $02(a6),d{i}' for i in range(8)])
+            self.assertIn('move.w a2,12(a4)',body)
+            self.assertLess(body.index('move.w $02(a6),d7'),body.index('move.w a2,12(a4)'))
+            self.assertEqual(body.count('move.w d7,a1'),0)
+
+
+    def test_kind45_line_c_history_descriptor_and_kernel(self):
+        patterns=build_rom.line_c_history_patterns()
+        rows=build_rom.trials(line_c_history=True)
+        self.assertEqual((len(patterns),len(rows)),(6,960))
+        self.assertEqual(len(set(rows)),960)
+        self.assertEqual({row[0] for row in rows},{45})
+        self.assertEqual({row[1] for row in rows},set(range(10)))
+        self.assertEqual({row[2] for row in rows},set(range(6)))
+        self.assertEqual({row[3] for row in rows},{0})
+        self.assertEqual({row[4] for row in rows},{0,1})
+        self.assertEqual({row[5] for row in rows},set(range(8)))
+        self.assertLess(0x40000+64+len(rows)*40,0x7e000)
+        self.assertEqual([(p['a'],p['b'],p['c']) for p in patterns], [
+            (0,0,0),(0,0,0),(0xffff,0,0),(0,0xffff,0),
+            (0,0,0xffff),(0xffff,0xffff,0xffff)])
+        self.assertEqual([p['name'] for p in patterns],
+                         ['none','all-zero','a-ffff','b-ffff','c-ffff','all-ffff'])
+        self.assertEqual([p['blit'] for p in patterns],[False,True,True,True,True,True])
+        subset=build_rom.trials(line_c_history=True,line_c_history_subset=[5])
+        self.assertEqual(len(subset),160)
+        self.assertEqual({row[2] for row in subset},{5})
+
+        root=Path(__file__).resolve().parents[1]
+        asm=(root/'src/rom/experiment.asm').read_text()
+        dispatch=asm.split('main:',1)[1].split('.recorded:',1)[0]
+        self.assertRegex(dispatch,r'cmpi\.w #45,\(a4\)\s+beq(?:\.s)?\s+\.line_c_history')
+        routine=asm.split('line_c_history_trial:',1)[1].split('include "line_c_history_presets.i"',1)[0]
+        self.assertIn('lea line_c_history_patterns,a2',routine)
+        self.assertIn('include \"line_c_history_patterns.i\"',asm)
+        for label in ('.history_fill_a:', '.history_fill_b:', '.history_fill_c:'):
+            self.assertIn(label,routine)
+        self.assertLess(routine.index('history_prime_busy'),routine.index('history_prime_done'))
+        self.assertLess(routine.index('.history_reset_c:'),routine.index('move.w d3,$11000'))
+        self.assertIn('history_clear_prime_d:',routine)
+        edge=(root/'src/rom/edge_kernel.asm').read_text()
+        for label in ('line_c_activity_direct:','line_c_activity_poll:'):
+            body=edge.split(label,1)[1].split('\n        dcb.b $ff7',1)[0]
+            reads=[line.strip() for line in body.splitlines()
+                   if re.fullmatch(r'move\.w \$02\(a6\),d[0-7]',line.strip())]
+            self.assertEqual(reads,[f'move.w $02(a6),d{i}' for i in range(8)])
 
     def test_cpu_trial_coverage(self):
         rows=build_rom.trials(cpu=True)

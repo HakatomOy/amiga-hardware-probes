@@ -1189,6 +1189,49 @@ def _compare_line_c_read_sequence(pairs):
         note='Kind42 reads DMACONR eight times consecutively inside one blit; early and post-BBUSY observer slots are repeated eight times per preset.')
 
 
+def _compare_line_c_bus_data(pairs):
+    """Validate kind46's complete CPU-word / ASHIFT / scratch-region matrix."""
+    expected={tuple(row) for row in build_rom.trials(line_c_bus_data=True)}
+    patterns=build_rom.line_c_bus_data_patterns()
+    regions=build_rom.line_c_bus_data_regions()
+    seen=set(); output=[]
+    samples=lambda row:(row['counter'],row['icr'],row['irq_beam'],row['irq_level'],
+        row['saved_pc_offset']>>16,row['saved_pc_offset']&0xffff,row['status'],row['aux'])
+    for key,hw,emu in pairs:
+        if key not in expected: raise ValueError(f'Invalid kind46 descriptor {key}')
+        if key in seen: raise ValueError(f'Duplicate kind46 descriptor {key}')
+        seen.add(key)
+        _,ashift,pattern_index,region_index,delay,repeat=key
+        if (ashift not in range(16) or pattern_index not in range(len(patterns)) or
+                region_index not in range(len(regions)) or delay!=0 or repeat not in range(8)):
+            raise ValueError(f'Invalid kind46 CPU-write descriptor {key}')
+        if hw['launch_beam']!=emu['launch_beam']:
+            raise ValueError(f'Kind46 launch position differs for {key}')
+        if any(row[field] != 0 for row in (hw,emu) for field in ('launch_ref','end_ref')):
+            raise ValueError(f'Kind46 post-BBUSY D readback is nonzero for {key}')
+        hseq,eseq=samples(hw),samples(emu)
+        pattern,region=patterns[pattern_index],regions[region_index]
+        output.append(dict(ashift=ashift,pattern=pattern['name'],data=f"0x{pattern['data']:04x}",
+            scratch_region=region['name'],scratch_address=f"0x{region['address']:08x}",
+            repeat=repeat,delay=delay,launch_beam=hw['launch_beam'],
+            hardware_samples=list(hseq),emulator_samples=list(eseq),
+            hardware_d_readbacks=[hw['launch_ref'],hw['end_ref']],
+            emulator_d_readbacks=[emu['launch_ref'],emu['end_ref']],
+            hardware_bzero=[bool(value&0x2000) for value in hseq],
+            emulator_bzero=[bool(value&0x2000) for value in eseq],
+            raw_mismatch=(hseq!=eseq or hw['end_beam']!=emu['end_beam'] or
+                hw['second_counter_or_beam']!=emu['second_counter_or_beam'] or
+                hw['second_icr_or_level']!=emu['second_icr_or_level'])))
+    if seen!=expected:
+        raise ValueError(f'Incomplete kind46 descriptor matrix; missing {sorted(expected-seen)[:3]}')
+    return dict(kind=46,groups=sorted(output,key=lambda row:(row['ashift'],row['pattern'],
+        row['scratch_region'],row['repeat'])),
+        record_layout=dict(launch_beam=12,d_readback_first_d=14,d_readback_second_d=18,
+            samples_offset=20,sample_count=8,sample6_offset32=32,
+            postread_beam=16,post_sequence_beam=36,postbusy_beam=38),
+        note='Kind46 writes the literal CPU D3 word to chip or slow scratch RAM immediately after line BLTSIZE, then reads DMACONR eight times consecutively. After BBUSY clears it reads D[0x10000] and D[0x11050] into the legacy launch_ref/end_ref fields; both must remain zero. Line inputs are fixed at A=8000, B=C=0, LF=CA, BSHIFT=0, two pixels; beam phase is held constant.')
+
+
 def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emulator_sha256=None):
     provenance = capture_provenance(emu_folder, expected_emulator_binary, expected_emulator_sha256)
     hm, hr = load(hw_folder)
@@ -1198,7 +1241,7 @@ def compare(hw_folder, emu_folder, expected_emulator_binary=None, expected_emula
     pairs = _paired_rows(hr, er)
     kinds = {key[0] for key, _, _ in pairs}
     reports = []
-    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup, 28: _compare_line_pipeline, 29: _compare_line_truth_table, 30: _compare_line_stage, 31: lambda rows: _compare_line_b_hold(rows,0), 32: lambda rows: _compare_line_b_hold(rows,1), 33: _compare_line_b_mask, 34: _compare_line_b_prime, 35: _compare_line_word_control, 36: _compare_line_shift_truth, 37: _compare_line_wrap, 38: _compare_line_c_cross, 39: _compare_line_c_words, 40: _compare_line_c_tomography, 41: _compare_line_c_onset, 42: _compare_line_c_read_sequence}
+    funcs = {18: _compare_cpu, 19: _compare_observers, 20: _compare_div_irq, 21: _compare_aligned, 22: _compare_bzero, 23: _compare_irq_paths, 24: _compare_bzero_line, 25: _compare_line_logic, 26: _compare_line_logic_fine, 27: _compare_line_logic_followup, 28: _compare_line_pipeline, 29: _compare_line_truth_table, 30: _compare_line_stage, 31: lambda rows: _compare_line_b_hold(rows,0), 32: lambda rows: _compare_line_b_hold(rows,1), 33: _compare_line_b_mask, 34: _compare_line_b_prime, 35: _compare_line_word_control, 36: _compare_line_shift_truth, 37: _compare_line_wrap, 38: _compare_line_c_cross, 39: _compare_line_c_words, 40: _compare_line_c_tomography, 41: _compare_line_c_onset, 42: _compare_line_c_read_sequence, 46: _compare_line_c_bus_data}
     for kind in sorted(kinds):
         if kind not in funcs:
             raise ValueError(f'Unsupported experiment kind {kind}')

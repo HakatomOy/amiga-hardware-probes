@@ -658,3 +658,86 @@ line_c_read_postbusy:
         move.w 6(a6),38(a4)
         move.l (sp)+,d7
         rts
+
+; Kind44 starts the line blit after ROM beam alignment. The direct observer
+; immediately performs eight DMACONR reads; all beam/result stores follow.
+; The poll observer waits for BBUSY to clear before taking the same sequence.
+        dcb.b $ff7600-*,0
+line_c_activity_direct:
+        move.l d7,a0
+        jsr $fb0000
+        move.w 6(a6),a2
+        move.w d5,(a1)
+        move.w $02(a6),d0
+        move.w $02(a6),d1
+        move.w $02(a6),d2
+        move.w $02(a6),d3
+        move.w $02(a6),d4
+        move.w $02(a6),d5
+        move.w $02(a6),d6
+        move.w $02(a6),d7
+        movem.w d0-d7,20(a4)
+        move.w a2,12(a4)
+        move.w 6(a6),36(a4)
+        move.w 6(a6),16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.w 6(a6),38(a4)
+        move.l a0,d7
+        rts
+
+        dcb.b $ff7700-*,0
+line_c_activity_poll:
+        move.l d7,a0
+        jsr $fb0000
+        move.w 6(a6),a2
+        move.w d5,(a1)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.w $02(a6),d0
+        move.w $02(a6),d1
+        move.w $02(a6),d2
+        move.w $02(a6),d3
+        move.w $02(a6),d4
+        move.w $02(a6),d5
+        move.w $02(a6),d6
+        move.w $02(a6),d7
+        movem.w d0-d7,20(a4)
+        move.w a2,12(a4)
+        move.w 6(a6),36(a4)
+        move.w 6(a6),16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.w 6(a6),38(a4)
+        move.l a0,d7
+        rts
+
+; Kind46 writes D3 to the selected chip/slow address directly after BLTSIZE.
+; The following eight CPU reads are adjacent DMACONR accesses; beam/result
+; stores and BBUSY polling happen only after the raw sample sequence.
+        dcb.b $ff7800-*,0
+line_c_bus_data_observer:
+        move.l d7,a0
+        jsr $fb0000
+        move.w 6(a6),a2
+        move.w d5,(a1)
+        move.w d3,(a3)
+        move.w $02(a6),d0
+        move.w $02(a6),d1
+        move.w $02(a6),d2
+        move.w $02(a6),d3
+        move.w $02(a6),d4
+        move.w $02(a6),d5
+        move.w $02(a6),d6
+        move.w $02(a6),d7
+        movem.w d0-d7,20(a4)
+        move.w a2,12(a4)
+        move.w 6(a6),36(a4)
+        move.w 6(a6),16(a4)
+        btst #6,$02(a6)
+        bne.s *-6
+        move.w 6(a6),38(a4)
+        move.w $10000,14(a4)
+        move.w $11050,18(a4)
+        move.l a0,d7
+        rts

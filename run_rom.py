@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Run exactly the measurement ROM in Copperline, stopping before RBCP."""
-import argparse,base64,hashlib,json,os,socket,subprocess,time
+import argparse,base64,hashlib,json,os,socket,struct,subprocess,time
 from pathlib import Path
 import rom_results
 ROOT=Path(__file__).resolve().parent
@@ -72,6 +72,91 @@ def run(binary,out,config=None,romdir=None):
             data=base64.b64decode(result['data'])
             capture=out/'capture.bin';capture.write_bytes(data)
             rom_results.extract(capture,out,manifest=manifest_path)
+            if 'line_c_bus_data_observer' in manifest:
+                addresses=manifest['line_c_bus_data_observer']['source_addresses']
+                lengths=manifest['line_c_bus_data_observer']['source_lengths']
+                source_checks={}
+                for channel,name in (('a','A'),('b','B'),('c','C')):
+                    address=addresses[channel]
+                    length=lengths[channel]
+                    memory=rpc('mem.read',dict(addr=address,len=length,encoding='base64'))
+                    actual=base64.b64decode(memory['data'])
+                    expected=bytes(length)
+                    source_checks[name]=dict(address=address,expected=expected.hex(),
+                                             actual=actual.hex(),matches=actual==expected)
+                second_c_address=manifest['line_c_bus_data_observer']['final_verification']['c_second_word_address']
+                second_c_memory=rpc('mem.read',dict(addr=second_c_address,len=2,encoding='base64'))
+                second_c_actual=base64.b64decode(second_c_memory['data'])
+                source_checks['C_second_word']=dict(address=second_c_address,expected='0000',
+                    actual=second_c_actual.hex(),matches=second_c_actual==b'\0\0')
+                verification=manifest['line_c_bus_data_observer']['final_verification']
+                result_rows=json.loads((out/'results.json').read_text())['records']
+                readback_spec=manifest['line_c_bus_data_observer']['postbusy_readbacks']
+                result_checks={}
+                for name,spec,field in (('first_d',readback_spec['first_d'],'launch_ref'),
+                                        ('second_d',readback_spec['second_d'],'end_ref')):
+                    failures=[dict(record=index,descriptor=manifest['trials'][index],actual=row[field])
+                              for index,row in enumerate(result_rows) if row[field]!=spec['expected']]
+                    result_checks[name]=dict(address=spec['address'],field=field,
+                        expected=spec['expected'],record_count=len(result_rows),
+                        mismatch_count=len(failures),offenders=failures[:16],
+                        matches=not failures)
+                scratch_checks={}
+                expected_word=struct.pack('>H',verification['pattern'])
+                for address in verification['scratch_addresses']:
+                    memory=rpc('mem.read',dict(addr=address,len=2,encoding='base64'))
+                    actual=base64.b64decode(memory['data'])
+                    scratch_checks[f'0x{address:08x}']=dict(expected=expected_word.hex(),
+                                                            actual=actual.hex(),
+                                                            matches=actual==expected_word)
+                check_report=dict(checkpoint='collection_done',descriptor=manifest['trials'][-1],
+                                  source_memory=source_checks,postbusy_d_readbacks=result_checks,
+                                  scratch_words=scratch_checks)
+                (out/'source-memory-check.json').write_text(json.dumps(check_report,indent=2)+'\n')
+                if not all(check['matches'] for check in source_checks.values()) or \
+                        not all(check['matches'] for check in scratch_checks.values()) or \
+                        not all(check['matches'] for check in result_checks.values()):
+                    raise RuntimeError('Kind46 source/scratch-memory verification failed at collection_done')
+                prime=None
+            elif 'line_c_history_observer' in manifest:
+                descriptor=manifest['trials'][-1]
+                pattern=manifest['line_c_history_patterns'][descriptor[2]]
+                presets=manifest['line_c_history_presets']
+                cfirst=presets[descriptor[1]]['c_first']
+                prime=manifest['line_c_history_priming']
+                expected={
+                    'a': struct.pack('>8H', *([pattern['a']]*8)),
+                    'b': struct.pack('>8H', *([pattern['b']]*8)),
+                    'c': struct.pack('>8H',cfirst,*([0]*7)),
+                }
+                pattern_name=pattern['name']
+                failure='Kind45 source-memory verification failed at collection_done'
+            elif 'line_c_activity_observer' in manifest:
+                descriptor=manifest['trials'][-1]
+                prime=manifest['line_c_activity_observer']['priming']
+                cfirst=manifest['line_c_activity_presets'][descriptor[1]]['c_first']
+                expected={
+                    'a': bytes(16),
+                    'b': bytes(16),
+                    'c': struct.pack('>8H',cfirst,*([0]*7)),
+                }
+                pattern_name='kind44-zero-prime'
+                failure='Kind44 source-memory verification failed at collection_done'
+            else:
+                prime=None
+            if prime is not None:
+                checks={}
+                for channel,name in (('a','A'),('b','B'),('c','C')):
+                    address=prime['source_addresses'][channel]
+                    memory=rpc('mem.read',dict(addr=address,len=16,encoding='base64'))
+                    actual=base64.b64decode(memory['data'])
+                    checks[name]=dict(address=address,expected=expected[channel].hex(),
+                                      actual=actual.hex(),matches=actual==expected[channel])
+                check_report=dict(checkpoint='collection_done',pattern=pattern_name,
+                                  descriptor=descriptor,channels=checks)
+                (out/'source-memory-check.json').write_text(json.dumps(check_report,indent=2)+'\n')
+                if not all(check['matches'] for check in checks.values()):
+                    raise RuntimeError(failure)
             rpc('step',dict(count=3))
             rpc('capture.screenshot',dict(path=str(out/'screen.png')))
             _write_invocation(out,binary,command,binary_sha256,time.monotonic()-started)

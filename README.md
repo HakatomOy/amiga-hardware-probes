@@ -1,4 +1,4 @@
-# A500 IRQ probe disk
+# Amiga hardware probes
 
 A standalone, reproducibly built bootable ADF for measuring interrupt behavior
 on an unaccelerated Amiga 500 with a 68000. It buffers measurements in chip RAM,
@@ -25,7 +25,7 @@ On this Windows machine, with Ubuntu-24.04 WSL and GCC/make installed:
 
 ```powershell
 python tools/setup_vasm.py --wsl
-python build.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot
+python build.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot
 python -m unittest discover -s tests -v
 ```
 
@@ -162,17 +162,17 @@ Copper-generated STOP/IRQ trials and the line-mode BZERO plus destination-memory
 matrix (2,560 rows):
 
 ```powershell
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --irq-paths
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --bzero-line
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic-fine
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-logic-followup
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-pipeline
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-truth-table
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-stage
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-b-hold
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-b-hold-dma
-python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --line-b-mask
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --irq-paths
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --bzero-line
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-logic
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-logic-fine
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-logic-followup
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-pipeline
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-truth-table
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-stage
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-b-hold
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-b-hold-dma
+python build_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --line-b-mask
 ```
 
 `--line-logic` builds kind 25 (3,456 trials): line minterms `$00/$ff/$ca/$f0`,
@@ -318,6 +318,77 @@ word offsets 20-34 (sample six is at offset 32, normally named `status`),
 launch beam is at 12, post-read beam at 16, presample beam at 36, and the beam
 after BBUSY clears at 38. The early and postbusy stubs are at `$FF7400` and
 `$FF7500`; their layout and literal C presets are recorded in the manifest.
+
+`--line-c-activity` builds kind44 (320 trials): the same five first-C words
+and two A-data values cross unprimed versus fully A/B/C-primed state, direct
+versus BBUSY-poll observation, and eight repeats. Both observer modes use
+phase 0 and the same launch beam. The primed control performs an eight-word
+normal A/B/C/D blit from zero-filled source words to a separate destination,
+then restores ADAT and C-first-word inputs for the line blit. The direct
+observer reads DMACONR immediately after BLTSIZE; the poll observer waits for
+BBUSY to clear first. Both retain the eight raw reads at offsets 20-34,
+launch beam at 12, post-sequence beam at 36, endpoint at 16, and postbusy beam
+at 38. `build_line_c_activity_rom.py` archives the immutable ROM and a source
+snapshot. The headless runner also reads back the A/B/C input words through
+CCP at `collection_done` for this kind.
+
+`build_line_c_history_rom.py` builds kind45 (960 trials): the same ten first-C/A
+presets cross six normal-mode history conditions (`none`, explicit all-zero,
+A-only `$FFFF`, B-only `$FFFF`, C-only `$FFFF`, and all channels `$FFFF`),
+direct versus BBUSY-poll observation, and eight repeats. For each non-`none`
+condition, the controller writes eight literal words to each A/B/C source and
+performs the same eight-word `$0FCA` normal blit used by kind44. It then clears
+the prime destination, restores C memory to the selected first-C word followed
+by seven zeros, restores the ADAT/CDAT line inputs, and uses the unchanged
+kind44 observer stubs. A/B source words remain at their selected prime values
+for CCP verification after collection. `--patterns` accepts a comma-separated
+subset of the six names; the default is the complete 960-row matrix. The build
+archive contains its manifest, ROM image, and hashed source snapshot.
+
+`build_line_c_bus_data_rom.py` builds kind46 (1,536 trials): ASHIFT 0-15 is
+crossed with six literal CPU D3 words (`$0000/$FFFF/$2000/$0800/$2800/$D7FF`),
+chip `$18000` versus slow `$C01000` scratch, and eight repeats. The line-blit
+inputs are fixed at A=`$8000`, B=C=0, LF=`$CA`, BSHIFT=0 and two pixels. At the
+same ROM-aligned point in every trial, FF7800 writes D3 to `(A3)` immediately
+after BLTSIZE, then reads DMACONR eight times without an intervening
+instruction. The runner verifies zero A/B/C source memory and the final
+`$D7FF` word at both scratch addresses through CCP. After the eight samples
+and BBUSY clears, the observer also reads D words at `$10000` and `$11050`
+into the record's legacy `launch_ref`/`end_ref` fields; both must remain zero.
+Build and preflight into
+new directories:
+
+```powershell
+python build_line_c_bus_data_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --out build/line-c-bus-data-kind46-run
+python run_rom.py --binary ../Copperline/target/release/copperline.exe --romdir build/line-c-bus-data-kind46-run --out captures/rom-copperline-line-c-bus-data-run
+python run_winuae_rom.py --binary "C:/Program Files/WinUAE/WinUAE.exe" --romdir build/line-c-bus-data-kind46-run --out captures/rom-winuae-line-c-bus-data-run
+python compare_timing_sweeps.py captures/rom-winuae-line-c-bus-data-run captures/rom-copperline-line-c-bus-data-run --out captures/kind46-copperline-winuae-run.json
+```
+
+The physical A500 capture has not been run for kind46. See
+[`line-c-bus-data-experiment.md`](docs/line-c-bus-data-experiment.md) for the
+control rationale and comparison limits.
+
+For direct bus observation, `tools/build_bus_address_rom.py` and
+`tools/build_scope_bzero_rom.py` create immutable, source-snapshotted 512 KiB
+ROM archives. Always choose a new `--out` directory; builders refuse to
+replace an existing archive. The analyzer parses RG03 captures and writes
+decoded custom-register windows and raw sample provenance:
+
+```powershell
+python tools/build_bus_address_rom.py --out build/scope-address-new
+python tools/build_scope_bzero_rom.py --c-pattern zero --b-data ffff --out build/scope-bzero-new
+python tools/analyze_bzero_bus.py captures/bzero-scope-2026-10-16/bzero-c0000-bffff.bin --nominal-cpu-reference-hz 7093790 --output captures/bzero-scope-2026-10-16/bzero-c0000-bffff-new-analysis.json
+```
+
+The analyzer's CPU-time scale is estimated from the nominal reference; the
+RG03 LA time-increment header is not trusted. Wiring and interpretation limits
+are documented in [`a500-bzero-bus-validation-2026-10-16.md`](docs/a500-bzero-bus-validation-2026-10-16.md).
+
+The experiment records the full literal pattern table and all assembler inputs
+in the immutable archive's `manifest.json` and `source_snapshot/manifest.json`.
+The runner checks final A/B/C memory against the final trial descriptor, so the
+default ordering ends on all-`$FFFF` and verifies both retained A/B patterns.
 
 Archive each generated ROM and its source snapshot before collecting hardware
 data. Compare validated hardware and emulator capture folders with:

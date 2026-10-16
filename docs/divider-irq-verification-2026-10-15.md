@@ -125,7 +125,7 @@ readback files are in `captures/divider-irq-2026-10-15-backup`.
 ## Reproduction and validation
 
 ```powershell
-python build_divider_irq_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/a500-irq-probe/.tools/vasm/vasmm68k_mot --out build/divider-irq-new
+python build_divider_irq_rom.py --wsl --vasm /mnt/c/Users/seppo/amiga/amiga-hardware-probes/.tools/vasm/vasmm68k_mot --out build/divider-irq-new
 python run_winuae_rom.py --binary 'C:\Program Files\WinUAE\winuae64_603.exe' --romdir build/divider-irq-new --out captures/divider-irq-winuae-new
 python run_rom.py --binary ../Copperline/target/release/copperline.exe --romdir build/divider-irq-new --out captures/divider-irq-copperline-new
 python compare_divider_irq.py captures/divider-irq-a500-v3/results.json captures/divider-irq-winuae-v3/results.json captures/divider-irq-copperline-v3/results.json --out captures/divider-irq-comparison-new.json

@@ -143,6 +143,12 @@ main:
         beq .irq_focus
         cmpi.w #42,(a4)
         beq .line_c_read_sequence
+        cmpi.w #44,(a4)
+        beq .line_c_activity
+        cmpi.w #45,(a4)
+        beq .line_c_history
+        cmpi.w #46,(a4)
+        beq .line_c_bus_data
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -218,6 +224,15 @@ main:
         bra.w .recorded
 .line_c_read_sequence:
         jsr line_c_read_sequence_trial
+        bra.w .recorded
+.line_c_activity:
+        jsr line_c_activity_trial
+        bra.w .recorded
+.line_c_history:
+        jsr line_c_history_trial
+        bra.w .recorded
+.line_c_bus_data:
+        jsr line_c_bus_data_trial
         bra.w .recorded
 .divirq:
         bsr divirq_trial
@@ -1293,7 +1308,7 @@ line_wrap_trial:
         move.w d5,$70(a6)
         bra.s .wrap_data_ready
 .wrap_data_c_words:
-        move.w #0,$74(a6)
+        move.w d5,$74(a6)
         move.w #0,$72(a6)
         move.w d5,$70(a6)
         bra.s .wrap_data_ready
@@ -1303,7 +1318,7 @@ line_wrap_trial:
         move.w #0,$70(a6)
         bra.s .wrap_data_ready
 .wrap_data_onset:
-        move.w d5,$74(a6)
+        move.w #0,$74(a6)
         move.w #0,$72(a6)
         move.w #0,$70(a6)
 .wrap_data_ready:
@@ -2722,6 +2737,306 @@ line_c_read_sequence_trial:
         rts
 
         include "line_c_read_sequence_presets.i"
+        even
+
+; Kind44 repeats kind42's inputs with an explicit normal-mode A/B/C/D blit
+; before the line blit in the primed variant. This seeds all three fetched
+; source channels through real DMA before changing to line mode.
+line_c_activity_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.activity_clear_d: move.w d0,(a0)+
+        dbra d7,.activity_clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #2,d0
+        move.w d0,d1
+        lsl.w #1,d0
+        add.w d1,d0
+        movea.l #line_c_activity_presets,a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w (a0)+,d6
+        move.w (a0)+,d7
+        move.w (a0)+,d2
+        move.w #0,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+        lea $12000,a0
+        moveq #0,d0
+        move.w #7,d1
+.activity_fill_a: move.w d0,(a0)+
+        dbra d1,.activity_fill_a
+        lea $16000,a0
+        moveq #0,d0
+        move.w #7,d1
+.activity_fill_b: move.w d0,(a0)+
+        dbra d1,.activity_fill_b
+        lea $11000,a0
+        move.w #7,d1
+.activity_fill_c: move.w d0,(a0)+
+        dbra d1,.activity_fill_c
+        lea $17000,a0
+        moveq #0,d0
+        move.w #7,d1
+.activity_clear_prime_d: move.w d0,(a0)+
+        dbra d1,.activity_clear_prime_d
+        move.w d2,$40(a6)
+        move.w d7,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #0,$64(a6)
+        move.w #0,$62(a6)
+        move.w #0,$60(a6)
+        move.w #0,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #$12000,$50(a6)
+        move.l #$17000,$54(a6)
+        btst #0,4(a4)
+        beq.s .activity_unprimed
+        move.w #$0fca,$40(a6)
+        move.w #0,$42(a6)
+        move.w #$8240,$96(a6)
+        move.w #$0088,$58(a6)
+.activity_prime_busy: btst #6,$02(a6)
+        beq.s .activity_prime_busy
+.activity_prime_done: btst #6,$02(a6)
+        bne.s .activity_prime_done
+.activity_unprimed:
+        move.w d5,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+        move.w d3,$11000
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        move.w d2,$40(a6)
+        move.w d7,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        lea $58(a6),a1
+        jsr sync_beam
+        move.w d6,d5
+        movea.l #$ff7600,a2
+        cmpi.w #1,8(a4)
+        beq.s .activity_poll_observer
+        bra.s .activity_observer_ready
+.activity_poll_observer:
+        movea.l #$ff7700,a2
+.activity_observer_ready:
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+
+        include "line_c_activity_presets.i"
+        even
+
+; Kind45 repeats kind42's inputs after a selected normal-mode A/B/C/D blit.
+; Its literal source patterns exercise full, partial and zero DMA histories
+; before the unchanged line-mode observer begins.
+line_c_history_trial:
+        move.l d7,-(sp)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.history_clear_d: move.w d0,(a0)+
+        dbra d7,.history_clear_d
+        moveq #0,d0
+        move.w 2(a4),d0
+        lsl.w #2,d0
+        move.w d0,d1
+        lsl.w #1,d0
+        add.w d1,d0
+        movea.l #line_c_history_presets,a0
+        adda.w d0,a0
+        move.w (a0)+,d3
+        move.w (a0)+,d4
+        move.w (a0)+,d5
+        move.w (a0)+,d6
+        move.w (a0)+,d7
+        move.w (a0)+,d2
+        move.w #0,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+        moveq #0,d0
+        move.w 4(a4),d0
+        move.w d0,d1
+        lsl.w #1,d0
+        add.w d1,d0
+        lsl.w #1,d0
+        lea line_c_history_patterns,a2
+        adda.w d0,a2
+        move.w (a2)+,d1
+        lea $12000,a0
+        moveq #7,d0
+.history_fill_a: move.w d1,(a0)+
+        dbra d0,.history_fill_a
+        move.w (a2)+,d1
+        lea $16000,a0
+        moveq #7,d0
+.history_fill_b: move.w d1,(a0)+
+        dbra d0,.history_fill_b
+        move.w (a2)+,d1
+        lea $11000,a0
+        moveq #7,d0
+.history_fill_c: move.w d1,(a0)+
+        dbra d0,.history_fill_c
+        lea $17000,a0
+        moveq #0,d0
+        move.w #7,d1
+.history_clear_prime_d: move.w d0,(a0)+
+        dbra d1,.history_clear_prime_d
+        move.w d2,$40(a6)
+        move.w d7,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #0,$64(a6)
+        move.w #0,$62(a6)
+        move.w #0,$60(a6)
+        move.w #0,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #$12000,$50(a6)
+        move.l #$17000,$54(a6)
+        tst.w 4(a4)
+        beq.s .history_unprimed
+        move.w #$0fca,$40(a6)
+        move.w #0,$42(a6)
+        move.w #$8240,$96(a6)
+        move.w #$0088,$58(a6)
+.history_prime_busy: btst #6,$02(a6)
+        beq.s .history_prime_busy
+.history_prime_done: btst #6,$02(a6)
+        bne.s .history_prime_done
+.history_unprimed:
+        moveq #0,d0
+        lea $17000,a0
+        moveq #7,d1
+.history_clear_prime_d_after: move.w d0,(a0)+
+        dbra d1,.history_clear_prime_d_after
+        lea $11000,a0
+        moveq #7,d1
+.history_reset_c: move.w d0,(a0)+
+        dbra d1,.history_reset_c
+        move.w d3,$11000
+        move.w d5,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+        move.w d3,$11000
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        move.w d2,$40(a6)
+        move.w d7,$42(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        lea $58(a6),a1
+        jsr sync_beam
+        move.w d6,d5
+        movea.l #$ff7600,a2
+        cmpi.w #1,8(a4)
+        beq.s .history_poll_observer
+        bra.s .history_observer_ready
+.history_poll_observer:
+        movea.l #$ff7700,a2
+.history_observer_ready:
+        jsr (a2)
+        move.l (sp)+,d7
+        rts
+
+        include "line_c_history_presets.i"
+        include "line_c_history_patterns.i"
+        even
+
+; Kind46 writes a selected CPU word to chip or slow RAM immediately after
+; BLTSIZE, then samples eight consecutive DMACONR words. Its source channels
+; remain zero, and the two scratch destinations are outside the D area.
+line_c_bus_data_trial:
+        move.l a3,-(sp)
+        move.l d7,-(sp)
+        move.w 6(a4),-(sp)
+        clr.w 6(a4)
+        move.w #$7fff,$96(a6)
+        lea $10000,a0
+        moveq #0,d0
+        move.w #1023,d7
+.bus_data_clear_d: move.w d0,(a0)+
+        dbra d7,.bus_data_clear_d
+        lea $12000,a0
+        moveq #7,d7
+.bus_data_clear_a: move.w d0,(a0)+
+        dbra d7,.bus_data_clear_a
+        lea $16000,a0
+        moveq #7,d7
+.bus_data_clear_b: move.w d0,(a0)+
+        dbra d7,.bus_data_clear_b
+        lea $11000,a0
+        move.w #81,d7
+.bus_data_clear_c: move.w d0,(a0)+
+        dbra d7,.bus_data_clear_c
+        move.w d0,$11050
+        move.w #$8000,$74(a6)
+        move.w #0,$72(a6)
+        move.w #0,$70(a6)
+        move.w #$ffff,$44(a6)
+        move.w #$ffff,$46(a6)
+        move.w #-280,$64(a6)
+        move.w #0,$62(a6)
+        move.w #80,$60(a6)
+        move.w #80,$66(a6)
+        move.l #$11000,$48(a6)
+        move.l #$16000,$4c(a6)
+        move.l #-80,$50(a6)
+        move.l #$10000,$54(a6)
+        move.w 2(a4),d0
+        lsl.w #8,d0
+        lsl.w #4,d0
+        ori.w #$0bca,d0
+        move.w d0,$40(a6)
+        move.w #$0001,$42(a6)
+        move.w #$7fff,$96(a6)
+        move.w #$8240,$96(a6)
+        lea $58(a6),a1
+        move.w #$0082,d5
+        jsr sync_beam
+        move.w 4(a4),d0
+        add.w d0,d0
+        lea line_c_bus_data_patterns,a2
+        adda.w d0,a2
+        move.w (a2),d3
+        move.w (sp),d0
+        lsl.w #2,d0
+        lea line_c_bus_data_regions,a3
+        adda.w d0,a3
+        movea.l (a3),a3
+        movea.l #$ff7800,a2
+        jsr (a2)
+        move.w (sp)+,6(a4)
+        move.l (sp)+,d7
+        move.l (sp)+,a3
+        rts
+
+        include "line_c_bus_data_patterns.i"
+        include "line_c_bus_data_regions.i"
         even
 
 ; Kind 43: masked Copper COPER request visibility and straight-line CPU IPL observations.

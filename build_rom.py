@@ -243,6 +243,37 @@ def line_c_read_sequence_presets():
     return presets
 
 
+def line_c_activity_presets():
+    """Kind44 reuses the five C words and two A-data controls from kind42."""
+    return line_c_read_sequence_presets()
+
+
+def line_c_history_patterns():
+    """Kind45 normal-mode priming values for the eight-word A/B/C sources."""
+    return [
+        dict(index=0, name='none', a=0x0000, b=0x0000, c=0x0000, blit=False),
+        dict(index=1, name='all-zero', a=0x0000, b=0x0000, c=0x0000, blit=True),
+        dict(index=2, name='a-ffff', a=0xffff, b=0x0000, c=0x0000, blit=True),
+        dict(index=3, name='b-ffff', a=0x0000, b=0xffff, c=0x0000, blit=True),
+        dict(index=4, name='c-ffff', a=0x0000, b=0x0000, c=0xffff, blit=True),
+        dict(index=5, name='all-ffff', a=0xffff, b=0xffff, c=0xffff, blit=True),
+    ]
+
+
+def line_c_bus_data_patterns():
+    """Kind46 CPU D3 words written immediately after line BLTSIZE."""
+    return [
+        dict(index=index, name=f"d{value:04x}", data=value)
+        for index, value in enumerate((0x0000, 0xffff, 0x2000, 0x0800, 0x2800, 0xd7ff))
+    ]
+
+
+def line_c_bus_data_regions():
+    """Chip/slow CPU write destinations; values are literal byte addresses."""
+    return [dict(index=0, name="chip", address=0x00018000),
+            dict(index=1, name="slow", address=0x00c01000)]
+
+
 def line_stage_profiles():
     """Kind30 pairs of first/second C words crossed with USEB off/on."""
     source_profiles=(('zero_zero',0x0000,0x0000),('zero_full',0x0000,0xffff),
@@ -380,7 +411,20 @@ def line_word_control_delays():
             for index,delay in enumerate((0,1,2,4,16))]
 
 
-def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4,line_c_read_sequence=False):
+def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4,line_c_read_sequence=False,line_c_activity=False,line_c_history=False,line_c_history_subset=None,line_c_bus_data=False):
+    if line_c_bus_data:
+        return [(46,ashift,pattern,region,0,repeat)
+                for ashift in range(16) for pattern in range(len(line_c_bus_data_patterns()))
+                for region in range(len(line_c_bus_data_regions())) for repeat in range(8)]
+    if line_c_history:
+        selected=set(range(len(line_c_history_patterns()))) if line_c_history_subset is None else set(line_c_history_subset)
+        return [(45,preset['index'],pattern,0,observer,repeat)
+                for preset in line_c_activity_presets() for pattern in range(len(line_c_history_patterns()))
+                if pattern in selected for observer in (0,1) for repeat in range(8)]
+    if line_c_activity:
+        return [(44,preset['index'],prime,0,observer,repeat)
+                for preset in line_c_activity_presets() for prime in (0,1)
+                for observer in (0,1) for repeat in range(8)]
     if line_c_read_sequence:
         return [(42,preset['index'],observer,0,0,repeat)
                 for preset in line_c_read_sequence_presets() for observer in (0,1)
@@ -542,17 +586,17 @@ def trials(focused=False,continuous=False,modes=False,pulses=False,reads=False,l
                             rows.append((10,source,kernel,phase,dma+memory*4,repeat))
     return rows
 
-def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4,line_c_read_sequence=False):
+def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=False,reads=False,loads=False,blits=False,cpu=False,edges=False,channels=False,observe=0,priority=False,bzero=False,irq_paths=False,bzero_line=False,line_logic=False,line_logic_fine=False,line_logic_followup=False,line_pipeline=False,line_truth_table=False,line_stage=False,line_b_hold=False,line_b_hold_dma=False,line_b_mask=False,line_b_prime=False,line_word_control=False,line_shift_truth=False,line_wrap=False,line_c_cross=False,line_c_words=False,line_c_tomography=False,line_c_tomography_shift=4,line_c_onset=False,line_c_onset_shift=4,line_c_read_sequence=False,line_c_activity=False,line_c_history=False,line_c_history_subset=None,line_c_bus_data=False):
     hold_mode=line_b_hold or line_b_hold_dma
     hold_useb=1 if line_b_hold_dma else 0
     edge_kernel=any((edges,channels,cpu,priority,bzero,irq_paths,bzero_line,line_logic,
         line_logic_fine,line_logic_followup,line_pipeline,line_truth_table,line_stage,
-        hold_mode,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_onset,line_c_read_sequence))
+        hold_mode,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_onset,line_c_read_sequence,line_c_activity,line_c_history,line_c_bus_data))
     if not 0 <= line_c_tomography_shift <= 15:
         raise ValueError('line_c_tomography_shift must be 0..15')
     if not 0 <= line_c_onset_shift <= 15:
         raise ValueError('line_c_onset_shift must be 0..15')
-    rows=trials(focused,continuous,modes,pulses,reads,loads,blits,cpu,edges,channels,observe,priority,bzero,irq_paths,bzero_line,line_logic,line_logic_fine,line_logic_followup,line_pipeline,line_truth_table,line_stage,line_b_hold,line_b_hold_dma,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_tomography_shift,line_c_onset,line_c_onset_shift,line_c_read_sequence)
+    rows=trials(focused,continuous,modes,pulses,reads,loads,blits,cpu,edges,channels,observe,priority,bzero,irq_paths,bzero_line,line_logic,line_logic_fine,line_logic_followup,line_pipeline,line_truth_table,line_stage,line_b_hold,line_b_hold_dma,line_b_mask,line_b_prime,line_word_control,line_shift_truth,line_wrap,line_c_cross,line_c_words,line_c_tomography,line_c_tomography_shift,line_c_onset,line_c_onset_shift,line_c_read_sequence,line_c_activity,line_c_history,line_c_history_subset,line_c_bus_data)
     build=ROOT/'build/rom'; build.mkdir(parents=True,exist_ok=True)
     sources=sorted([ROOT/'build_rom.py',*list((ROOT/'src/rom').glob('*')),*list((ROOT/'vendor/rbcp').glob('*'))])
     h=hashlib.sha256()
@@ -584,6 +628,15 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
         h.update(json.dumps(line_c_onset_presets(line_c_onset_shift),sort_keys=True).encode())
     if line_c_read_sequence:
         h.update(json.dumps(line_c_read_sequence_presets(),sort_keys=True).encode())
+    if line_c_activity:
+        h.update(json.dumps(line_c_activity_presets(),sort_keys=True).encode())
+    if line_c_history:
+        h.update(json.dumps(line_c_activity_presets(),sort_keys=True).encode())
+        h.update(json.dumps(line_c_history_patterns(),sort_keys=True).encode())
+        h.update(json.dumps(sorted(line_c_history_subset) if line_c_history_subset is not None else None).encode())
+    if line_c_bus_data:
+        h.update(json.dumps(line_c_bus_data_patterns(),sort_keys=True).encode())
+        h.update(json.dumps(line_c_bus_data_regions(),sort_keys=True).encode())
     if line_truth_table:
         h.update(json.dumps(line_truth_profiles(),sort_keys=True).encode())
     if line_stage:
@@ -650,6 +703,30 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
         read_table.append('        dc.w '+','.join(f'${preset[key]&0xffff:04x}'
             for key in ('c_first','c_second','a_data','bltsize','bltcon1','bltcon0')))
     (build/'line_c_read_sequence_presets.i').write_text('\n'.join(read_table)+'\n')
+    activity_table=['line_c_activity_presets:']
+    activity_rows=line_c_activity_presets() if line_c_activity else [line_c_activity_presets()[0]]
+    for preset in activity_rows:
+        activity_table.append('        dc.w '+','.join(f'${preset[key]&0xffff:04x}'
+            for key in ('c_first','c_second','a_data','bltsize','bltcon1','bltcon0')))
+    (build/'line_c_activity_presets.i').write_text('\n'.join(activity_table)+'\n')
+    history_table=['line_c_history_presets:']
+    history_rows=line_c_activity_presets() if line_c_history else [line_c_activity_presets()[0]]
+    for preset in history_rows:
+        history_table.append('        dc.w '+','.join(f'${preset[key]&0xffff:04x}'
+            for key in ('c_first','c_second','a_data','bltsize','bltcon1','bltcon0')))
+    (build/'line_c_history_presets.i').write_text('\n'.join(history_table)+'\n')
+    history_patterns=['line_c_history_patterns:']
+    for pattern in line_c_history_patterns():
+        history_patterns.append('        dc.w '+','.join(f'${pattern[key]:04x}' for key in ('a','b','c')))
+    (build/'line_c_history_patterns.i').write_text('\n'.join(history_patterns)+'\n')
+    bus_data_patterns=['line_c_bus_data_patterns:']
+    for pattern in line_c_bus_data_patterns():
+        bus_data_patterns.append(f"        dc.w ${pattern['data']:04x}")
+    (build/'line_c_bus_data_patterns.i').write_text('\n'.join(bus_data_patterns)+'\n')
+    bus_data_regions=['line_c_bus_data_regions:']
+    for region in line_c_bus_data_regions():
+        bus_data_regions.append(f"        dc.l ${region['address']:08x}")
+    (build/'line_c_bus_data_regions.i').write_text('\n'.join(bus_data_regions)+'\n')
     stage_table=['line_stage_profiles:']
     for profile in line_stage_profiles():
         stage_table.append('        dc.w '+','.join(f'${profile[key]&0xffff:04x}' for key in ('c_first','c_second','useb')))
@@ -712,6 +789,11 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
         kernel_observer_offset=0x20000+(0xff3000-0xfb0000)
         assert data[observer_offset:observer_offset+0x40]==kernel[kernel_observer_offset:kernel_observer_offset+0x40], \
             'Raw ROM FF3000 observer does not match rom_kernel.bin'
+        if line_c_bus_data:
+            observer_offset=kernel_offset+(0xff7800-0xf90000)
+            kernel_observer_offset=0x20000+(0xff7800-0xfb0000)
+            assert data[observer_offset:observer_offset+0x40]==kernel[kernel_observer_offset:kernel_observer_offset+0x40], \
+                'Raw ROM FF7800 kind46 observer does not match rom_kernel.bin'
     assert data[-16:]==bytes.fromhex('00180019001a001b001c001d001e001f')
     swapped=bytearray(data); swapped[0::2]=data[1::2]; swapped[1::2]=data[0::2]
     (build/'a500-timing-rom-onerom.bin').write_bytes(swapped)
@@ -767,6 +849,50 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
             samples=dict(offset=20,count=8,stride=2,source='DMACONR'),
             launch_beam=12,presample_beam=36,postread_beam=16,postbusy_beam=38,
             sample6_offset32='status',wait_bbusy_bit=6)
+    if line_c_activity:
+        manifest['line_c_activity_presets']=line_c_activity_presets()
+        manifest['line_c_activity_observer']=dict(direct=0xff7600,poll=0xff7700,
+            first_c_address=0x11000,c_second=0,cdat=0,bshift=4,
+            samples=dict(offset=20,count=8,stride=2,source='DMACONR'),
+            launch_beam=12,post_sequence_beam=36,endpoint_beam=16,postbusy_beam=38,
+            sample6_offset32='status',wait_bbusy_bit=6,
+            priming=dict(mode='normal_blit',channels='A/B/C/D',bltsize=0x0088,
+                bltcon0=0x0fca,bltcon1=0,source_words='8 zero words each for A/B/C; restore ADAT and Cfirst afterward',
+                source_addresses=dict(a=0x12000,b=0x16000,c=0x11000),destination=0x17000,
+                busy_wait='assert_then_clear'))
+    if line_c_history:
+        manifest['line_c_history_presets']=line_c_activity_presets()
+        manifest['line_c_history_patterns']=line_c_history_patterns()
+        manifest['line_c_history_subset']=sorted(line_c_history_subset) if line_c_history_subset is not None else None
+        manifest['line_c_history_observer']=manifest.get('line_c_activity_observer',dict(
+            direct=0xff7600,poll=0xff7700,first_c_address=0x11000,c_second=0,cdat=0,bshift=4,
+            samples=dict(offset=20,count=8,stride=2,source='DMACONR'),launch_beam=12,
+            post_sequence_beam=36,endpoint_beam=16,postbusy_beam=38,sample6_offset32='status',wait_bbusy_bit=6))
+        manifest['line_c_history_priming']=dict(mode='normal_blit',channels='A/B/C/D',bltsize=0x0088,
+            bltcon0=0x0fca,bltcon1=0,words_per_source=8,source_addresses=dict(a=0x12000,b=0x16000,c=0x11000),
+            destination=0x17000,busy_wait='assert_then_clear',c_source_after_prime='preset first word followed by seven zero words',
+            d_destination_cleared_after_prime=True)
+    if line_c_bus_data:
+        manifest['line_c_bus_data_patterns']=line_c_bus_data_patterns()
+        manifest['line_c_bus_data_regions']=line_c_bus_data_regions()
+        manifest['line_c_bus_data_observer']=dict(address=0xff7800,
+            samples=dict(offset=20,count=8,stride=2,source='DMACONR'),
+            launch_beam=12,post_sequence_beam=36,endpoint_beam=16,postbusy_beam=38,
+            sample6_offset32='status',wait_bbusy_bit=6,
+            write=dict(instruction='move.w d3,(a3)',position='immediately after BLTSIZE',
+                pattern_register='D3',scratch_address_register='A3',
+                equal_instruction_and_addressing_across_chip_and_slow_regions=True),
+            line=dict(a_data=0x8000,b_data=0,c_data=0,minterm=0xca,
+                usea=True,useb=False,usec=True,used=True,bshift=0,pixels=2,
+                bltcon0_base=0x0bca,bltcon1=0x0001,bltapt=-80,
+                c_source=0x11000,d_destination=0x10000),
+            source_addresses=dict(a=0x12000,b=0x16000,c=0x11000),
+            source_lengths=dict(a=16,b=16,c=164),
+            postbusy_readbacks=dict(first_d=dict(address=0x10000,result_offset=14,expected=0),
+                                   second_d=dict(address=0x11050,result_offset=18,expected=0)),
+            final_verification=dict(source_memory_zero_lengths=dict(a=16,b=16,c=164),pattern=0xd7ff,
+                scratch_addresses=[0x18000,0x00c01000],c_second_word_address=0x11050,
+                c_second_word_expected=0))
     if line_truth_table:
         manifest['line_truth_profiles']=line_truth_profiles()
     if line_stage:
@@ -779,10 +905,11 @@ def build(assembler,wsl=False,focused=False,continuous=False,modes=False,pulses=
     return manifest
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); group=p.add_mutually_exclusive_group(); group.add_argument('--focused',action='store_true'); group.add_argument('--continuous',action='store_true'); group.add_argument('--modes',action='store_true'); group.add_argument('--pulses',action='store_true'); group.add_argument('--reads',action='store_true'); group.add_argument('--loads',action='store_true'); group.add_argument('--blits',action='store_true'); group.add_argument('--cpu',action='store_true'); group.add_argument('--edges',action='store_true'); group.add_argument('--channels',action='store_true'); group.add_argument('--priority',action='store_true',help='aligned observer sweep with BLTPRI enabled'); group.add_argument('--bzero',action='store_true',help='BZERO transition observer matrix'); group.add_argument('--irq-paths',action='store_true',help='native and Copper-generated IRQ STOP path matrix'); group.add_argument('--bzero-line',action='store_true',help='line-mode BZERO onset sweep'); group.add_argument('--line-logic',action='store_true',help='line minterm and BZERO/data behavior matrix'); group.add_argument('--line-logic-fine',action='store_true',help='focused 1-CCK line BZERO readback sweep'); group.add_argument('--line-logic-followup',action='store_true',help='focused kind27 line BZERO input/BDAT ordering matrix'); group.add_argument('--line-pipeline',action='store_true',help='kind28 line-mode BZERO pixel-pipeline preset matrix'); group.add_argument('--line-truth-table',action='store_true',help='kind29 line-mode 8-bit minterm truth table'); group.add_argument('--line-stage',action='store_true',help='kind30 line-mode intermediate ALU stage matrix'); group.add_argument('--line-b-hold',action='store_true',help='kind31 line-mode hidden B datapath, USEB off'); group.add_argument('--line-b-hold-dma',action='store_true',help='kind32 line-mode hidden B datapath, USEB on'); group.add_argument('--line-b-mask',action='store_true',help='kind33 BSHIFT/ASHIFT line BZERO mask matrix'); group.add_argument('--line-b-prime',action='store_true',help='kind34 normal-B priming before line BZERO samples'); group.add_argument('--line-word-control',action='store_true',help='kind35 equal-cycle CPU instruction bus-word control'); group.add_argument('--line-shift-truth',action='store_true',help='kind36 shifted B line minterm truth-table closure'); group.add_argument('--line-wrap',action='store_true',help='kind37 BSHIFT and line-length counter-wrap map'); group.add_argument('--line-c-cross',action='store_true',help='kind38 line-mode C dependence with CC minterm'); group.add_argument('--line-c-words',action='store_true',help='kind39 line-mode C first/second memory-word probe'); p.add_argument('--observe',choices=['busy','irq','memory'],default='busy')
+    p=argparse.ArgumentParser(); p.add_argument('--vasm',default='vasmm68k_mot'); p.add_argument('--wsl',action='store_true'); group=p.add_mutually_exclusive_group(); group.add_argument('--focused',action='store_true'); group.add_argument('--continuous',action='store_true'); group.add_argument('--modes',action='store_true'); group.add_argument('--pulses',action='store_true'); group.add_argument('--reads',action='store_true'); group.add_argument('--loads',action='store_true'); group.add_argument('--blits',action='store_true'); group.add_argument('--cpu',action='store_true'); group.add_argument('--edges',action='store_true'); group.add_argument('--channels',action='store_true'); group.add_argument('--priority',action='store_true',help='aligned observer sweep with BLTPRI enabled'); group.add_argument('--bzero',action='store_true',help='BZERO transition observer matrix'); group.add_argument('--irq-paths',action='store_true',help='native and Copper-generated IRQ STOP path matrix'); group.add_argument('--bzero-line',action='store_true',help='line-mode BZERO onset sweep'); group.add_argument('--line-logic',action='store_true',help='line minterm and BZERO/data behavior matrix'); group.add_argument('--line-logic-fine',action='store_true',help='focused 1-CCK line BZERO readback sweep'); group.add_argument('--line-logic-followup',action='store_true',help='focused kind27 line BZERO input/BDAT ordering matrix'); group.add_argument('--line-pipeline',action='store_true',help='kind28 line-mode BZERO pixel-pipeline preset matrix'); group.add_argument('--line-truth-table',action='store_true',help='kind29 line-mode 8-bit minterm truth table'); group.add_argument('--line-stage',action='store_true',help='kind30 line-mode intermediate ALU stage matrix'); group.add_argument('--line-b-hold',action='store_true',help='kind31 line-mode hidden B datapath, USEB off'); group.add_argument('--line-b-hold-dma',action='store_true',help='kind32 line-mode hidden B datapath, USEB on'); group.add_argument('--line-b-mask',action='store_true',help='kind33 BSHIFT/ASHIFT line BZERO mask matrix'); group.add_argument('--line-b-prime',action='store_true',help='kind34 normal-B priming before line BZERO samples'); group.add_argument('--line-word-control',action='store_true',help='kind35 equal-cycle CPU instruction bus-word control'); group.add_argument('--line-shift-truth',action='store_true',help='kind36 shifted B line minterm truth-table closure'); group.add_argument('--line-wrap',action='store_true',help='kind37 BSHIFT and line-length counter-wrap map'); group.add_argument('--line-c-cross',action='store_true',help='kind38 line-mode C dependence with CC minterm'); group.add_argument('--line-c-words',action='store_true',help='kind39 line-mode C first/second memory-word probe'); group.add_argument('--line-c-activity',action='store_true',help='kind44 early line BZERO samples with CPU observer/hold-prime controls'); p.add_argument('--line-c-history',action='store_true',help='kind45 controlled A/B/C nonzero-prime history matrix'); p.add_argument('--observe',choices=['busy','irq','memory'],default='busy')
     p.add_argument('--line-c-tomography',action='store_true',help='kind40 A-shift and first-C-word cold-mask tomography')
     p.add_argument('--line-c-tomography-shift',type=int,default=4,help='kind40 BSHIFT 0..15 for separate repeat ROMs')
     p.add_argument('--line-c-onset',action='store_true',help='kind41 C first-word one-cold BZERO onset map')
     p.add_argument('--line-c-onset-shift',type=int,default=4,help='kind41 BSHIFT 0..15 for separate repeat ROMs')
     p.add_argument('--line-c-read-sequence',action='store_true',help='kind42 eight consecutive DMACONR samples within one line blit')
-    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads,a.loads,a.blits,a.cpu,a.edges,a.channels,['busy','irq','memory'].index(a.observe),a.priority,a.bzero,a.irq_paths,a.bzero_line,a.line_logic,a.line_logic_fine,a.line_logic_followup,a.line_pipeline,a.line_truth_table,a.line_stage,a.line_b_hold,a.line_b_hold_dma,a.line_b_mask,a.line_b_prime,a.line_word_control,a.line_shift_truth,a.line_wrap,a.line_c_cross,a.line_c_words,a.line_c_tomography,a.line_c_tomography_shift,a.line_c_onset,a.line_c_onset_shift,a.line_c_read_sequence)
+    p.add_argument('--line-c-bus-data',action='store_true',help='kind46 post-BLTSIZE CPU data writes followed by consecutive DMACONR samples')
+    a=p.parse_args(); build(a.vasm,a.wsl,a.focused,a.continuous,a.modes,a.pulses,a.reads,a.loads,a.blits,a.cpu,a.edges,a.channels,['busy','irq','memory'].index(a.observe),a.priority,a.bzero,a.irq_paths,a.bzero_line,a.line_logic,a.line_logic_fine,a.line_logic_followup,a.line_pipeline,a.line_truth_table,a.line_stage,a.line_b_hold,a.line_b_hold_dma,a.line_b_mask,a.line_b_prime,a.line_word_control,a.line_shift_truth,a.line_wrap,a.line_c_cross,a.line_c_words,a.line_c_tomography,a.line_c_tomography_shift,a.line_c_onset,a.line_c_onset_shift,a.line_c_read_sequence,a.line_c_activity,a.line_c_history,line_c_bus_data=a.line_c_bus_data)
