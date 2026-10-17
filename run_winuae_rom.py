@@ -5,7 +5,27 @@ from pathlib import Path
 import rom_results
 
 
-def run(exe, romdir, out):
+def _prepare_winuae_settings(out, settings_from=None):
+    settings_path = out/'winuae.ini'
+    if settings_from is None:
+        settings_path.write_text('[WinUAE]\nDebuggerType=1\n')
+        source_path = None
+        source_kind = 'generated-default'
+    else:
+        source_path = Path(settings_from).resolve()
+        if not source_path.is_file():
+            raise FileNotFoundError(f'WinUAE settings file not found: {source_path}')
+        shutil.copyfile(source_path, settings_path)
+        source_kind = 'copied-existing-settings'
+    return dict(settings_source_kind=source_kind,
+                settings_source_path=str(source_path) if source_path else None,
+                settings_source_sha256=hashlib.sha256(settings_path.read_bytes()).hexdigest())
+
+
+def run(exe, romdir, out, settings_from=None):
+    settings_from = Path(settings_from).resolve() if settings_from is not None else None
+    if settings_from is not None and not settings_from.is_file():
+        raise FileNotFoundError(f'WinUAE settings file not found: {settings_from}')
     out.mkdir(parents=True, exist_ok=False)
     manifest = json.loads((romdir/'manifest.json').read_text())
     shutil.copyfile(romdir/'manifest.json', out/'build-manifest.json')
@@ -41,7 +61,7 @@ function on_uae_vsync()
 end
 '''
     (out/'capture.lua').write_text(lua)
-    (out/'winuae.ini').write_text('[WinUAE]\nDebuggerType=1\n')
+    settings_provenance = _prepare_winuae_settings(out, settings_from)
     (out/'machine.uae').write_text(f'''quickstart=a500,1
 config_description=OneROM RAM probe - Best Compatibility
 use_gui=no
@@ -77,10 +97,14 @@ kickstart_ext_rom_file=
         try: proc.wait(timeout=240)
         finally:
             if proc.poll() is None: proc.terminate();proc.wait(timeout=20)
-    (out/'invocation.json').write_text(json.dumps(dict(command=command,binary_sha256=hashlib.sha256(exe.read_bytes()).hexdigest()),indent=2))
+    invocation = dict(command=command,
+                      binary_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),
+                      **settings_provenance)
+    (out/'invocation.json').write_text(json.dumps(invocation,indent=2))
     rom_results.extract(out/'capture.bin',out,manifest=out/'build-manifest.json')
 
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--binary',type=Path,required=True);p.add_argument('--romdir',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
-    a=p.parse_args();run(a.binary.resolve(),a.romdir.resolve(),a.out.resolve())
+    p.add_argument('--settings-from',type=Path,help='copy a previously accepted WinUAE ini into this run')
+    a=p.parse_args();run(a.binary.resolve(),a.romdir.resolve(),a.out.resolve(),a.settings_from)

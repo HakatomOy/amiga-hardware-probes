@@ -149,6 +149,14 @@ main:
         beq .line_c_history
         cmpi.w #46,(a4)
         beq .line_c_bus_data
+        cmpi.w #47,(a4)
+        beq .copper_wait
+        cmpi.w #48,(a4)
+        beq .line_a_bit
+        cmpi.w #49,(a4)
+        beq .blitter_handoff
+        cmpi.w #50,(a4)
+        beq .copper_start_busy
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -233,6 +241,18 @@ main:
         bra.w .recorded
 .line_c_bus_data:
         jsr line_c_bus_data_trial
+        bra.w .recorded
+.copper_wait:
+        jsr copper_wait_trial
+        bra.w .recorded
+.line_a_bit:
+        jsr line_a_bit_trial
+        bra.w .recorded
+.blitter_handoff:
+        jsr blitter_handoff_trial
+        bra.w .recorded
+.copper_start_busy:
+        jsr copper_start_busy_trial
         bra.w .recorded
 .divirq:
         bsr divirq_trial
@@ -3039,6 +3059,9 @@ line_c_bus_data_trial:
         include "line_c_bus_data_regions.i"
         even
 
+        include "copper_wait_kernel.i"
+        include "copper_start_busy_kernel.i"
+
 ; Kind 43: masked Copper COPER request visibility and straight-line CPU IPL observations.
 irq_focus_trial:
         move.l #divirq_handler,$6c
@@ -3079,3 +3102,9 @@ irq_focus_trial:
 .done:
         move.l #irq3,$6c
         rts
+
+        even
+        include "line_a_bit_kernel.i"
+
+        even
+        include "blitter_handoff_kernel.i"

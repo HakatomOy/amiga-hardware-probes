@@ -369,6 +369,129 @@ The physical A500 capture has not been run for kind46. See
 [`line-c-bus-data-experiment.md`](docs/line-c-bus-data-experiment.md) for the
 control rationale and comparison limits.
 
+`build_copper_wait_rom.py` builds kind47 (1,024 trials) to test whether Copper
+BLTSIZE writes made during chip-bus activity delay observable blitter startup.
+It crosses 16-word D-only constant-one and A-to-D copies, one or two identical
+already-eligible Copper WAITs with BFD clear, BLTPRI, quiet ROM versus chip-read
+CPU traffic, optional four-plane DMA, two CPU instruction paths, eight WAIT
+horizontal positions and two repeats. The CPU runs a fixed 512-iteration ROM
+loop while the Copper reaches line 66; the pre-marker interval contains no
+DMACONR polling. The COPER handler stores its first VHPOSR sample, then DMACONR,
+the first destination word and saved PC; after 256 NOPs the program records the
+first and last destination words. The standard 40-byte record is documented in
+the archived manifest. This is a discriminating experiment, not a hardware
+finding; compare Copperline and WinUAE runs with an A500 capture before changing
+emulator behavior.
+
+The `--unrolled` builder option produces the same 1,024 descriptors with
+variant bit 3 set. It replaces the DBRA traffic loop with 512 ROM NOPs for the
+quiet case or 256 fixed chip-memory reads for the traffic case. Both ROM blocks
+span the line 66 launch window without a loop branch and are checked byte for
+byte against the embedded kernel in the immutable archive.
+
+The additional `--no-blit` option sets variant bit 4 and keeps the same 1,024
+rows. Copper writes a two-word `$01fe,$0000` NOOP pair in the BLTSIZE slot;
+the WAITs, later COPER marker, and instruction-fetch positions are unchanged.
+Those rows check the list/observer baseline with no blitter launch and should
+leave both sampled destination endpoints at `$dead`. Combine it with
+`--unrolled` to retain the branch-free CPU paths.
+
+The `--cpu-launch --unrolled` control builds the same 1,024 descriptors with
+variant bit 5 set and bit 4 clear. CPU code preloads the selected BLTCON0/1;
+Copper keeps the same setup MOVE slots but replaces its BLTSIZE slot with the
+same two-word NOOP. Copper enters a fixed line 66 hpos `$20` wait, then reaches
+the BFD-clear WAIT at `$60 + 2*delay`. The CPU polls line 66 to hpos `$30`,
+records the pre-write VHPOSR at record byte `+14`, and starts the same 16-word
+blit with a CPU BLTSIZE write before continuing through the unrolled quiet or
+chip-read path. This isolates who starts the blit while retaining the Copper
+WAIT wakeup and COPER marker. The measured CPU launch position is the key check:
+it must precede the BFD WAIT target while the blitter is still busy. This mode
+requires `--unrolled` and cannot be combined with `--no-blit`.
+
+The `--finish-sweep --unrolled` follow-up uses kind47 variant bits 6/5/3 and
+2,048 rows. Target bits 3..2 select one, four, eight, or sixteen words; target
+bits 1..0 retain D-only/A-to-D mode and one/two Copper WAITs. Copper's BFD-clear
+WAIT is fixed at line 66 hpos `$60`; descriptor delay now selects zero through
+seven NOPs in the CPU launch stub. Finish-sweep enters from an earlier Copper
+WAIT at line 66 hpos `$04` and gates the CPU launch at hpos `$10`, keeping its
+COPER marker behind the CPU launch. The stub runs
+the selected NOP/EXG phase path and pad, samples VHPOSR into D2 immediately
+before `MOVE.W D5,$58(a6)`, and then follows the unrolled quiet or chip-read
+path. The controller stores D2 at record byte `+14` after masking interrupts,
+so there is no prelaunch chip-RAM result store. The manifest records width,
+BLTSIZE encoding, launch pad, phase path, and field offsets; this distinguishes
+short blits that finish before hpos `$60` from wider blits still active there.
+
+The hypothesis was prompted by [Toni Wilen's EAB discussion](https://eab.abime.net/showpost.php?p=1426048),
+WinUAE's developer. The ROM encodes a new measurement and does not copy WinUAE
+implementation code.
+
+`build_line_a_bit_rom.py` builds kind48 (1,536 trials) to measure line-mode BZERO behavior across all 16 one-hot BLTADAT bits, ASHIFT 0/2/4, BLTBDAT 0/$FFFF with USEB disabled, and one/two-pixel lines with C=0. Each trial records eight immediate DMACONR reads and the post-busy words at `$10000` and `$11050`. The shared FF7800 observer also writes zero to its `$18000` scratch word between launch and those reads; the archive manifest records that observer write. This is a measurement matrix, not a hardware finding.
+
+The opt-in `--truth-control` mode preserves those legacy rows and uses a separate
+kind48 marker-bit path for 2,048 new trials. It crosses eight literal ADAT
+patterns, minterms `$00,$ff,$f0,$cc,$33,$aa,$40,$ca`, BLTBDAT `$0000/$ffff`,
+and BSHIFT 0/1 over two pixels. C DMA remains enabled from zeroed C memory,
+while B DMA stays off. BSHIFT is stored in the descriptor's phase word but
+cleared during beam alignment; BLTADAT is seeded with `$8000` before the
+selected pattern, and BLTBDAT is written before the final BLTCON1 value, matching
+the legacy register history. The shared FF7800 observer and 40-byte record
+remain unchanged. The archive manifest labels the new descriptor encoding,
+patterns, minterms, exact register-write order, and the `$CA`/BSHIFT-0
+reproduction cases around effective A bits 13 and 11.
+
+The opt-in `--history-control` mode adds 2,016 kind48 trials to distinguish
+retained BLTBDAT/shifter history from the final CPU register-write order. It
+crosses A patterns `$8000,$2800,$2801`, the line-function minterms
+`$f0,$cc,$40,$ca`, seven B-state preconditions (no extra prime, CPU BDAT
+`$2800/$d7ff`, or normal/line-mode B-only DMA fetches of `$2800/$d7ff` in both
+orders), and three target BDAT write orders (before CON1, after CON1, or
+skipped), with eight repeats. DMA primes run to BBUSY clear before the target
+setup; the target always uses BSHIFT 0. The history mode has its own descriptor
+marker and minterm table, while the legacy and truth-control paths remain
+separate. The manifest records the prime registers, fetch words, target
+ordering, and shared observer sequence. This is a proposed discrimination
+experiment, not a hardware finding.
+
+The separate `--normal-history-control` mode adds 168 rows using the same seven
+B-state primes and three BDAT/CON1 write orders, followed by a normal-mode
+one-word B-to-D copy (`BLTCON0=$01cc`, `BLTCON1=0`, `BLTSIZE=$0041`) with B DMA
+disabled and D DMA enabled. The source is fixed to the `$cc` B function. The
+second observed destination remains zero because this target writes only one
+word. This control tests whether a value fetched into B during line-mode
+priming is retained for a subsequent normal-mode operation; its results must
+be interpreted separately from the line-mode history matrix.
+
+The opt-in `--normal-history-no-dma-control` mode adds 48 rows for two further
+prime profiles: CPU-load BLTBDAT with `$2800` or `$d7ff` while CON1 is normal,
+then start a two-pixel line-mode blit with `BLTCON0=$00cc`, leaving A/B/C/D DMA
+disabled. After BBUSY clears, each trial uses the same one-word normal-mode
+`$01cc` B-to-D target and the same before/after/skipped BLTBDAT write control.
+The source-memory contents do not matter because no channel fetches during the
+prime. This isolates line-mode shifter history from B-channel DMA fetches.
+
+The opt-in `--line-hold-matrix` mode adds 1,152 held-out cases: four raw
+BLTBDAT words (`$0001,$8000,$a55a,$1248`), BSHIFT values `0,1,7,15`, line-prime
+lengths of one to three pixels, and the three target BDAT/CON1 write orders,
+with eight repeats. Each prime loads BLTBDAT in normal mode, then runs line
+mode with `BLTCON0=$00cc` so no DMA channel fetches. The target is a normal-mode
+one-word B-to-D copy. The A500 capture shows that a one-pixel skipped-write
+prime retains `shift_combine(0, raw, BSHIFT, false)`; for two or three pixels it
+retains `ROR(raw, (BSHIFT - (pixels - 1)) & 15)`. Writing zero before target
+CON1 instead uses `shift_combine(raw, 0, (BSHIFT - pixels) & 15, false)`, while
+writing zero after CON1 produces zero. These measured rules and their capture
+provenance are recorded in the manifest. Emulator candidate counts remain
+provisional; see [`docs/a500-b-hold-2026-10-17.md`](docs/a500-b-hold-2026-10-17.md).
+
+The separate opt-in `--line-hold-c-dma-matrix` repeats those 1,152 tuples with
+C DMA enabled during the line prime (`BLTCON0=$02cc`). It fetches zeros from a
+256-byte buffer at `$14000`; the first line-prime D write goes to `$15000`, and
+later line D writes follow the C pointer into `$14050/$140a0`. The normal-mode
+target resets D to `$10000`, and the observer is unchanged. Its A500 capture
+matched the all-DMA-off matrix in all 1,152 first-D words; the second D word was
+zero throughout. Source ID `1b1847727efe84edb602a69fc9f78d6e01f9caa7fa38321549875b83173aa327`,
+packet SHA-256 `4decda1716cd77cf4c2943f3e80fe2f758472bbc4a7186a52fb78099a9e2b73a`.
+
 For direct bus observation, `tools/build_bus_address_rom.py` and
 `tools/build_scope_bzero_rom.py` create immutable, source-snapshotted 512 KiB
 ROM archives. Always choose a new `--out` directory; builders refuse to

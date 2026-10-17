@@ -741,3 +741,126 @@ line_c_bus_data_observer:
         move.w $11050,18(a4)
         move.l a0,d7
         rts
+
+; Kind47 CPU traffic loop. The caller selects quiet ROM instruction fetches
+; (D3=0) or repeated chip-RAM operand reads (D3=2); no custom-register polling.
+        dcb.b $ff7900-*,0
+copper_wait_cpu_loop:
+        btst #6,d3
+        bne.s .finish_sweep
+        btst #5,d3
+        bne.s .cpu_launch
+        btst #3,d3
+        bne.s .unrolled
+        btst #1,d3
+        bne.s .chip_reads
+.rom_quiet:
+        nop
+        dbra d7,.rom_quiet
+        rts
+.chip_reads:
+        move.w $18000,d0
+        dbra d7,.chip_reads
+        rts
+.unrolled:
+        btst #1,d3
+        bne.s .unrolled_reads
+        jmp $ff7a00
+.unrolled_reads:
+        jmp $ff7e10
+.cpu_launch:
+        jmp $ffc000
+.finish_sweep:
+        jmp $ffc100
+
+; Fixed code paths span line 66 without DBRA or a control-register poll.
+        dcb.b $ff7a00-*,0
+copper_wait_unrolled_quiet:
+        rept 512
+        nop
+        endr
+        rts
+
+        dcb.b $ff7e10-*,0
+copper_wait_unrolled_reads:
+        rept 256
+        move.w $18000,d0
+        endr
+        rts
+
+        include "blitter_handoff_observer.i"
+
+; Kind47 CPU-launch control. Copper is already waiting with BFD clear at
+; line 66 h=0x60+2*delay. Poll beam position to h>=0x30, record the launch
+; beam before BLTSIZE, start the same 16-word operation from the CPU, then
+; continue through the existing unrolled traffic block.
+        dcb.b $ffc000-*,0
+copper_wait_cpu_launch:
+.line:  move.w 6(a6),d0
+        andi.w #$ff00,d0
+        cmpi.w #$4200,d0
+        bne.s .line
+.hpos:  move.w 6(a6),d0
+        andi.w #$00ff,d0
+        cmpi.w #$0030,d0
+        bcs.s .hpos
+        move.w 6(a6),14(a4)
+        move.w #$0050,$58(a6)
+        btst #1,d3
+        bne.s .chip_reads
+        jmp $ff7a00
+.chip_reads:
+        jmp $ff7e10
+
+; Kind47 CPU finish-sweep control. After the beam gate, select the recorded
+; phase path and 0..7 NOP launch pad, then sample VHPOSR into D2 immediately
+; before the CPU BLTSIZE write. The caller stores D2 after masking IRQs.
+        dcb.b $ffc100-*,0
+copper_wait_finish_sweep:
+.pad_select:
+        lea .pad_table(pc),a0
+        move.w 8(a4),d0
+        add.w d0,d0
+        move.w 0(a0,d0.w),d0
+        ext.l d0
+        lea .pad_table(pc),a0
+        adda.l d0,a0
+.line:  move.w 6(a6),d0
+        andi.w #$ff00,d0
+        cmpi.w #$4200,d0
+        bne.s .line
+.hpos:  move.w 6(a6),d0
+        andi.w #$00ff,d0
+        cmpi.w #$0010,d0
+        bcs.s .hpos
+        tst.w 6(a4)
+        beq.s .phase_nop
+        exg d0,d1
+        bra.s .phase_ready
+.phase_nop:
+        nop
+.phase_ready:
+        jmp (a0)
+.pad_table:
+        dc.w .pad0-.pad_table,.pad1-.pad_table,.pad2-.pad_table,.pad3-.pad_table
+        dc.w .pad4-.pad_table,.pad5-.pad_table,.pad6-.pad_table,.pad7-.pad_table
+.pad7:  nop
+.pad6:  nop
+.pad5:  nop
+.pad4:  nop
+.pad3:  nop
+.pad2:  nop
+.pad1:  nop
+.pad0:
+        move.w 6(a6),d2
+        move.w d5,$58(a6)
+        btst #1,d3
+        bne.s .chip_reads
+        jmp $ff7a00
+.chip_reads:
+        jmp $ff7e10
+        dcb.b $ffc200-*,0
+        include "copper_start_busy_observer.i"
+; Keep the direct BBUSY observer below the reserved future-ROM tail. A negative
+; DCB count makes assembly fail if this observer grows past FFC600.
+        dcb.b $ffc600-*,0
