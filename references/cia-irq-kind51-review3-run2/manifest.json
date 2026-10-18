@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "reference_id": "cia-irq-kind51-review3-run2",
+  "original_capture": "captures/rom-amiga500-cia-cpu-irq-kind51-review3-run2/capture",
+  "test_rom_sha256": "5366a95c29ab2b8cf826ed72d6ee5ffe8b8d22b5f9380d7598f517fcf1601198",
+  "source_id": "416ef5b56e43d6803b82cf3986d81bcf40ae747da13b98d378f43d5130bc139a",
+  "results_sha256": "15be7218629265a21ca0aa5902ffab11a6987939b1ae0a9ee84c8be2e02e7cb5",
+  "record_count": 1536,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS (raw VPOSR a000)",
+    "denise": "OCS (floating ID is not revision evidence)",
+    "silicon_revisions": "not established"
+  },
+  "capture_method": "OneROM USB / checksum-protected RBCP",
+  "repeatability": "Paired review3 captures run1/run2; 99 exact-start pairs match; other launch phases differ.",
+  "metadata": {
+    "version": 1,
+    "source_id": "416ef5b56e43d6803b82cf3986d81bcf40ae747da13b98d378f43d5130bc139a",
+    "record_count": 1536,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "15be7218629265a21ca0aa5902ffab11a6987939b1ae0a9ee84c8be2e02e7cb5"
+  }
+}

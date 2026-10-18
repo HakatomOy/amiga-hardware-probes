@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "reference_id": "irq-focus-v3",
+  "original_capture": "captures/irq-focus-a500-v3",
+  "test_rom_sha256": "68d117691ef64a97c682d203cd2ee180cc4c7f7bb4a1c68bc193173cd9d7a1f0",
+  "source_id": "99a1ae36ea4d03e93fbce46b6eefead08fcba4dcc2dbd7b24fd31e9cbcbb68d1",
+  "results_sha256": "08389b95ac0b4a30a1ed01b3eed449295deaa0d0a554bcf4d8e6bdd3df72cfd7",
+  "record_count": 2212,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS (raw VPOSR a000)",
+    "denise": "OCS (floating ID is not revision evidence)",
+    "silicon_revisions": "not established"
+  },
+  "capture_method": "OneROM USB / checksum-protected RBCP",
+  "repeatability": "Independent repeated hardware run documented in docs/irq-focus-measurements-2026-10-15.md or docs/divider-irq-verification-2026-10-15.md.",
+  "metadata": {
+    "version": 1,
+    "source_id": "99a1ae36ea4d03e93fbce46b6eefead08fcba4dcc2dbd7b24fd31e9cbcbb68d1",
+    "record_count": 2212,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "08389b95ac0b4a30a1ed01b3eed449295deaa0d0a554bcf4d8e6bdd3df72cfd7"
+  }
+}

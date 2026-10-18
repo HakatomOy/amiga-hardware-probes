@@ -69,3 +69,30 @@ with `--binary "C:/Program Files/WinUAE/winuae64_603.exe"` (the option names the
 executable), an identical probe ROM and a fresh output directory; consult
 `python run_winuae_rom.py --help` for its required ROM/configuration arguments.
 Hardware capture and experiment build procedures remain in `rom-measurement.md`.
+
+## Focused accuracy workflow
+
+Start from `accuracy-investigation-2026-10-18.md` for confirmed findings and the
+next unresolved question. Checksum-protected original measurement packets are
+versioned under `../references/`; their manifests identify the ROM, hardware,
+capture method and repeatability. Private logs and generated ROMs remain local.
+
+```powershell
+python tools/check_cia_model.py --out captures/NEW_RUN/model
+python tools/replay_accuracy.py --binary ../Copperline/target/ci/copperline.exe --config MACHINE.toml --out captures/NEW_RUN/replay --suite cia-irq --suite irq-focus --suite divider-irq
+```
+
+The model harness compiles the production CIA source with minimal external
+support definitions; it does not replace the full emulator regression suite.
+The replay batch snapshots executable/configuration, saves hashes and full logs,
+and emits bounded summaries. Each destination must be new. Omit `--suite` to
+include the bus neighbors too; their immutable ROM archives must exist locally.
+
+`compare_copper_busy.py` handles the kind50 layout explicitly. The ordinary
+RBCP `status` and PC slots contain DMACONR samples in that experiment, so generic
+status validation is inappropriate. It compares only identical descriptors and
+both observed beam brackets; gate and settled-data guards remain mandatory.
+`tools/compare_custom_sampling.py --before BEFORE_BATCH --after AFTER_BATCH
+--out REPORT` assesses common cohorts across the Copper pilot, CPU handoff and
+normal/fill BZERO references. Inspect repaired and regressed cases separately;
+a lower aggregate mismatch count alone is insufficient evidence for a fix.

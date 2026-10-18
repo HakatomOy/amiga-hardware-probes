@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "reference_id": "blitter-handoff-kind49",
+  "original_capture": "captures/rom-amiga500-blitter-handoff-kind49-run1/capture",
+  "observation_profile": "standard",
+  "test_rom_sha256": "b838cec57094e934c8c1cdec7ba761baad5e1443537a281cfa57b8f6cd982304",
+  "source_id": "836cfdc91ac3201e47f18c0770ddffc4e32be32054d215cec491b38cfb46d151",
+  "results_sha256": "480f5177aea788d870b4714d49d6b6465a9e9f8139e6c75941417cb4aa7a0b3b",
+  "record_count": 2304,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS",
+    "denise": "OCS; floating ID not revision evidence",
+    "silicon_revisions": "not established"
+  },
+  "capture_method": "OneROM USB / checksum-protected RBCP",
+  "repeatability": "Within-capture descriptor repeat field retained; no independent run implied. See docs/a500-b-hold-2026-10-17.md and docs/rom-timing-isolation-2026-10-14.md.",
+  "metadata": {
+    "version": 1,
+    "source_id": "836cfdc91ac3201e47f18c0770ddffc4e32be32054d215cec491b38cfb46d151",
+    "record_count": 2304,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "480f5177aea788d870b4714d49d6b6465a9e9f8139e6c75941417cb4aa7a0b3b"
+  }
+}

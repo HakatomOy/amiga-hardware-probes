@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "reference_id": "bzero-edges-kind22",
+  "original_capture": "captures/rom-amiga500-bzero-edges1",
+  "observation_profile": "standard",
+  "test_rom_sha256": "059112d740325bdb74ca958434e99b44371cdfc095b535b1f32d16a5f9cd4a84",
+  "source_id": "634599ff1094acc5fd95f87f8ab34264a61a12407ff0577330b2b30f348fc076",
+  "results_sha256": "3fc9ac2ef2134a5b03090fefca5d5251e5445c71fbee8c9c2f0759284138e7fe",
+  "record_count": 4608,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS",
+    "denise": "OCS; floating ID not revision evidence",
+    "silicon_revisions": "not established"
+  },
+  "capture_method": "OneROM USB / checksum-protected RBCP",
+  "repeatability": "Within-capture descriptor repeat field retained; no independent run implied. See docs/a500-b-hold-2026-10-17.md and docs/rom-timing-isolation-2026-10-14.md.",
+  "metadata": {
+    "version": 1,
+    "source_id": "634599ff1094acc5fd95f87f8ab34264a61a12407ff0577330b2b30f348fc076",
+    "record_count": 4608,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "3fc9ac2ef2134a5b03090fefca5d5251e5445c71fbee8c9c2f0759284138e7fe"
+  }
+}
