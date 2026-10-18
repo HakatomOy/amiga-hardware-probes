@@ -14,6 +14,15 @@ one constant latency is correct for all instructions. The IRQ handlers and their
 logging instructions are part of the experiment and must run unchanged in the
 emulator. See [the measurement contract](docs/measurement.md).
 
+## Compare captures with a compact report
+
+Use [`compare_captures.py`](docs/capture-comparison.md) to summarize A500,
+Copperline, and optional WinUAE RBCP captures before inspecting individual rows.
+It reports counts, repeated difference patterns, representative case IDs, and
+exact-start CIA/IRQ cohorts. Retrieve specific evidence with `--case` and
+`--window`; matching rows do not need manual review. The workflow documents
+units, integrity checks, trace inputs, and interpretation limits.
+
 ## Build
 
 Requires Python 3.9+, and the Motorola-syntax vasm assembler, `vasmm68k_mot`.
