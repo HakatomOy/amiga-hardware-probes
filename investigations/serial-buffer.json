@@ -1,0 +1,82 @@
+{
+  "experiment": "serial-buffer-replay",
+  "accepted_commits": {
+    "Copperline": "a2299b00",
+    "amiga-hardware-probes": "68c5353"
+  },
+  "confirmed_facts": [
+    "Two A500 runs agree byte-for-byte on320 drained cases.",
+    "One pending byte repairs147 complete cases with no complete-case regressions.",
+    "13 second-boundary differences remain; first-boundary sweep has6 differences and2 excluded unstable repeats.",
+    "3635 core tests and217 probe tests passed at acceptance;11 earlier packets plus1920 CPU/DMA cases unchanged."
+  ],
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\serial-buffer-v1-run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\serial-buffer-v1-run2"
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "Every active write restarts output",
+      "evidence": "Stable first completion in both hardware runs."
+    },
+    {
+      "hypothesis": "Only queued handoff differs",
+      "evidence": "Single-byte boundary probe also differs near observed UF15."
+    }
+  ],
+  "source_files": [
+    "../Copperline/src/chipset/cia.rs",
+    "build_serial_buffer_rom.py",
+    "src/rom/cia_serial_buffer_kernel.i",
+    "compare_serial_buffer.py"
+  ],
+  "next_question": "What distinguishes serial flag-latch phase from the delayed Timer-B observation near UF15/31?",
+  "decision": "preserve",
+  "evidence": [
+    "captures/workflow-serial-20261019-v1/comparison.json"
+  ],
+  "history": [
+    "docs/serial-buffer-investigation-2026-10-19.md",
+    "captures/serial-buffer-20261019"
+  ],
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\workflow-serial-20261019-v1",
+  "identity": {
+    "binary_sha256": "889886365204d0b9c00242ce4b968c284c17837d6e6908e9861e9ca4f069608a",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "00875ce2ed6c8371f5a7ed730677aa5d27b93a97ed9eb6189c1e11ea830123c8",
+    "source_id": "015b086d339d89ea70082d793d324d68a6800cce327646392a6f16ce8cc99779"
+  },
+  "hypothesis": "An active SDR write fills one pending byte without restarting the active transfer.",
+  "competitor": "An active SDR write restarts transmission or creates more than one pending byte.",
+  "test": "Replay drained single-byte, active-write, two-active-write and idle-write controls against identical UF brackets.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "first preserved, one extra completion": "Supports one pending byte; preserve the independent flag-boundary constraint.",
+    "first delayed": "Reject buffering-only model; inspect shift restart.",
+    "third completion after late second ack": "Reject one pending byte; investigate deeper queue or measurement state."
+  },
+  "evidence_fingerprint": "fdbb411369f46f8885c66749a9a8695ad9cd668a16b6b78fa1dbcc49fda449e6",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    },
+    {
+      "name": "workflow-tests",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "cia-neighbors",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "neighbor-delta",
+      "exit": 0,
+      "tier": "neighbor"
+    }
+  ],
+  "decision_reason": "Existing buffering repair and neighbor preservation confirmed; keep the 13-case flag-boundary pattern open. No new hardware or emulator patch is justified by this replay."
+}
