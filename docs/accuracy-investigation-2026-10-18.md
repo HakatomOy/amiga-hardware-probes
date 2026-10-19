@@ -38,18 +38,15 @@ case IDs, per-field deltas and logs are linked in
 
 ## Next unresolved question
 
-Does Copper-launched busy/BZERO propagation differ, or do current status
-pipelines compensate for a sampling error? Before another patch or HW run,
-state both hypotheses and implement the smaller INTREQ-marker-before/after-
-BLTSIZE experiment described in the experiment record, with CPU/Copper launch
-and no-blit controls. Marker and busy moving together implicates scheduling or
-sampling; marker agreement with a busy-only error isolates the status path.
-Do not repeat the unchanged pilot or adjust a global delay.
-
-Relevant code: `../Copperline/src/chipset/cia.rs`, `src/bus.rs`, `src/cpu.rs`
-(the latter two also under Copperline). Resolve this bus family before broader
-68000 operand/prefetch contention experiments. The present divider cases match;
-no additional CPU patch is supported yet. Start a fresh context from this record.
+Physical bus-marker probes now isolate a repeated completion family: BBUSY
+clears early and the Copper BFD completion marker is observed early. CPU
+read-tail sampling and skipping the launch clock were insufficient; both
+candidates are reverted. See
+[the bus handoff](bus-marker-investigation-2026-10-19.md) for reference IDs,
+source files, bounded traces, rejected hypotheses and the next bus-pressure
+experiment. Do not repeat unchanged captures or retune a global delay.
+The existing divider/IRQ cases match; broader operand/prefetch contention
+needs new physical evidence after this bus question is resolved.
 
 ## Follow-up: physical CIA verification, 19 October
 

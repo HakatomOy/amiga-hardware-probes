@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "reference_id": "bus-marker-focus-v2-run1",
+  "original_capture": "captures/cia-hw-20261019/bus-marker-focus-a500-v2-run1",
+  "test_rom_sha256": "c86fb8166e7bf122597fdb007f46f54d1c9f02dc0edeaf78fa4c793960e128aa",
+  "source_id": "c00e1af45498e27925d6ba6c37e3db86b58439f6358a8a415b075a957533ba0b",
+  "results_sha256": "c54b52800307c84a620e49e6fea3396df5948b6b0d87741e89bf64f762d736ce",
+  "record_count": 384,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS; raw VPOSR a000",
+    "denise": "OCS; raw ID floats",
+    "silicon_revisions": "unconfirmed"
+  },
+  "capture_method": "OneROM live ROM substitution; checksum-protected RBCP; original backup restored and readback verified",
+  "repeatability": "Two independent captures: 374 cross-run exact-phase candidate observations all agree; ten have no matching bracket. Hardware observations may be reused in cohort counts.",
+  "observation_profile": {
+    "kind": 55,
+    "focused": true,
+    "widths": [
+      1,
+      16
+    ],
+    "gates": [
+      64,
+      68,
+      72,
+      76,
+      80,
+      84,
+      88,
+      92,
+      96,
+      100,
+      104,
+      108,
+      112,
+      116
+    ],
+    "variant": "bit0 BLTPRI; bit1 CPU launch; bit2 marker after size; bit3 no blit",
+    "phase": "gate index",
+    "delay": "reserved zero",
+    "repeat": "two executions",
+    "observer": "FFC A00 (FFCA00); four alternating INTREQR/DMACONR pairs, no stores between reads",
+    "fields": {
+      "launch_beam": "pre-train or pre-CPU-launch VHPOSR",
+      "launch_ref": "post-train VHPOSR",
+      "end_beam": "settled VHPOSR; FFFF on watchdog",
+      "end_ref": "settled INTREQR",
+      "20..34": "four INTREQR/DMACONR pairs; status and saved PC are raw samples",
+      "36..38": "settled first/last D words"
+    },
+    "units": "raw register values; beam brackets only; no inferred cycle offsets or trace alignment",
+    "copper": "line66 h60 WAIT; marker/size adjacent moves in either order; no BFD completion marker",
+    "limits": "CPU sequence starts after its gate; Copper sequence starts at fixed WAIT. Do not equate their gates to transfer timestamps."
+  },
+  "metadata": {
+    "version": 1,
+    "source_id": "c00e1af45498e27925d6ba6c37e3db86b58439f6358a8a415b075a957533ba0b",
+    "record_count": 384,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "c54b52800307c84a620e49e6fea3396df5948b6b0d87741e89bf64f762d736ce"
+  },
+  "restoration": {
+    "errors": [],
+    "reset_release_verified": true,
+    "restored_verified": true
+  }
+}

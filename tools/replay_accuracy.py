@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import compare_captures
 import compare_cia_hardware
+import compare_bus_marker
 import compare_copper_busy
 import compare_divider_irq
 import compare_irq_focus
@@ -20,6 +21,8 @@ import run_rom
 import rom_results
 
 SUITES = {
+    "bus-marker": ("bus-marker-focus-v2", "references/bus-marker-focus-v2-run1"),
+    "bus-completion": ("bus-marker-completion-v3", "references/bus-marker-completion-v3-run1"),
     "cia-output": ("cia-hw-verify-v4", "references/cia-output-serial-v4-run1"),
     "cia-irq": ("cia-cpu-irq-kind51-review3", "references/cia-irq-kind51-review3-run1"),
     "irq-focus": ("irq-focus-v3", "references/irq-focus-v3"),
@@ -69,6 +72,13 @@ def main(argv=None):
                     _, hw_rows = compare_cia_hardware.load(hardware)
                     _, emu_rows = compare_cia_hardware.load(destination)
                     raw = compare_cia_hardware.compare(hw_rows, emu_rows)
+                elif suite in ("bus-marker", "bus-completion"):
+                    if left["metadata"]["source_id"] != right["metadata"]["source_id"]:
+                        raise ValueError("source_id mismatch")
+                    _, hw_rows = compare_bus_marker.load(hardware)
+                    _, emu_rows = compare_bus_marker.load(destination)
+                    raw = compare_bus_marker.compare(hw_rows, emu_rows)
+                    raw["phase_cohorts"] = compare_bus_marker.compare_cohorts(hw_rows, emu_rows)
                 elif suite == "copper-busy":
                     _, hw_rows = compare_copper_busy.load(hardware)
                     _, emu_rows = compare_copper_busy.load(destination)
@@ -78,6 +88,8 @@ def main(argv=None):
                 (destination / "raw-comparison.json").write_text(json.dumps(raw, indent=2) + "\n")
                 result = {"raw_counts": raw["counts"], "reference": str(hardware),
                           "source_id": left["metadata"]["source_id"], "report": str(destination / "raw-comparison.json")}
+                if suite in ("bus-marker", "bus-completion"):
+                    result["phase_cohorts"] = raw["phase_cohorts"]["counts"]
                 if suite == "cia-irq":
                     result["eligible"] = raw["kind51_launch_eligibility"]
                 elif suite in ("irq-focus", "divider-irq"):

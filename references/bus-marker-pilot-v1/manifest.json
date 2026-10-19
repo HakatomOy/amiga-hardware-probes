@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "reference_id": "bus-marker-pilot-v1",
+  "original_capture": "captures/cia-hw-20261019/bus-marker-a500-v1-run1",
+  "test_rom_sha256": "398794bf34c4788cce51e6b7a47d89fe95dee083521b4ff915d71e6abfcb9805",
+  "source_id": "73e27ff7746501f434e1d6daa1b02dc87dab051d05c8b30d6c801c893f07116b",
+  "results_sha256": "444837b7e09e39fb592ebafa076d1c4f85a91ad430837c36f2808da6d1d68bf7",
+  "record_count": 896,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS; raw VPOSR a000",
+    "denise": "OCS; raw ID floats",
+    "silicon_revisions": "unconfirmed"
+  },
+  "capture_method": "OneROM live ROM substitution; checksum-protected RBCP; original backup restored and readback verified",
+  "repeatability": "One physical capture; two repetitions per condition. Pilot phase coverage is limited.",
+  "observation_profile": {
+    "kind": 55,
+    "widths": [
+      1,
+      16
+    ],
+    "gates": [
+      64,
+      68,
+      72,
+      76,
+      80,
+      84,
+      88,
+      92,
+      96,
+      100,
+      104,
+      108,
+      112,
+      116
+    ],
+    "variant": "bit0 BLTPRI; bit1 CPU launch; bit2 marker after size; bit3 no blit",
+    "phase": "gate index",
+    "delay": "reserved zero",
+    "repeat": "two executions",
+    "observer": "FFC A00 (FFCA00); four alternating INTREQR/DMACONR pairs, no stores between reads",
+    "fields": {
+      "launch_beam": "pre-train or pre-CPU-launch VHPOSR",
+      "launch_ref": "post-train VHPOSR",
+      "end_beam": "settled VHPOSR; FFFF on watchdog",
+      "end_ref": "settled INTREQR",
+      "20..34": "four INTREQR/DMACONR pairs; status and saved PC are raw samples",
+      "36..38": "settled first/last D words"
+    },
+    "units": "raw register values; beam brackets only; no inferred cycle offsets or trace alignment",
+    "copper": "line66 h60 WAIT; marker/size adjacent moves in either order; no BFD completion marker",
+    "limits": "CPU sequence starts after its gate; Copper sequence starts at fixed WAIT. Do not equate their gates to transfer timestamps."
+  },
+  "metadata": {
+    "version": 1,
+    "source_id": "73e27ff7746501f434e1d6daa1b02dc87dab051d05c8b30d6c801c893f07116b",
+    "record_count": 896,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "444837b7e09e39fb592ebafa076d1c4f85a91ad430837c36f2808da6d1d68bf7"
+  },
+  "restoration": {
+    "errors": [],
+    "reset_release_verified": true,
+    "restored_verified": true
+  }
+}

@@ -23,6 +23,9 @@ class HardwareReferenceTests(unittest.TestCase):
                 if manifest.get("observation_profile") == "copper-busy-kind50":
                     import compare_copper_busy
                     self.assertFalse(any(compare_copper_busy.validate(r) for r in rows))
+                elif isinstance(manifest.get("observation_profile"), dict) and manifest["observation_profile"].get("kind") == 55:
+                    import compare_bus_marker
+                    self.assertEqual(compare_bus_marker.load(path.parent)[0], metadata)
                 else:
                     self.assertFalse(any(r["status"] for r in rows))
                 self.assertEqual(len(manifest["test_rom_sha256"]), 64)
