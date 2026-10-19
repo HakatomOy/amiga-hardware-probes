@@ -18,8 +18,10 @@ python tools/experiment.py run experiments/workflows/serial-buffer.json --out ca
 The example uses local immutable ROM archives, the current Copperline CI binary
 and the explicit A500 configuration. Adjust local paths when necessary. Missing
 assets fail clearly; the tool never downloads ROMs or rebuilds an old pinned ROM
-from potentially changed sources. `--through comparison`, `focused` or `neighbor`
+from potentially changed sources. `--through preflight`, `comparison`, `focused` or `neighbor`
 stops at that boundary for investigation; partial runs cannot be accepted.
+Preflight-only mode needs no hardware references and does not advance the
+investigation decision; use it to establish useful transition coverage first.
 
 Every manifest declares:
 
@@ -54,6 +56,11 @@ running, never raise them merely to obtain a pass. Conflicting qualified hardwar
 observations are excluded, not averaged. Malformed captures fail the batch rather
 than entering match counts. For new probes, calibrate a conservative minimum
 duration once and record it; a complete header/case check is still mandatory.
+For edge-discrimination probes, also declare `capture.coverage` extraction rules
+with `field`, `unit`, `meaning`, optional mask/shift/descriptor `where`, and
+`require_values` (for example `[0, 1]`). Preflight must observe both sides of the
+intended transition before hardware starts. A valid packet containing only
+uninformative clear samples must not trigger two expensive physical captures.
 
 ## Read changes, retrieve evidence selectively
 
@@ -75,6 +82,18 @@ bounded surrounding window. No trace alignment, scaling or event dropping occurs
 Without event traces, full snapshot fields remain available; they are not
 misrepresented as pin-level traces. `--window` is bounded to32 events each side.
 
+Before opening raw cases, aggregate the selected family mechanically:
+
+```powershell
+python tools/experiment.py aggregate captures/RUN --status mismatches --group-by target,variant,phase --fields FIELD_NAME --limit 8
+```
+
+Field names refer to declared measurements/qualification names, including their
+mask/shift and unit. The report returns counts, bounded value distributions and
+representative IDs. It does not infer cycle differences from packed beam words.
+This avoids writing a new one-off parser or printing repeated full records when
+testing whether differences share an operand, phase or source condition.
+
 For unchanged neighboring suites, use a strict packet gate after replay:
 
 ```powershell
@@ -86,6 +105,12 @@ or missing suites, and rejects source mismatches. This checks preservation, not
 hardware accuracy. Decoded records are compared exactly; volatile header values
 are not credited as measurement changes. Favorable changes still require explicit hardware comparison
 and review; a replay command exiting successfully does not establish no regression.
+When the same immutable candidate already produced a neighbor batch, add
+`--binary PATH --config PATH` to bind reuse to that batch's recorded hashes,
+actual executable/configuration snapshots and each suite's invocation identity.
+This lets a later broad-validation plan reuse proven neighbors without rerunning
+the emulator. Changed identities require fresh replays; do not reuse checks whose
+other inputs or interpretation rules changed.
 
 ## Validation ladder and artifact reuse
 
@@ -95,6 +120,22 @@ replays CIA/IRQ neighbors, checks packet preservation, then runs core tests,
 strict Clippy and formatting. Keep known ignored/window-test exclusions explicit.
 Run broader validation once after a candidate passes the earlier tiers; do not
 recompile Copperline because only instructions or comparison scripts changed.
+
+If a nonfunctional cleanup fixes a late check, retry validation without repeating
+hardware, emulator replay or already-passing stages:
+
+```powershell
+python tools/experiment.py resume captures/RUN --repeat probe-tests
+```
+
+Resume verifies frozen binary/ROM/configuration and capture/reference identities,
+then runs failed and remaining declared checks. Use `--repeat NAME` for successful
+checks whose tool/test inputs changed. Previous failures and logs remain in
+`validation_attempts` and distinct retry directories. A regressed comparison,
+stale run or changed artifact cannot resume; functional emulator changes require
+a new binary and a new run. Do not use resume to reuse checks whose other inputs
+changed. Predeclare the full validation ladder even when initially stopping at
+`--through neighbor`; resume can then complete broader checks without new captures.
 
 Optional command caching requires `cache: true`, explicit nonempty `inputs`
 glob patterns and generated `outputs` file paths. For example:
@@ -172,7 +213,9 @@ python tools/experiment.py restart investigations/serial-buffer.json --out captu
 
 Every decision requires a reason and existing evidence paths. Acceptance also
 requires baseline comparison and successful neighboring and broad validation.
-Failed, incomplete and stale runs cannot be accepted. Command success is a
+Failed, incomplete and stale runs cannot be accepted. A completed failed batch
+can still record `narrow`, `measure` or `preserve` with evidence, so a rejected
+candidate does not require manual record repair. Command success is a
 mechanical requirement; Sol must still assess timing inference and generalization.
 
 The runner counts repeated identical evidence patterns. After two successive
@@ -187,3 +230,7 @@ traces in linked files. Restart packets include the current decision, identities
 validation and bounded knowledge lists; records over8000 characters must be
 shortened before export. Start a fresh context at a natural boundary from this
 packet and repository instructions, then retrieve only evidence needed next.
+
+Start subsequent sessions from that restart packet; reread only the relevant
+workflow sections when changing a contract. Do not repeatedly load this whole
+guide, historical records, or successful suite logs into the investigation context.

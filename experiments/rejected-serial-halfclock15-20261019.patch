@@ -1,0 +1,93 @@
+diff --git a/src/chipset/cia.rs b/src/chipset/cia.rs
+index 67068947..65d619fe 100644
+--- a/src/chipset/cia.rs
++++ b/src/chipset/cia.rs
+@@ -1255,12 +1255,19 @@ impl Cia {
+             return 0;
+         }
+         // Output CNT toggles on each Timer-A underflow: two half-clocks
+-        // shift one bit. A500 captures place completion at sixteen underflows.
++        // shift one bit. The SP flag is latched on the fifteenth half-clock;
++        // the sixteenth finishes the byte and promotes a pending SDR write.
++        // A500 kind64 brackets ICR with direct TA counts, separating this
++        // flag phase from the one-edge-delayed TB cascade observation.
+         let mut half_clocks = u64::from(ta_underflows);
+         let mut completed = 0;
+         while self.sdr_out.is_some() {
+-            let remaining =
+-                u64::from(16 - 2 * self.sdr_shift_count) - u64::from(self.sdr_output_half_clock);
++            let progress =
++                u64::from(2 * self.sdr_shift_count) + u64::from(self.sdr_output_half_clock);
++            let remaining = 16 - progress;
++            if progress < 15 && progress + half_clocks >= 15 {
++                completed = ICR_SP;
++            }
+             if half_clocks < remaining {
+                 half_clocks += u64::from(self.sdr_output_half_clock);
+                 self.sdr_shift_count += (half_clocks / 2) as u8;
+@@ -1268,7 +1275,6 @@ impl Cia {
+                 break;
+             }
+             half_clocks -= remaining;
+-            completed = ICR_SP;
+             self.sdr_out = self.sdr_pending.take();
+             self.sdr_shift_count = 0;
+             self.sdr_output_half_clock = false;
+@@ -1663,7 +1669,7 @@ mod tests {
+         initial.tick(5); // First reload leaves count=1.
+         initial.write(REG_ICR, 0x80 | ICR_SP);
+         initial.write(REG_SDR, 0xa5);
+-        initial.tick(30); // Fifteen underflows; completion is two edges away.
++        initial.tick(28); // Fourteen underflows; the SP flag is two edges away.
+         assert_eq!(initial.sdr_shift_count, 7);
+         assert!(!initial.irq_line_asserted());
+         let mut batch = initial.clone();
+@@ -2531,7 +2537,7 @@ mod tests {
+     }
+ 
+     #[test]
+-    fn sdr_output_sets_sp_after_sixteen_timer_a_underflows() {
++    fn sdr_output_sets_sp_on_fifteenth_half_clock_before_byte_handoff() {
+         let mut cia = Cia::new(Which::A);
+         cia.write(REG_TALO, 0);
+         cia.write(REG_TAHI, 0);
+@@ -2540,7 +2546,7 @@ mod tests {
+         cia.write(REG_CRA, CRA_SPMODE | 0x01);
+         cia.tick(2);
+ 
+-        for _ in 0..15 {
++        for _ in 0..14 {
+             cia.tick(1);
+         }
+         assert_eq!(cia.read(REG_ICR) & ICR_SP, 0);
+@@ -2559,8 +2565,10 @@ mod tests {
+             let mut restored: Cia =
+                 serde_json::from_slice(&serde_json::to_vec(&cia).unwrap()).unwrap();
+             for state in [&mut cia, &mut restored] {
+-                assert_eq!(state.tick_sdr_output(14), 0);
++                assert_eq!(state.tick_sdr_output(13), 0);
+                 assert_eq!(state.tick_sdr_output(1), ICR_SP);
++                assert!(state.sdr_output_half_clock);
++                assert_eq!(state.tick_sdr_output(1), 0);
+                 assert!(!state.sdr_output_half_clock);
+                 assert_eq!(state.tick_sdr_output(16), 0, "no queued byte");
+             }
+@@ -2581,14 +2589,16 @@ mod tests {
+             cia.write(REG_SDR, 0x5a);
+             assert_eq!(cia.tick_sdr_output(3), 0);
+             cia.write(REG_SDR, 0x3c);
+-            assert_eq!(cia.tick_sdr_output(7), 0);
++            assert_eq!(cia.tick_sdr_output(6), 0);
+             assert_eq!(
+                 cia.tick_sdr_output(1),
+                 ICR_SP,
+                 "first byte is not restarted"
+             );
+-            assert_eq!(cia.tick_sdr_output(15), 0);
++            assert_eq!(cia.tick_sdr_output(1), 0, "handoff must not reassert SP");
++            assert_eq!(cia.tick_sdr_output(14), 0);
+             assert_eq!(cia.tick_sdr_output(1), ICR_SP, "one queued completion");
++            assert_eq!(cia.tick_sdr_output(1), 0, "pending byte finishes at32");
+             assert_eq!(cia.tick_sdr_output(32), 0, "no third byte");
+             cia.write(REG_SDR, 0xff);
+             assert_eq!(cia.tick_sdr_output(16), ICR_SP, "idle write still starts");

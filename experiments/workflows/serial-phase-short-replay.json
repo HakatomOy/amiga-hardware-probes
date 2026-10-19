@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "id": "serial-phase",
+  "hypothesis": "Serial SP flag asserts on half-clock15 while the byte period remains16 Timer-A underflows.",
+  "competitor": "The apparent early flag is caused by the one-edge-delayed Timer-B cascade observation.",
+  "test": "Bracket ICR with direct TA counter reads plus TB counts at single/queued boundaries; compare exact measured phase.",
+  "outcomes": {
+    "difference away from reload": "Supports serial flag-phase correction, independently of TB cascade ambiguity.",
+    "difference only near reload or no qualified phases": "Preserve timing model; improve observation/calibration instead."
+  },
+  "next_question": "Does the flag difference persist with direct TA brackets away from reload?",
+  "investigation": "captures/serial-phase-20261019/short-record.json",
+  "binary": "captures/serial-phase-20261019/acceptance-v2/emulator.exe",
+  "romdir": "build/serial-phase-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "4cc886e9af20e1006f6d5af04a173a0321fa9f01105986c6b4f04a2d0ea1b8eb",
+  "capture": {
+    "minimum_seconds": 30,
+    "expected_cases": 384,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/serial-phase-v1/run1",
+    "references/serial-phase-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "measurements": [
+      {
+        "name": "first_completion",
+        "field": "counter",
+        "mask": 8,
+        "unit": "ICR SP bit",
+        "meaning": "SP flag acknowledged near observed underflow18"
+      },
+      {
+        "name": "second_completion",
+        "field": "icr",
+        "mask": 8,
+        "unit": "ICR SP bit",
+        "meaning": "SP flag acknowledged at sampled underflow24..48"
+      },
+      {
+        "name": "third_completion",
+        "field": "irq_beam",
+        "mask": 8,
+        "unit": "ICR SP bit",
+        "meaning": "SP flag acknowledged near observed underflow56"
+      }
+    ],
+    "qualification": [
+      {
+        "name": "write1_before",
+        "field": "launch_beam",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "write1_before; TB cascade is one E-clock edge delayed;65535 means absent write"
+      },
+      {
+        "name": "write1_after",
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "write1_after; TB cascade is one E-clock edge delayed;65535 means absent write"
+      },
+      {
+        "name": "end_beam",
+        "field": "end_beam",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "TA counter E-clock ticks",
+        "meaning": "Direct TA low-byte count around the second ICR read; latch15/31"
+      },
+      {
+        "name": "end_ref",
+        "field": "end_ref",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "TA counter E-clock ticks",
+        "meaning": "Direct TA low-byte count around the second ICR read; latch15/31"
+      },
+      {
+        "name": "first_before",
+        "field": "irq_level",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "first_before; TB cascade is one E-clock edge delayed;65535 means absent write"
+      },
+      {
+        "name": "first_after",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "first_after; TB cascade is one E-clock edge delayed;65535 means absent write"
+      },
+      {
+        "name": "second_before",
+        "field": "saved_pc_offset",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "second_before; TB cascade is one E-clock edge delayed;65535 means absent write"
+      },
+      {
+        "name": "second_after",
+        "field": "aux",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "second_after; TB cascade is one E-clock edge delayed;65535 means absent write"
+      },
+      {
+        "name": "third_before",
+        "field": "second_counter_or_beam",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "third_before; TB cascade is one E-clock edge delayed;65535 means absent write"
+      },
+      {
+        "name": "third_after",
+        "field": "second_icr_or_level",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "observed TA underflows",
+        "meaning": "third_after; TB cascade is one E-clock edge delayed;65535 means absent write"
+      }
+    ],
+    "max_excluded": 128,
+    "max_unstable": 0
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 180,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/serial-phase-20261019/baseline-v1/candidate"
+}

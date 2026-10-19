@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "reference_id": "serial-phase-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\serial-phase-20261019\\baseline-v1\\hardware-1",
+  "test_rom_sha256": "4cc886e9af20e1006f6d5af04a173a0321fa9f01105986c6b4f04a2d0ea1b8eb",
+  "source_id": "f0a1d5867838842626cfa00cf36b6993b197be4b5007840da199ac76ebf9dd8b",
+  "results_sha256": "259dd4cbb2fbeb079855de20f12d8fd81bce3096b0db468bcc38bb7fcd30009a",
+  "record_count": 384,
+  "metadata": {
+    "version": 1,
+    "source_id": "f0a1d5867838842626cfa00cf36b6993b197be4b5007840da199ac76ebf9dd8b",
+    "record_count": 384,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "259dd4cbb2fbeb079855de20f12d8fd81bce3096b0db468bcc38bb7fcd30009a"
+  },
+  "restoration": {
+    "backup_sha256": "343ba7a035f38414c0e5ff0ddbadd2eba0052585e91c674ec460dc3e9139a373",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "343ba7a035f38414c0e5ff0ddbadd2eba0052585e91c674ec460dc3e9139a373",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 64,
+    "targets": [
+      "CIA-A",
+      "CIA-B"
+    ],
+    "sources": [
+      "Timer-A serial output"
+    ],
+    "masks": null,
+    "units": "TA counter ticks and TB observed underflows; no alignment",
+    "variants": "single first ack12; queued writeUF4 first ack18",
+    "event_offset": "sampleUF<<5 | NOP pad",
+    "watchdog": "bounded2048 TB polls per wait",
+    "masked_fields": null,
+    "launch": "actual SDR-write UF brackets; FFFF if absent",
+    "fields": {
+      "launch_beam": "write UF before",
+      "launch_ref": "write UF after",
+      "end_beam": "TA low before second ICR",
+      "end_ref": "TA low after second ICR",
+      "counter": "first ICR atUF12(single)/18(queued)",
+      "icr": "sampled ICR",
+      "irq_beam": "third ICR atUF56",
+      "irq_level": "first UF before",
+      "saved_pc_offset": "first UF after:second UF before",
+      "aux": "second UF after",
+      "second_counter_or_beam": "third UF before",
+      "second_icr_or_level": "third UF after",
+      "delay": "sampleUF<<5 | NOP pad"
+    },
+    "limitations": "Serial completion flags only; no transmitted payload or electrical pin edges"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0
+  },
+  "uncontrolled_state": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\serial-phase-20261019\\baseline-v1\\reference-1",
+  "annotation_correction": "Complete kind64 field labels replace inherited kind56 defaults; original build archive and raw packet unchanged."
+}

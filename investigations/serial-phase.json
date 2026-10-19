@@ -1,0 +1,91 @@
+{
+  "experiment": "serial-phase-pipeline-candidate",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\serial-phase-20261019\\acceptance-v2",
+  "identity": {
+    "binary_sha256": "6a6f6b3265fe5f7745366f31aad9274727f30b9396657a6530dfe2f72d33a225",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "4d9e690b0f42d11427438505424f43bf9bb7725cab6e0aeece9f88a84d432249",
+    "source_id": "fc2f88b02bc450556dab51b15d0d03fdf2a80cad09ca085c68d02d0487813e67"
+  },
+  "hypothesis": "Serial flag visibility has a short fixed E-clock pipeline after half-clock15, while byte period remains16 underflows.",
+  "competitor": "Flag boundary is tied to timer period/reload16, or to an unqualified observation phase.",
+  "test": "Sweep independent TA/TB brackets with TA latches15,31,63,127 and16 read pads, for single and queued bytes.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "same fixed TA-count offset across periods": "Supports an E-clock serial flag pipeline, then require neighbor regression checks.",
+    "offset scales with period or inconsistent brackets": "Reject fixed delay; preserve the constraint and narrow the reproducer."
+  },
+  "next_question": "Payload and exact direction/write edge behavior need separate pin-level evidence; continue priority2 CPU bus grants.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\serial-phase-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\serial-phase-v2\\run2"
+  ],
+  "evidence_fingerprint": "62ecec080d4cd6f8dd0adf7023fbc1831f7950e4239774200fa757f7d66ae5a1",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    },
+    {
+      "name": "proven-neighbors",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "probe-tests",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "strict-clippy",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "rust-format",
+      "exit": 0,
+      "tier": "broad"
+    }
+  ],
+  "decision": "accept",
+  "decision_reason": "All qualified direct-phase and held-out serial cases repaired without regressions; old CIA/IRQ neighbors unchanged;3637 core tests, strict Clippy and fmt pass.",
+  "evidence": [
+    "captures/serial-phase-20261019/acceptance-v2/summary.json",
+    "captures/serial-phase-20261019/short-replay-v2/comparison.json"
+  ],
+  "accepted_commits": {
+    "Copperline": "b487bae1"
+  },
+  "confirmed_facts": [
+    "Direct TA/TB phase brackets reject a cascade-only explanation.",
+    "Immediate half-clock15 flag was rejected:52 repairs but10 regressions.",
+    "Half-clock15 plus four-E-clock flag pipeline matches1533 extended and369 short qualified cases;3/15 phase exclusions remain explicit.",
+    "Older serial320/320 and38 stable boundary cases match; CIA-output2063 qualified cases match; CIA-IRQ/IRQ-stage neighbors unchanged.",
+    "3637 core tests pass,37 ignored,548 window tests excluded; strict Clippy and formatting pass."
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "Immediate half-clock15 flag",
+      "evidence": "captures/serial-phase-20261019/candidate-v1/comparison.json:10 regressions."
+    },
+    {
+      "hypothesis": "Only delayed Timer-B observation explains the difference",
+      "evidence": "Direct TA/ICR/TA brackets and held-out long timer periods."
+    }
+  ],
+  "source_files": [
+    "../Copperline/src/chipset/cia.rs",
+    "build_serial_phase_rom.py",
+    "tools/screen_serial_delay.py"
+  ],
+  "history": [
+    "docs/serial-phase-investigation-2026-10-19.md",
+    "captures/serial-phase-20261019"
+  ]
+}

@@ -86,6 +86,21 @@ class ExperimentTests(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 e.validate_spec(spec)
 
+    def test_uninformative_preflight_stops_before_hardware(self):
+        from tools import run_onerom_live
+        self.spec['capture']['coverage']=[dict(field('counter'),require_values=[10,11])]
+        self.spec['hardware']=dict(onerom='unused',repeats=2,limitations='fixture')
+        with patch.object(e,'command_run',self.fake_command([])),patch.object(run_onerom_live,'collect_live') as hw:
+            report=self.execute('uncovered',hardware=True)
+        self.assertEqual(report['status'],'failed')
+        self.assertIn('coverage missing',report['error'])
+        hw.assert_not_called()
+        self.spec['capture']['coverage'][0]['require_values']=[10]
+        with patch.object(e,'command_run',self.fake_command([])),patch.object(run_onerom_live,'collect_live') as hw:
+            report=self.execute('preflight-only',hardware=True,through='preflight')
+        self.assertEqual(report['status'],'preflight')
+        hw.assert_not_called()
+
     def test_comparison_mutations_and_delta(self):
         hw = [row()]
         base = row()
@@ -128,6 +143,7 @@ class ExperimentTests(unittest.TestCase):
                 destination = out / 'candidate'
                 destination.mkdir()
                 (destination / 'results.bin').write_bytes(packet(counter))
+                e.write(destination/'results.json',dict(metadata=e.rom_results.decode(packet(counter))[0]))
             return dict(name=spec['name'], exit=1 if spec['name'] == fail else 0,
                         reused=False, duration=0)
         return run
@@ -192,6 +208,20 @@ class ExperimentTests(unittest.TestCase):
             self.spec['hypothesis'] = 'revised phase explanation'
             self.assertEqual(self.execute('revised', through='comparison')['status'], 'review')
 
+    def test_resume_retries_only_failed_and_remaining_validation(self):
+        calls=[]
+        with patch.object(e,'command_run',self.fake_command(calls,fail='neighbor')):
+            self.execute('retry')
+        calls.clear()
+        with patch.object(e,'command_run',self.fake_command(calls)):
+            report=e.resume('retry')
+        self.assertEqual(report['status'],'review')
+        self.assertEqual([c['name'] for c in calls],['neighbor','broad'])
+        self.assertTrue(any(c['exit']==1 for c in report['validation_attempts']))
+        with self.assertRaises(ValueError):e.resume('retry')
+        (self.root/'retry/emulator.exe').write_bytes(b'changed')
+        with self.assertRaises(ValueError):e.resume('retry',repeat=['focused'])
+
     def test_cache_logs_and_actual_exit_status(self):
         source = self.root / 'source.rs'
         source.write_text('first')
@@ -247,6 +277,21 @@ class ExperimentTests(unittest.TestCase):
         self.assertIn('counter', report['representatives'][0]['fields'])
         self.assertEqual(e.packets('old','new',['absent'])['counts']['missing_suites'], 1)
 
+    def test_neighbor_reuse_binds_binary_config_and_invocation(self):
+        for name in ('old','new'):
+            p=self.root/name/'cia';p.mkdir(parents=True)
+            (p/'results.bin').write_bytes(packet())
+        parent=self.root/'new'
+        (parent/'emulator.exe').write_bytes(b'test executable')
+        (parent/'machine.toml').write_text('')
+        identity=dict(binary_sha256=e.digest(b'test executable'),config_sha256=e.digest(b''))
+        e.write(parent/'summary.json',identity)
+        e.write(parent/'cia/invocation.json',dict(binary_sha256=identity['binary_sha256'],binary_changed_during_run=False))
+        self.assertEqual(e.packets('old','new',['cia'],'emulator.exe','machine.toml')['status'],'unchanged')
+        (parent/'emulator.exe').write_bytes(b'tampered')
+        with self.assertRaises(ValueError):
+            e.packets('old','new',['cia'],'emulator.exe','machine.toml')
+
     def test_trace_shift_is_not_aligned_away(self):
         case = [0]*6
         left, right = self.root/'left.jsonl', self.root/'right.jsonl'
@@ -266,6 +311,17 @@ class ExperimentTests(unittest.TestCase):
         e.write(self.root/'record.json', dict(confirmed_facts=['x'*9000]))
         with self.assertRaises(ValueError):
             e.restart('record.json')
+
+    def test_aggregate_uses_declared_units_and_extractions(self):
+        e.write(self.root/'selection/experiment.json',self.spec)
+        _,cases=e.compare([row()], [dict(row(),counter=12)],policy())
+        e.write(self.root/'selection/cases.json',cases)
+        report=e.aggregate('selection','mismatches',['target'],['counter'])
+        self.assertEqual(report['cases'],1)
+        self.assertEqual(report['groups'][0]['fields']['counter']['maximum'],12)
+        self.assertEqual(report['groups'][0]['fields']['counter']['unit'],'CCK')
+        with self.assertRaises(ValueError):
+            e.aggregate('selection','mismatches',['target'],['undeclared'])
 
     def test_hardware_is_explicit_and_repeats_keep_restoration_provenance(self):
         from tools import run_onerom_live

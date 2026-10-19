@@ -71,13 +71,16 @@ def validate_spec(spec):
     if comparison.get('alignment') != 'exact' or not comparison.get('measurements'):
         raise ValueError('explicit measurements and exact alignment required')
     known = set(rom_results.FIELDS) - {'pc_hi', 'pc_lo'} | {'saved_pc_offset', 'reference_ticks'}
-    for f in comparison['measurements'] + comparison['qualification']:
+    for f in comparison['measurements'] + comparison['qualification'] + capture.get('coverage',[]):
         if f['field'] not in known or not f.get('unit') or not f.get('meaning'):
             raise ValueError('each measured/qualification field requires a valid field, unit and meaning')
         if f.get('shift', 0) not in range(32) or not 0 <= f.get('mask', 0xffffffff) <= 0xffffffff:
             raise ValueError('invalid field mask/shift')
         if f.get('pattern', 'values') not in ('values', 'delta'):
             raise ValueError('pattern must be values or delta; deltas never align captures')
+    for rule in capture.get('coverage',[]):
+        if not rule.get('require_values') or any(k not in DESCRIPTOR for k in rule.get('where',{})):
+            raise ValueError('coverage requires values and optional descriptor-only conditions')
     if spec.get('traces') and not spec['traces'].get('unit'):
         raise ValueError('trace time unit must be explicit')
     names = [f.get('name', f['field']) for f in comparison['measurements']]
@@ -129,6 +132,19 @@ def load_capture(path, build, contract, reference=False):
         if not restoration.get('restored_verified') or not restoration.get('reset_release_verified') or restoration.get('errors'):
             raise ValueError(f'{path}: unverified hardware restoration')
     return meta, rows
+
+
+def check_coverage(rows,contract):
+    report=[]
+    for rule in contract.get('coverage',[]):
+        selected=[r for r in rows if all(r[k]==v for k,v in rule.get('where',{}).items())]
+        distribution=Counter(value(r,rule) for r in selected)
+        required=rule['require_values']
+        missing=[x for x in required if x not in distribution]
+        if missing:
+            raise ValueError(f"preflight coverage missing {rule['field']} values {missing}; revise probe before hardware")
+        report.append(dict(field=rule['field'],unit=rule['unit'],required_counts={x:distribution[x] for x in required}))
+    return report
 
 
 def compare(hardware, candidate, policy):
@@ -397,12 +413,18 @@ def run(spec_path, out, hardware=False, events=False, through='broad'):
             if result['exit']:
                 raise ValueError(f"preflight failed: {result.get('excerpt', '')}")
         _, candidate = load_capture(out / 'candidate', build, spec['capture'])
+        coverage=check_coverage(candidate,spec['capture'])
         if spec.get('reuse_preflight', False) and not reused_capture:
             replay_cache.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(out / 'candidate/results.bin', replay_cache / 'results.bin')
             write(replay_cache / 'origin.json', dict(run=str(out), identity=summary['identity'],
                                                     results_sha256=digest((out/'candidate/results.bin').read_bytes())))
-        emit(out, 'preflight', dict(cases=len(candidate), seconds=seconds, reused=reused_capture), events)
+        emit(out, 'preflight', dict(cases=len(candidate), seconds=seconds, reused=reused_capture,coverage=coverage), events)
+        if through=='preflight':
+            summary.update(status='preflight',counts=dict(cases=len(candidate),complete=True),
+                           next_step='Preflight complete; continue with saved references or a planned hardware run.')
+            write(out/'summary.json',summary);emit(out,'complete',compact(summary),events)
+            return summary
         references = [resolve(p) for p in spec.get('references', [])]
         if hardware:
             from tools import run_onerom_live, save_reference
@@ -511,6 +533,65 @@ def compact(summary):
     return {k: summary[k] for k in ('status', 'output', 'counts', 'delta', 'patterns', 'validation_through', 'error', 'logs', 'investigation', 'next_step') if k in summary}
 
 
+def resume(out, through='broad', repeat=()):
+    """Retry validation only, retaining frozen captures and all previous logs."""
+    out=resolve(out);spec=validate_spec(read(out/'experiment.json'));summary=read(out/'summary.json')
+    record_path=resolve(spec['investigation']);record=read(record_path)
+    if record.get('run')!=str(out):raise ValueError('cannot resume a stale investigation run')
+    identity=summary['identity']
+    for path,name in ((out/'emulator.exe','binary_sha256'),(out/'machine.toml','config_sha256'),
+                      (out/'rom/a500-timing-rom.bin','rom_sha256')):
+        if digest(path.read_bytes())!=identity[name]:raise ValueError('frozen artifact changed; start a new run')
+    build=read(out/'build-manifest.json')
+    meta,_=load_capture(out/'candidate',build,spec['capture'])
+    candidate_meta=read(out/'candidate/results.json')['metadata'] if (out/'candidate/results.json').exists() else None
+    if candidate_meta and meta['sha256']!=candidate_meta['sha256']:raise ValueError('candidate packet changed')
+    if not candidate_meta:
+        origin=read(out/'candidate/reuse.json')['original']
+        if meta['sha256']!=origin['results_sha256']:raise ValueError('cached candidate packet changed')
+    report=read(out/'comparison.json')
+    hashes=[load_capture(resolve(p),build,spec['capture'],True)[0]['sha256'] for p in report['references']]
+    if hashes!=report['reference_hashes']:raise ValueError('hardware evidence changed; start a new run')
+    changes=report.get('delta',{}).get('counts',{})
+    if any(changes.get(k,0) for k in ('regressions','qualification_regressions','missing_results')):
+        raise ValueError('cannot resume a regressed comparison')
+    if (report['counts']['excluded']>spec['comparison'].get('max_excluded',0)
+            or report['counts']['unstable_reference']>spec['comparison'].get('max_unstable',0)):
+        raise ValueError('cannot resume an unqualified comparison')
+    if any(name not in {c['name'] for c in spec.get('validation',[])} for name in repeat):
+        raise ValueError('repeat names must be declared validation commands')
+    attempts=out/'validation-retries';attempts.mkdir(exist_ok=True)
+    logs=attempts/str(len(list(attempts.iterdir()))+1);logs.mkdir()
+    variables=dict(root=str(ROOT),out=str(out),python=sys.executable,binary=str(out/'emulator.exe'),
+                   config=str(out/'machine.toml'),romdir=str(out/'rom'))
+    cache=ROOT/'captures/.experiment-cache'
+    successful={c['name'] for c in summary['commands'] if c['exit']==0}
+    pending=[c for c in spec.get('validation',[]) if TIERS.index(c['tier'])<=TIERS.index(through)
+             and (c['name'] not in successful or c['name'] in repeat)]
+    if not pending:raise ValueError('no validation remains at this tier; do not repeat unchanged checks')
+    summary.setdefault('validation_attempts',[])
+    summary.pop('error',None);summary.pop('logs',None)
+    try:
+        for command in spec.get('validation',[]):
+            if TIERS.index(command['tier'])>TIERS.index(through):break
+            if command['name'] in successful and command['name'] not in repeat:continue
+            result=dict(tier=command['tier'],**command_run(command,logs,variables,cache))
+            old=[c for c in summary['commands'] if c['name']==command['name']]
+            summary['validation_attempts']+=old
+            summary['commands']=[c for c in summary['commands'] if c['name']!=command['name']]+[result]
+            emit(out,'validation',dict(name=result['name'],tier=command['tier'],exit=result['exit'],retry=True))
+            if result['exit']:raise ValueError(f"{result['name']} failed: {result.get('excerpt','')}")
+        summary.update(status='review',validation_through=through)
+        record.update(decision='review evidence',
+                      no_new_evidence=0 if any(c['name'] not in successful for c in pending) else record.get('no_new_evidence',0),
+                      validation=[{k:c[k] for k in ('name','exit','tier') if k in c} for c in summary['commands']])
+    except Exception as error:
+        summary.update(status='failed',error=str(error)[:2000],logs=dict(directory=str(logs)))
+        record['decision']='validation failed'
+    write(record_path,record);write(out/'summary.json',summary);emit(out,'complete',compact(summary))
+    return summary
+
+
 def trace_window(left, right, case, window):
     def selected(path):
         rows = []
@@ -533,8 +614,8 @@ def decide(out, action, reason, evidence):
     out = resolve(out)
     spec = read(out / 'experiment.json')
     summary = read(out / 'summary.json')
-    if summary['status'] != 'review':
-        raise ValueError('failed/incomplete run cannot advance an investigation')
+    if summary['status'] != 'review' and action in ('accept','patch'):
+        raise ValueError('failed/incomplete run cannot be accepted or directly patched; record a narrowed/revised experiment')
     if not reason.strip() or not evidence or any(not resolve(p).exists() for p in evidence):
         raise ValueError('a reason and existing evidence paths are required')
     if action == 'accept':
@@ -591,8 +672,23 @@ def archive(out, destination):
     return dict(references=str(destination), runs=len(sources))
 
 
-def packets(before, after, suites):
+def packets(before, after, suites, binary=None, config=None):
     """A strict unchanged-packet gate; changed neighbors require HW interpretation."""
+    if bool(binary) != bool(config):
+        raise ValueError('binary and config identity checks must be supplied together')
+    if binary:
+        parent = resolve(after)
+        identity = read(parent/'summary.json')
+        expected_binary = digest(resolve(binary).read_bytes())
+        expected_config = digest(resolve(config).read_bytes())
+        if (identity['binary_sha256'] != expected_binary or identity['config_sha256'] != expected_config
+                or digest((parent/'emulator.exe').read_bytes()) != expected_binary
+                or digest((parent/'machine.toml').read_bytes()) != expected_config):
+            raise ValueError('replayed binary/config identity differs; rerun neighbors')
+        for suite in suites:
+            invocation = read(parent/suite/'invocation.json')
+            if invocation['binary_sha256'] != expected_binary or invocation.get('binary_changed_during_run'):
+                raise ValueError(f'{suite}: invalid replay binary provenance')
     counts = Counter(suites=len(suites), unchanged_cases=0, changed_cases=0, missing_suites=0)
     representatives = []
     for suite in suites:
@@ -618,6 +714,33 @@ def packets(before, after, suites):
                 status='failed' if counts['changed_cases'] or counts['missing_suites'] else 'unchanged')
 
 
+def aggregate(out, status, group_by, fields, limit=8):
+    """Summarize selected evidence without dumping matching records."""
+    out = resolve(out)
+    spec = read(out/'experiment.json')
+    definitions = {f.get('name', f['field']): f for f in
+                   spec['comparison']['measurements'] + spec['comparison']['qualification']}
+    if any(f not in definitions for f in fields) or any(f not in DESCRIPTOR for f in group_by):
+        raise ValueError('use declared measurement names and descriptor grouping fields')
+    groups = defaultdict(list)
+    for case, detail in read(out/'cases.json').items():
+        if detail['status'] == status:
+            r = detail['candidate']
+            groups[tuple(r[f] for f in group_by)].append((case,r))
+    result = []
+    for condition, rows in sorted(groups.items(), key=lambda item:(-len(item[1]),item[0]))[:limit]:
+        observed = {}
+        for name in fields:
+            distribution = Counter(value(row,definitions[name]) for _,row in rows)
+            observed[name] = dict(unit=definitions[name]['unit'], minimum=min(distribution),
+                                  maximum=max(distribution), distinct=len(distribution),
+                                  common=distribution.most_common(3))
+        result.append(dict(condition=dict(zip(group_by,condition)), count=len(rows),
+                           fields=observed, representatives=[case for case,_ in rows[:3]]))
+    return dict(status=status, cases=sum(map(len,groups.values())), groups_total=len(groups),
+                groups=result, note='Declared extraction only; no alignment or conversion of packed timing values.')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
@@ -626,7 +749,7 @@ def main():
     p.add_argument('--out', required=True)
     p.add_argument('--hardware', action='store_true', help='perform new live runs instead of reusing references')
     p.add_argument('--events', action='store_true', help='emit stage completion events, never raw logs')
-    p.add_argument('--through', choices=('comparison',) + TIERS, default='broad', help='stop at this validation tier; partial runs cannot be accepted')
+    p.add_argument('--through', choices=('preflight','comparison') + TIERS, default='broad', help='stop at this validation tier; partial runs cannot be accepted')
     for name in ('status', 'detail', 'decide', 'archive'):
         p = sub.add_parser(name)
         p.add_argument('run')
@@ -646,6 +769,18 @@ def main():
     p.add_argument('--before', required=True)
     p.add_argument('--after', required=True)
     p.add_argument('--suite', action='append', required=True)
+    p.add_argument('--binary')
+    p.add_argument('--config')
+    p = sub.add_parser('aggregate')
+    p.add_argument('run')
+    p.add_argument('--status', choices=('matches','mismatches','excluded','unstable_reference'), default='mismatches')
+    p.add_argument('--group-by', default='target,variant,phase')
+    p.add_argument('--fields', default='')
+    p.add_argument('--limit', type=int, default=8, choices=range(1,17))
+    p = sub.add_parser('resume')
+    p.add_argument('run')
+    p.add_argument('--through', choices=TIERS,default='broad')
+    p.add_argument('--repeat',action='append',default=[])
     args = parser.parse_args()
     try:
         if args.command == 'run':
@@ -654,9 +789,18 @@ def main():
                 print(json.dumps(compact(result)))
             return 1 if result['status'] == 'failed' else 0
         if args.command == 'packets':
-            result = packets(args.before, args.after, args.suite)
+            result = packets(args.before, args.after, args.suite, args.binary, args.config)
             print(json.dumps(result))
             return 1 if result['status'] == 'failed' else 0
+        if args.command == 'aggregate':
+            result = aggregate(args.run, args.status, [x for x in args.group_by.split(',') if x],
+                               [x for x in args.fields.split(',') if x], args.limit)
+            print(json.dumps(result))
+            return 0
+        if args.command == 'resume':
+            result=resume(args.run,args.through,args.repeat)
+            print(json.dumps(compact(result)))
+            return 1 if result['status']=='failed' else 0
         if args.command == 'status':
             result = read(resolve(args.run) / 'status.json')
         elif args.command == 'detail':
