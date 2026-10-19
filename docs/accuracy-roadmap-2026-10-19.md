@@ -20,8 +20,13 @@ working files. Use staged builds, immutable captures and compact scripted report
    supported by #3 bus findings.
    Repeated1920-case matrix isolates96 TST/six-plane+Copper handler-time
    differences; all other timing controls match. See CPU DMA investigation.
-5. **In progress: CIA serial buffering.** Drain initial state; active-output writes,
-   queued bytes and completion behavior, including repeatability.
+5. **Fixed pending-byte buffering; boundary timing remains measured.**
+   Two hardware runs agree on320 drained cases. One pending byte repairs147
+   complete cases without regressions;13 flag-boundary differences remain.
+   A separate40-case first-completion sweep isolates a pre-existing boundary
+   difference (one unstable hardware cohort excluded). See serial investigation.
+   All11 earlier regression packets and the1920-case CPU/DMA neighbor are
+   byte-identical;3635 core tests, strict Clippy and formatting pass.
 
 For each: competing hypotheses and discriminating test; emulator preflight;
 version source/ROM/configuration identity and restoration proof; focused and

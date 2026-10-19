@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "reference_id": "serial-boundary-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "captures\\serial-buffer-20261019\\a500-boundary-v1-run2",
+  "test_rom_sha256": "82c5a49a96929951756cb47c8684a8913ba9534d82b533965c0e60783d217614",
+  "source_id": "e3e4746fe1f0d5cf0ea4fd02f7ddb4d9fcf549d67505bf5bd75029eba7cc5578",
+  "results_sha256": "995f8e186d4ece8a29ae11813fdbb89d8a102f4a9b671b8e12be4642a40301b4",
+  "record_count": 40,
+  "metadata": {
+    "version": 1,
+    "source_id": "e3e4746fe1f0d5cf0ea4fd02f7ddb4d9fcf549d67505bf5bd75029eba7cc5578",
+    "record_count": 40,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "995f8e186d4ece8a29ae11813fdbb89d8a102f4a9b671b8e12be4642a40301b4"
+  },
+  "restoration": {
+    "backup_sha256": "dc32fa367dd3b0ed775cfbc4f7bcdc8ec5a3f8e1e9d1ef14e2e0376b58e771c0",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "dc32fa367dd3b0ed775cfbc4f7bcdc8ec5a3f8e1e9d1ef14e2e0376b58e771c0",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 63,
+    "aligned": false,
+    "targets": [
+      "CIA-A",
+      "CIA-B"
+    ],
+    "sources": [
+      "Timer-A-clocked serial output"
+    ],
+    "masks": null,
+    "phases": "TA latch15 or31",
+    "event_offset": "second snapshot target underflow count",
+    "watchdog": "bounded2048 TB polls per wait",
+    "units": "TB cascade counts TA underflows, one-edge delayed; not CPU cycles; no alignment",
+    "launch": "actual before/after UF brackets for SDR writes; FFFF means absent",
+    "masked_fields": null,
+    "limitations": "ICR completion flags only; no transmitted pin data or isolated IPL propagation",
+    "variants": "0=single;1=active write atUF4;2=active writes atUF4/8;3=idle write atUF20",
+    "drain": "latch1 output512 DBRA,stop/settle/ack; prestart SP flag must be clear",
+    "fields": {
+      "launch_beam": "write1 UF before",
+      "launch_ref": "write1 UF after",
+      "end_beam": "write2 UF before",
+      "end_ref": "write2 UF after",
+      "counter": "ICR atUF12 (corrected annotation; archived build label says18)",
+      "icr": "ICR at sampled UF",
+      "irq_beam": "ICR atUF56",
+      "irq_level": "first UF before",
+      "saved_pc_offset": "first UF after:second UF before",
+      "aux": "second UF after",
+      "second_counter_or_beam": "third UF before",
+      "second_icr_or_level": "third UF after"
+    },
+    "first_snapshot_target": 12
+  },
+  "repeatability": "Two independent runs agree on39/40 measured records. One CIA-B latch15 underflow14 SP observation differs at identical brackets; pooled comparator excludes that unstable cohort. All eight underflow15 observations agree. Both live restorations verified.",
+  "uncontrolled_state": "Observed TA-underflow brackets from delayed TB cascade, not electrical pin edges. Single-byte first flag boundary only; no transmitted payload evidence."
+}

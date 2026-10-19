@@ -18,10 +18,13 @@ import compare_copper_busy
 import compare_divider_irq
 import compare_irq_stage
 import compare_irq_focus
+import compare_serial_buffer
 import run_rom
 import rom_results
 
 SUITES = {
+    "serial-buffer": ("serial-buffer-v1", "references/serial-buffer-v1-run1"),
+    "serial-boundary": ("serial-boundary-v1", "references/serial-boundary-v1-run1"),
     "irq-stages": ("irq-stage-v7", "references/irq-stage-v7-run1"),
     "bus-phasepad": ("bus-phasepad-v1", "references/bus-phasepad-v1-run1"),
     "bus-phase-entry": ("bus-phase-entry-v1", "references/bus-phase-entry-v1-run1"),
@@ -73,7 +76,13 @@ def main(argv=None):
                 run_rom.run(snapshot, destination, config_snapshot, ROOT / "build" / archive)
                 left = compare_captures.load_capture(hardware)
                 right = compare_captures.load_capture(destination)
-                if suite == "cia-output":
+                if suite in ("serial-buffer", "serial-boundary"):
+                    if left["metadata"]["source_id"] != right["metadata"]["source_id"]:
+                        raise ValueError("source_id mismatch")
+                    hw_rows = compare_serial_buffer.load(hardware)
+                    hw_rows += compare_serial_buffer.load(ROOT / (reference[:-1] + "2"))
+                    raw = compare_serial_buffer.compare(hw_rows, compare_serial_buffer.load(destination))
+                elif suite == "cia-output":
                     if left["metadata"]["source_id"] != right["metadata"]["source_id"]:
                         raise ValueError("source_id mismatch")
                     _, hw_rows = compare_cia_hardware.load(hardware)
