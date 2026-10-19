@@ -70,5 +70,16 @@
     "restore_readback_sha256": "307efb7875f32291be59dc93aa44eaae40ab1072aaf0091b88d1823bf9fc21cf",
     "restored_verified": true,
     "write_attempted": true
+  },
+  "metadata": {
+    "version": 1,
+    "source_id": "27f3bf9fae753fd30fdf6d514f8da2b4942dd10e0ece31c55b3d6b6ffe0aad3c",
+    "record_count": 1792,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "85dff19e8ce60593c633045047e721d37bb2fe7905f99bca75b1823a2153cbf3"
   }
 }

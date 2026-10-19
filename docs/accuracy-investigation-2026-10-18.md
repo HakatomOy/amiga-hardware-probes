@@ -38,13 +38,12 @@ case IDs, per-field deltas and logs are linked in
 
 ## Next unresolved question
 
-Physical bus-marker probes now isolate a repeated completion family: BBUSY
-clears early and the Copper BFD completion marker is observed early. CPU
-read-tail sampling and skipping the launch clock were insufficient; both
-candidates are reverted. See
-[the bus handoff](bus-marker-investigation-2026-10-19.md) for reference IDs,
-source files, bounded traces, rejected hypotheses and the next bus-pressure
-experiment. Do not repeat unchanged captures or retune a global delay.
+Physical bus-marker probes isolate the early BBUSY/BFD completion family.
+A split Copper start pipeline now matches busy/markers in onset, pressure and
+dense completion controls without moving CPU read sampling. See the current
+[bus investigation](bus-pressure-2026-10-19.md) for exact counts, excluded
+brackets, candidate validation and remaining first-case BZERO uncertainty.
+CPU register-handoff mismatches remain a separate family.
 The existing divider/IRQ cases match; broader operand/prefetch contention
 needs new physical evidence after this bus question is resolved.
 

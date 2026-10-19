@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay immutable CIA/IRQ reference ROMs; print one summary per suite."""
+"""Replay immutable hardware reference ROMs; print one summary per suite."""
 import argparse
 import contextlib
 import hashlib
@@ -21,6 +21,9 @@ import run_rom
 import rom_results
 
 SUITES = {
+    "bus-phasepad": ("bus-phasepad-v1", "references/bus-phasepad-v1-run1"),
+    "bus-phase-entry": ("bus-phase-entry-v1", "references/bus-phase-entry-v1-run1"),
+    "bus-phase-completion": ("bus-phase-completion-v1", "references/bus-phase-completion-v1-run1"),
     "bus-pressure": ("bus-pressure-v2", "references/bus-pressure-v2-run1"),
     "bus-onset": ("bus-onset-v1", "references/bus-onset-v1-run1"),
     "bus-marker": ("bus-marker-focus-v2", "references/bus-marker-focus-v2-run1"),
@@ -74,7 +77,7 @@ def main(argv=None):
                     _, hw_rows = compare_cia_hardware.load(hardware)
                     _, emu_rows = compare_cia_hardware.load(destination)
                     raw = compare_cia_hardware.compare(hw_rows, emu_rows)
-                elif suite in ("bus-marker", "bus-completion", "bus-pressure", "bus-onset"):
+                elif suite.startswith("bus-"):
                     if left["metadata"]["source_id"] != right["metadata"]["source_id"]:
                         raise ValueError("source_id mismatch")
                     _, hw_rows = compare_bus_marker.load(hardware)
@@ -90,7 +93,7 @@ def main(argv=None):
                 (destination / "raw-comparison.json").write_text(json.dumps(raw, indent=2) + "\n")
                 result = {"raw_counts": raw["counts"], "reference": str(hardware),
                           "source_id": left["metadata"]["source_id"], "report": str(destination / "raw-comparison.json")}
-                if suite in ("bus-marker", "bus-completion", "bus-pressure", "bus-onset"):
+                if suite.startswith("bus-"):
                     result["phase_cohorts"] = raw["phase_cohorts"]["counts"]
                     result["signal_mismatches"] = raw["phase_cohorts"]["signal_mismatches"]
                 if suite == "cia-irq":
