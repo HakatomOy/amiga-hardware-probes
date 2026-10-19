@@ -1,0 +1,305 @@
+{
+  "baseline_commit": "f2d0a52348ef2caf9ee48e4d500c1b1b1011102e",
+  "candidate_binary_sha256": "84427e1ed8bc91ea06348f510af4c3115b76ee6db91fe31a792ffde5668b3deb",
+  "machine_config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+  "comparisons": {
+    "a500-v3-vs-f2d-final-comparator": {
+      "total": 2128,
+      "missing": 0,
+      "comparable": 1946,
+      "different_underflow_brackets": 182,
+      "match": 765,
+      "mismatch": 1181
+    },
+    "a500-v3-vs-final": {
+      "total": 2128,
+      "missing": 0,
+      "comparable": 1946,
+      "different_underflow_brackets": 182,
+      "match": 1946,
+      "mismatch": 0
+    },
+    "a500-v4-vs-final": {
+      "total": 2272,
+      "missing": 0,
+      "comparable": 2063,
+      "different_underflow_brackets": 209,
+      "match": 2063,
+      "mismatch": 0
+    },
+    "a500-v4-run2-vs-final": {
+      "total": 2272,
+      "missing": 0,
+      "comparable": 2069,
+      "different_underflow_brackets": 203,
+      "match": 2069,
+      "mismatch": 0
+    },
+    "a500-v4-repeat": {
+      "total": 2272,
+      "missing": 0,
+      "comparable": 2225,
+      "different_underflow_brackets": 47,
+      "match": 2225,
+      "mismatch": 0
+    }
+  },
+  "units": "raw registers; measured underflows=65535-TB; no alignment",
+  "qualification": "Serial: identical before/after underflow brackets. PB6: identical final underflow count. Different brackets reported separately, never matches.",
+  "local_artifacts": "captures/cia-hw-20261019",
+  "limits": [
+    "TA/PB6 measured on both CIAs; TB/PB7 shared behavior only regression-tested",
+    "CPU IRQs masked; INTREQ snapshot is not electrical IRQ propagation or CPU IPL timing",
+    "Serial clean one-byte completion only; buffering remains unresolved"
+  ],
+  "checks": {
+    "headless_core": {
+      "passed": 3020,
+      "failed": 0,
+      "ignored": 5,
+      "command": "test --lib --profile ci --no-default-features --features control --locked --offline"
+    },
+    "clippy": "all-targets all-features, -D warnings: passed",
+    "format": "fmt -- --check: passed",
+    "probe_tools": {
+      "passed": 175,
+      "failed": 0
+    },
+    "logs": "captures/cia-hw-20261019/cargo"
+  },
+  "candidate_commit": "3b43225c",
+  "bus_regression_counts": {
+    "copper-busy": {
+      "counts": {
+        "eligible": 449,
+        "different_launch": 79,
+        "before_mismatch": 41,
+        "after_mismatch": 41,
+        "repaired": 0,
+        "regressed": 0,
+        "still_mismatched": 41
+      },
+      "fields": {
+        "sample0_busy": {
+          "before": 5,
+          "after": 5
+        },
+        "sample0_zero": {
+          "before": 12,
+          "after": 12
+        },
+        "sample1_busy": {
+          "before": 0,
+          "after": 0
+        },
+        "sample1_zero": {
+          "before": 3,
+          "after": 3
+        },
+        "sample2_busy": {
+          "before": 8,
+          "after": 8
+        },
+        "sample2_zero": {
+          "before": 3,
+          "after": 3
+        },
+        "sample3_busy": {
+          "before": 4,
+          "after": 4
+        },
+        "sample3_zero": {
+          "before": 5,
+          "after": 5
+        },
+        "sample4_busy": {
+          "before": 1,
+          "after": 1
+        },
+        "sample4_zero": {
+          "before": 5,
+          "after": 5
+        },
+        "sample5_busy": {
+          "before": 7,
+          "after": 7
+        },
+        "sample5_zero": {
+          "before": 10,
+          "after": 10
+        },
+        "sample6_busy": {
+          "before": 5,
+          "after": 5
+        },
+        "sample6_zero": {
+          "before": 5,
+          "after": 5
+        },
+        "sample7_busy": {
+          "before": 4,
+          "after": 4
+        },
+        "sample7_zero": {
+          "before": 0,
+          "after": 0
+        }
+      },
+      "examples": {
+        "repaired": [],
+        "regressed": [],
+        "still_mismatched": [
+          {
+            "case": "50:0:0:5:0:0",
+            "before_fields": [
+              "sample0_busy"
+            ],
+            "after_fields": [
+              "sample0_busy"
+            ]
+          },
+          {
+            "case": "50:0:2:0:0:0",
+            "before_fields": [
+              "sample6_busy",
+              "sample6_zero",
+              "sample7_busy"
+            ],
+            "after_fields": [
+              "sample6_busy",
+              "sample6_zero",
+              "sample7_busy"
+            ]
+          },
+          {
+            "case": "50:0:2:0:0:1",
+            "before_fields": [
+              "sample6_busy",
+              "sample6_zero",
+              "sample7_busy"
+            ],
+            "after_fields": [
+              "sample6_busy",
+              "sample6_zero",
+              "sample7_busy"
+            ]
+          }
+        ]
+      }
+    },
+    "blitter-handoff": {
+      "counts": {
+        "eligible": 2304,
+        "different_launch": 0,
+        "before_mismatch": 1238,
+        "after_mismatch": 1238,
+        "repaired": 0,
+        "regressed": 0,
+        "still_mismatched": 1238
+      },
+      "fields": {
+        "final_first_d": {
+          "before": 0,
+          "after": 0
+        },
+        "final_last_d": {
+          "before": 0,
+          "after": 0
+        },
+        "early_d": {
+          "before": 0,
+          "after": 0
+        },
+        "first_clear_zero": {
+          "before": 82,
+          "after": 82
+        },
+        "postwrite_busy": {
+          "before": 0,
+          "after": 0
+        },
+        "postwrite_zero": {
+          "before": 0,
+          "after": 0
+        },
+        "handoff_beam": {
+          "before": 1196,
+          "after": 1196
+        },
+        "postwrite_beam": {
+          "before": 1196,
+          "after": 1196
+        }
+      },
+      "examples": {
+        "repaired": [],
+        "regressed": [],
+        "still_mismatched": [
+          {
+            "case": "49:0:2:0:0:0",
+            "before_fields": [
+              "handoff_beam",
+              "postwrite_beam"
+            ],
+            "after_fields": [
+              "handoff_beam",
+              "postwrite_beam"
+            ]
+          },
+          {
+            "case": "49:0:2:0:0:1",
+            "before_fields": [
+              "handoff_beam",
+              "postwrite_beam"
+            ],
+            "after_fields": [
+              "handoff_beam",
+              "postwrite_beam"
+            ]
+          },
+          {
+            "case": "49:0:2:0:1:0",
+            "before_fields": [
+              "handoff_beam",
+              "postwrite_beam"
+            ],
+            "after_fields": [
+              "handoff_beam",
+              "postwrite_beam"
+            ]
+          }
+        ]
+      }
+    },
+    "bzero-edges": {
+      "counts": {
+        "eligible": 4608,
+        "different_launch": 0,
+        "before_mismatch": 0,
+        "after_mismatch": 0,
+        "repaired": 0,
+        "regressed": 0,
+        "still_mismatched": 0
+      },
+      "fields": {
+        "busy": {
+          "before": 0,
+          "after": 0
+        },
+        "zero": {
+          "before": 0,
+          "after": 0
+        },
+        "post_sample_beam": {
+          "before": 0,
+          "after": 0
+        }
+      },
+      "examples": {
+        "repaired": [],
+        "regressed": [],
+        "still_mismatched": []
+      }
+    }
+  }
+}

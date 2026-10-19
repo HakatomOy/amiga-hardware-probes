@@ -50,3 +50,13 @@ Relevant code: `../Copperline/src/chipset/cia.rs`, `src/bus.rs`, `src/cpu.rs`
 (the latter two also under Copperline). Resolve this bus family before broader
 68000 operand/prefetch contention experiments. The present divider cases match;
 no additional CPU patch is supported yet. Start a fresh context from this record.
+
+## Follow-up: physical CIA verification, 19 October
+
+F2d batching consistency did not establish physical PB/serial accuracy. New
+A500 measurements confirmed pulse polarity, START toggle reset, merged
+zero-latch underflows, TA high-byte auto-start carries, and sixteen-underflow
+serial completion differences. See
+[the current hardware record](cia-hardware-verification-2026-10-19.md) and its
+versioned v3/v4 reference packets. Earlier qualified IRQ/divider matches remain
+useful neighbors; they do not imply that all CIA behavior matches hardware.

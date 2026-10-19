@@ -12,6 +12,7 @@ import traceback
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import compare_captures
+import compare_cia_hardware
 import compare_copper_busy
 import compare_divider_irq
 import compare_irq_focus
@@ -19,6 +20,7 @@ import run_rom
 import rom_results
 
 SUITES = {
+    "cia-output": ("cia-hw-verify-v4", "references/cia-output-serial-v4-run1"),
     "cia-irq": ("cia-cpu-irq-kind51-review3", "references/cia-irq-kind51-review3-run1"),
     "irq-focus": ("irq-focus-v3", "references/irq-focus-v3"),
     "divider-irq": ("divider-irq-signs-v3", "references/divider-irq-v3"),
@@ -61,7 +63,13 @@ def main(argv=None):
                 run_rom.run(snapshot, destination, config_snapshot, ROOT / "build" / archive)
                 left = compare_captures.load_capture(hardware)
                 right = compare_captures.load_capture(destination)
-                if suite == "copper-busy":
+                if suite == "cia-output":
+                    if left["metadata"]["source_id"] != right["metadata"]["source_id"]:
+                        raise ValueError("source_id mismatch")
+                    _, hw_rows = compare_cia_hardware.load(hardware)
+                    _, emu_rows = compare_cia_hardware.load(destination)
+                    raw = compare_cia_hardware.compare(hw_rows, emu_rows)
+                elif suite == "copper-busy":
                     _, hw_rows = compare_copper_busy.load(hardware)
                     _, emu_rows = compare_copper_busy.load(destination)
                     raw = compare_copper_busy.compare(hw_rows, emu_rows)

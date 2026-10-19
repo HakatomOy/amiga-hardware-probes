@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "reference_id": "cia-output-serial-v4-run1",
+  "original_capture": "captures/cia-hw-20261019/a500-v4-run1",
+  "test_rom_sha256": "dce67c527f6110afa7ff9d3394c77fde638e2274b64d204f873580537ce7423c",
+  "source_id": "d96fb5b8ee118d27d8ab0f2263c2e81fc32fd6a805672ae96178f302c3dcfd5f",
+  "results_sha256": "ad19661fb56aa8566ad524c5f6c1c605ce77466b87c3b3879fe8394347503a79",
+  "record_count": 2272,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS; raw VPOSR a000",
+    "denise": "OCS; raw ID floats",
+    "silicon_revisions": "unconfirmed"
+  },
+  "capture_method": "OneROM live ROM substitution; checksum-protected RBCP; original backup restored and readback verified",
+  "repeatability": "Two independent captures; 2225 underflow-qualified pairs all match; 47 different brackets excluded. Each capture also includes two repeats per descriptor.",
+  "observation_profile": {
+    "kinds": {
+      "52": "serial SP completion",
+      "53": "TA PB6 pulse/toggle",
+      "54": "TA high-byte one-shot auto-start PB6"
+    },
+    "target": "0=CIA-A, 1=CIA-B",
+    "variant52": "0=SP masked, 1=SP enabled",
+    "variant53": "bit0 toggle, bit1 one-shot, bit2 DDRB=FF rather than 00",
+    "phase": "latch index into 0,1,3,15,200",
+    "delay": "DBRA delay, not an E-clock timestamp",
+    "repeat": "two executions",
+    "fields": {
+      "launch_beam": "post-start VHPOSR",
+      "launch_ref": "TB cascade bracket before observations",
+      "end_beam": "VHPOSR after live PB read",
+      "end_ref": "TB cascade bracket after observations",
+      "counter": "ICR snapshot",
+      "icr": "settled PB pins",
+      "irq_beam": "raw INTREQR before ICR",
+      "irq_level": "live PB pins",
+      "saved_pc_offset": "high16=PB before PBON, low16=pre-start VHPOSR; not PC",
+      "aux": "PB pins before START",
+      "second_counter_or_beam": "stopped TA",
+      "second_icr_or_level": "stopped TB cascade count",
+      "status": "0=collected"
+    },
+    "units": "raw registers; underflows=65535-TB; no trace alignment or inferred CPU delay",
+    "setup": "Serial pipeline drained at latch1 for 256 DBRA iterations, stopped and settled; one-shot configured only after high-byte latch write",
+    "limits": "TB cascade is one edge delayed; before/after counts bracket observations; all CPU IRQs masked; no pin propagation claim from beam differences"
+  },
+  "metadata": {
+    "version": 1,
+    "source_id": "d96fb5b8ee118d27d8ab0f2263c2e81fc32fd6a805672ae96178f302c3dcfd5f",
+    "record_count": 2272,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "ad19661fb56aa8566ad524c5f6c1c605ce77466b87c3b3879fe8394347503a79"
+  },
+  "restoration": {
+    "errors": [],
+    "reset_release_verified": true,
+    "restored_verified": true
+  }
+}
