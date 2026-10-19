@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "reference_id": "cia-phase-v2-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a001"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified backup restoration",
+  "original_capture": "captures\\cia-phase-20261019\\a500-v2-run2",
+  "test_rom_sha256": "4fb7eecec5a167dd8f1079da7ffb31a0130533e2fc945e3b6f5f38c1b1f41fa3",
+  "source_id": "c1fc0ef5b2492d8d508ac5b660b4cf95d1b5b1417c2ee4b722f0ac460f0b5694",
+  "results_sha256": "5b880e37c5915e8b02aa76a04db3be6b31ad3340b51eaf60b6eff35c080b7406",
+  "record_count": 768,
+  "metadata": {
+    "version": 1,
+    "source_id": "c1fc0ef5b2492d8d508ac5b660b4cf95d1b5b1417c2ee4b722f0ac460f0b5694",
+    "record_count": 768,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "5b880e37c5915e8b02aa76a04db3be6b31ad3340b51eaf60b6eff35c080b7406"
+  },
+  "observation_profile": {
+    "kind": 57,
+    "aligned": true,
+    "targets": [
+      0,
+      2,
+      4
+    ],
+    "sources": [
+      0,
+      2,
+      5,
+      6
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line68 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line72 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Request readback is not an electrical IPL timestamp; instruction polls and exception entry remain combined in handler beam",
+    "calibration": "+16 pre-CIA-A-PRA beam; +36 post-read beam; +38 raw PRA diagnostic",
+    "prelatched": "variants5/6: prime flag masked; CPU ICR mask-enable; Copper INTENA unmask line68 for recognition",
+    "masked": "direct CIA write then INTREQR/beam pairs; timer streams pad76 NOP, mask-enable no pad; +18 settled INTREQR",
+    "limits": "Calibration brackets condition evidence; no trace shifts. Prelatched recognition isolates Paula unmask; raw streams isolate CIA mask enable."
+  },
+  "restoration": {
+    "backup_sha256": "c4282f07602357a8eb4dcbb287d88f516e69e7fbe7dbe1f174fdfedf75f1f040",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "c4282f07602357a8eb4dcbb287d88f516e69e7fbe7dbe1f174fdfedf75f1f040",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "repeatability": "Two independent runs: 384 exact calibration/release/read cohorts agree; 384 excluded. Same-descriptor phase rotates; do not compare unqualified observations.",
+  "uncontrolled_state": "Independent E-clock calibration recorded; keyboard diagnostic serial flags not drained."
+}

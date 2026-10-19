@@ -19,7 +19,8 @@ def trials(repeats=2):
             for p in range(4) for d in range(8) for r in range(repeats)]
 
 
-def build(assembler, wsl, out, repeats=2, aligned=False):
+def build(assembler, wsl, out, repeats=2, aligned=False, rows=None, transform=None, profile=None):
+    selected_rows = trials(repeats) if rows is None else rows
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     stage = out / "source_snapshot"
@@ -43,10 +44,12 @@ def build(assembler, wsl, out, repeats=2, aligned=False):
     p.write_text(text + '\n        even\n        include "irq_stage_kernel.i"\n')
     p = stage / "src/rom/edge_kernel.asm"
     p.write_text(p.read_text() + '\n        dcb.b $ffca00-*,0\n        include "irq_stage_observer.i"\n')
+    if transform is not None:
+        transform(stage)
     old_root, old_trials = build_rom.ROOT, build_rom.trials
     try:
         build_rom.ROOT = stage
-        build_rom.trials = lambda *a, **k: trials(repeats)
+        build_rom.trials = lambda *a, **k: selected_rows
         manifest = build_rom.build(assembler, wsl=wsl, edges=True)
     finally:
         build_rom.ROOT, build_rom.trials = old_root, old_trials
@@ -64,6 +67,8 @@ def build(assembler, wsl, out, repeats=2, aligned=False):
                        "aux": "beam3", "second_counter_or_beam": "settled INTREQR",
                        "second_icr_or_level": "expected source mask"},
         limitations="Request readback is not an electrical IPL timestamp; instruction polls and exception entry remain combined in handler beam")
+    if profile is not None:
+        manifest["irq_stage"].update(profile)
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps({k: manifest[k] for k in ("source_id", "trial_count", "rom_sha256")}))
     return manifest

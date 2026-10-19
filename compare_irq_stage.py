@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Compare kind56 exact release/read-bracket cohorts without timing alignment."""
+"""Compare kind56/57 exact release/read-bracket cohorts without timing alignment."""
 import argparse
 from collections import Counter, defaultdict
 import json
 from pathlib import Path
 import rom_results
 from build_irq_stage_rom import TARGETS, SOURCES, MASKS
+
+SOURCES = SOURCES + ("CIA_A_PRELATCHED_UNMASK", "CIA_B_PRELATCHED_UNMASK")
+MASKS = MASKS + (8, 0x2000)
 
 DESC = tuple(rom_results.FIELDS[:6])
 
@@ -20,30 +23,37 @@ def beams(row):
 
 
 def cohort(row):
-    return key(row)[:-1] + (row["launch_beam"], row["launch_ref"]) + (beams(row) if row["target"] == 4 else ())
+    calibration = (row["end_beam"], row["second_counter_or_beam"]) if row["kind"] == 57 else ()
+    return key(row)[:-1] + (row["launch_beam"], row["launch_ref"]) + calibration + (beams(row) if row["target"] == 4 else ())
 
 
 def measures(row):
     if row["target"] == 4:
         mask = MASKS[row["variant"]]
+        settled = "end_ref" if row["kind"] == 57 else "second_counter_or_beam"
         return {name: row[f] & mask for name, f in
                 (("raw0", "counter"), ("raw1", "icr"), ("raw2", "irq_beam"),
-                 ("settled", "second_counter_or_beam"))}
-    return {f: row[f] for f in ("end_ref", "counter", "icr", "irq_beam", "irq_level",
-                                "saved_pc_offset", "aux", "second_counter_or_beam", "second_icr_or_level")}
+                 ("settled", settled))}
+    fields = ("end_ref", "counter", "icr", "irq_beam", "irq_level", "saved_pc_offset", "aux")
+    if row["kind"] != 57:
+        fields += ("second_counter_or_beam", "second_icr_or_level")
+    return {f: row[f] for f in fields}
 
 
 def validate(row):
-    if row["kind"] != 56 or not 0 <= row["target"] < 5 or not 0 <= row["variant"] < 5:
+    valid_source = row["variant"] in ((0, 2, 5, 6) if row["kind"] == 57 else range(5))
+    if row["kind"] not in (56, 57) or not 0 <= row["target"] < 5 or not valid_source:
         raise ValueError("unexpected kind/target/source")
-    if not 0 <= row["phase"] < 4 or not 0 <= row["delay"] < 8 or row["repeat"] not in (0, 1):
+    if not 0 <= row["phase"] < 4 or not 0 <= row["delay"] < 8 or row["repeat"] not in (range(5) if row["kind"] == 57 else range(2)):
         raise ValueError("descriptor outside the experiment matrix")
     if row["status"]:
         raise ValueError(f"{key(row)}: failed/missed interrupt status={row['status']}")
     if row["target"] == 4:
-        if row["second_icr_or_level"] != MASKS[row["variant"]] or not row["second_counter_or_beam"] & MASKS[row["variant"]]:
+        settled = row["end_ref"] if row["kind"] == 57 else row["second_counter_or_beam"]
+        mask_ok = row["kind"] == 57 or row["second_icr_or_level"] == MASKS[row["variant"]]
+        if not mask_ok or not settled & MASKS[row["variant"]]:
             raise ValueError(f"{key(row)}: masked source never latched")
-    elif row["aux"] != 1 or row["irq_level"] != (2, 3, 6, 2, 6)[row["variant"]]:
+    elif row["aux"] != 1 or row["irq_level"] != (2, 3, 6, 2, 6, 2, 6)[row["variant"]]:
         raise ValueError(f"{key(row)}: duplicate/wrong-level/watchdog event")
 
 
@@ -97,6 +107,14 @@ def compare(hardware, candidate):
                 for (t, s, diff), rows in sorted(groups.items(), key=lambda x: (-len(x[1]), x[0]))])
 
 
+def calibration_summary(rows):
+    """Independent phase evidence, never derived from interrupt outcomes."""
+    pairs = Counter((r["end_beam"], r["second_counter_or_beam"])
+                    for r in rows if r["kind"] == 57)
+    return [dict(pre=f"{pre:04x}", post=f"{post:04x}", cases=count)
+            for (pre, post), count in sorted(pairs.items())]
+
+
 def software_summary(report):
     total = sum(v.get("matches", 0) + v.get("mismatches", 0)
                 for k, v in report["by_mode_source"].items() if ":COPPER_" in k)
@@ -124,10 +142,13 @@ if __name__ == "__main__":
     h = [row for _, _, rows in captures for row in rows]
     report = compare(h, c)
     report["software_requests"] = software_summary(report)
+    report["independent_calibration"] = dict(
+        hardware=[dict(path=str(path), brackets=calibration_summary(rows))
+                  for path, _, rows in captures], candidate=calibration_summary(c))
     report.update(hardware=[str(path) for path, _, _ in captures],
                   reference_hashes=[meta["sha256"] for _, meta, _ in captures],
                   candidate=str(a.candidate), source_id=cm["source_id"],
-                  alignment="none; exact release brackets; masked controls also require all read brackets",
+                  alignment="none; exact release brackets and kind57 independent calibration; masked controls also require all read brackets",
                   units="raw register words, absolute PC, encoded beam; no packed-word subtraction")
     a.out.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report["counts"]))
