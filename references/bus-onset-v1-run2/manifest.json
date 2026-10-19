@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "reference_id": "bus-onset-v1-run2",
+  "original_capture": "captures/bus-pressure-20261019/a500-onset-v1-run2",
+  "test_rom_sha256": "0f30b0a82b8e1e98f643c267f102416f43c8512ec23954fa5596727ea306ec34",
+  "source_id": "c63a6d43f2b54ffc1cb49304be712a2d4beccef551a71b18f3fcd9cc3e3d045b",
+  "results_sha256": "a4c17d68297c376cc989dbfd1e1a2baf662280ef255d99b485350c131afc46b2",
+  "record_count": 2176,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS; raw VPOSR a000",
+    "denise": "OCS; raw ID floats",
+    "silicon_revisions": "unconfirmed"
+  },
+  "capture_method": "OneROM live ROM substitution; checksum-protected RBCP; original backup restored and readback verified",
+  "repeatability": "Two independent runs agree on all 2176 exact-phase cohort observations, zero mismatches/unstable groups. Candidate counts can reuse hardware observations.",
+  "observation_profile": {
+    "kind": 55,
+    "focused": false,
+    "completion_marker": true,
+    "bus_pressure": false,
+    "onset": true,
+    "widths": [
+      1,
+      16
+    ],
+    "gates": [
+      32,
+      36,
+      40,
+      44,
+      48,
+      52,
+      56,
+      60,
+      64,
+      68,
+      72,
+      76,
+      80,
+      84,
+      88,
+      92,
+      96
+    ],
+    "variant": "bit0 BLTPRI; bit1 CPU launch; bit2 marker after size; bit3 no blit",
+    "phase": "gate index",
+    "delay": "reserved zero",
+    "repeat": "two executions",
+    "observer": "FFC A00 (FFCA00); four alternating INTREQR/DMACONR pairs, no stores between reads",
+    "fields": {
+      "launch_beam": "pre-train or pre-CPU-launch VHPOSR",
+      "launch_ref": "post-train VHPOSR",
+      "end_beam": "settled VHPOSR; FFFF on watchdog",
+      "end_ref": "settled INTREQR",
+      "20..34": "four INTREQR/DMACONR pairs; status and saved PC are raw samples",
+      "36..38": "settled first/last D words"
+    },
+    "units": "raw register values; beam brackets only; no inferred cycle offsets or trace alignment",
+    "copper": "line66 h60 WAIT; marker/size adjacent moves; completion profile adds BFD=0 WAIT and INTREQ.SOFT",
+    "limits": "CPU sequence starts after its gate; Copper sequence starts at fixed WAIT. Do not equate their gates to transfer timestamps."
+  },
+  "metadata": {
+    "version": 1,
+    "source_id": "c63a6d43f2b54ffc1cb49304be712a2d4beccef551a71b18f3fcd9cc3e3d045b",
+    "record_count": 2176,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "a4c17d68297c376cc989dbfd1e1a2baf662280ef255d99b485350c131afc46b2"
+  },
+  "restoration": {
+    "errors": [],
+    "reset_release_verified": true,
+    "restored_verified": true
+  }
+}

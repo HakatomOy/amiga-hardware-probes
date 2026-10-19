@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS; raw VPOSR a000",
+    "denise": "OCS; raw ID floats",
+    "silicon_revisions": "unconfirmed"
+  },
+  "capture_method": "OneROM live ROM substitution; checksum-protected RBCP; original backup restored and readback verified",
+  "reference_id": "bus-phasepad-v1-run1",
+  "original_capture": "captures\\bus-pressure-20261019\\a500-phasepad-v1-run1",
+  "test_rom_sha256": "cb8bbf0fe5db6f6c3f11e115e46c2adfe4f64fca7110d19bd0fb682f1f0daa88",
+  "source_id": "45bb8fcc910ddf3c4ad1368ae785195edb2e98ad46f61a6c7c4811d78f8586e8",
+  "results_sha256": "72d6c86f48bda170e87c6d499bbb3979d8c3c837db963465f1fc923b79960b8f",
+  "record_count": 768,
+  "repeatability": "One independent hardware run; no unstable exact-phase groups across repeated cases. Further independent repeat pending.",
+  "observation_profile": {
+    "kind": 55,
+    "focused": false,
+    "completion_marker": false,
+    "bus_pressure": false,
+    "onset": false,
+    "phase_pad": true,
+    "widths": [
+      1,
+      16
+    ],
+    "gates": [
+      64,
+      68,
+      72,
+      76,
+      80,
+      84,
+      88,
+      92,
+      96,
+      100,
+      104,
+      108,
+      112,
+      116
+    ],
+    "variant": "bit0 BLTPRI; bit1 CPU launch; bit2 marker after size; bit3 no blit",
+    "phase": "gate index",
+    "delay": "reserved zero",
+    "repeat": "two executions",
+    "observer": "FFC A00 (FFCA00); four alternating INTREQR/DMACONR pairs, no stores between reads",
+    "fields": {
+      "launch_beam": "pre-train or pre-CPU-launch VHPOSR",
+      "launch_ref": "post-train VHPOSR",
+      "end_beam": "settled VHPOSR; FFFF on watchdog",
+      "end_ref": "settled INTREQR",
+      "20..34": "four INTREQR/DMACONR pairs; status and saved PC are raw samples",
+      "36..38": "settled first/last D words"
+    },
+    "units": "raw register values; beam brackets only; no inferred cycle offsets or trace alignment",
+    "copper": "line66 h60 WAIT; marker/size adjacent moves; completion profile adds BFD=0 WAIT and INTREQ.SOFT",
+    "limits": "CPU sequence starts after its gate; Copper sequence starts at fixed WAIT. Do not equate their gates to transfer timestamps."
+  },
+  "restoration": {
+    "backup_sha256": "66be9458fd5f067700fe18daf731e1701dbd95f5b7aa73d623111d2052693541",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "66be9458fd5f067700fe18daf731e1701dbd95f5b7aa73d623111d2052693541",
+    "restored_verified": true,
+    "write_attempted": true
+  }
+}

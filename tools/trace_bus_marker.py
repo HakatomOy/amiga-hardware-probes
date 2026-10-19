@@ -22,6 +22,7 @@ def main():
     a = p.parse_args()
     flags = {key: "1" for key in ("COPPERLINE_DIAG_BLT_SLOTS", "COPPERLINE_DIAG_COP_WRITES",
                                  "COPPERLINE_DIAG_CPU_READS")}
+    flags["COPPERLINE_DIAG_CPU_BUS_ADDR"] = "0xdff002,0xdff01e"
     original = run_rom._popen_with_binary_hash
     def launch(*args, **kwargs):
         kwargs["env"].update(flags)

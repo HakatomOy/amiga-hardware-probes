@@ -16,8 +16,8 @@ def case_id(key):
 
 def samples(row):
     pc = row["saved_pc_offset"]
-    return (row["counter"] & 0x14, row["icr"] & 0x6000,
-            row["irq_beam"] & 0x14, row["irq_level"] & 0x6000,
+    return (row["counter"] & 0x14, None if row["delay"] & 1 else row["icr"] & 0x6000,
+            row["irq_beam"] & 0x14, None if row["delay"] & 2 else row["irq_level"] & 0x6000,
             (pc >> 16) & 0x14, pc & 0x6000,
             row["status"] & 0x14, row["aux"] & 0x6000)
 
@@ -38,14 +38,22 @@ def load(path):
     if len({tuple(r[k] for k in DESCRIPTOR) for r in rows}) != len(rows):
         raise ValueError("duplicate descriptors")
     for r in rows:
-        if r["kind"] != 55 or r["target"] not in (0, 1) or r["variant"] not in range(16):
+        if r["kind"] != 55 or r["target"] not in (0, 1) or r["variant"] not in range(32 if profile.get("phase_pad") else 16):
             raise ValueError("invalid descriptor")
         if r["launch_beam"] == 0xffff or r["launch_ref"] == 0xffff or r["end_beam"] == 0xffff:
             raise ValueError("watchdog expired")
         expected = 0xdead if r["variant"] & 8 else 0xffff
         if (r["second_counter_or_beam"], r["second_icr_or_level"]) != (expected, expected):
             raise ValueError("unsettled or incorrect destination")
-        required = 0x14 if profile.get("completion_marker") else 0x10
+        if profile.get("bus_pressure"):
+            if r["delay"] not in range(4):
+                raise ValueError("invalid pressure mask")
+            for bit, field in ((1, "icr"), (2, "irq_level")):
+                if r["delay"] & bit and r[field] != 0xa55a:
+                    raise ValueError("ROM pressure substitute did not read A55A")
+        elif r["delay"]:
+            raise ValueError("unexpected pressure mask for baseline capture")
+        required = 0x14 if profile.get("completion_marker") and not r["variant"] & 2 else 0x10
         if r["end_ref"] & required != required:
             raise ValueError("marker missing after settling")
     return meta, rows
@@ -91,6 +99,13 @@ def compare(left, right):
                                           for key, ids in sorted(bracket_groups.items())]}
 
 
+def signal_mismatches(differences):
+    return {name for name, parity, mask in (("start_marker", 0, 0x10),
+                                            ("completion_marker", 0, 0x4),
+                                            ("busy", 1, 0x4000), ("zero", 1, 0x2000))
+            if any(i % 2 == parity and (a ^ b) & mask for i, a, b in differences)}
+
+
 def compare_cohorts(hardware, candidate):
     """Match recorded phases across repeats, never adjust a timestamp/read."""
     reference = defaultdict(list)
@@ -100,6 +115,7 @@ def compare_cohorts(hardware, candidate):
     counts = Counter(candidate_cases=len(candidate), comparable=0, match=0, mismatch=0,
                      no_identical_bracket=0, unstable_reference=0)
     groups = defaultdict(list)
+    signals = Counter(start_marker=0, completion_marker=0, busy=0, zero=0)
     for row in candidate:
         key = tuple(row[f] for f in DESCRIPTOR[:-1]) + (row["launch_beam"], row["launch_ref"])
         matches = reference.get(key, [])
@@ -115,13 +131,14 @@ def compare_cohorts(hardware, candidate):
         differences = tuple((i, a, b) for i, (a, b) in enumerate(zip(expected, actual)) if a != b)
         counts["mismatch" if differences else "match"] += 1
         if differences:
+            signals.update(signal_mismatches(differences))
             groups[(row["target"], row["variant"], differences)].append({
                 "candidate": case_id(tuple(row[f] for f in DESCRIPTOR)),
                 "hardware": [case_id(tuple(r[f] for f in DESCRIPTOR)) for r in matches],
                 "brackets": [row["launch_beam"], row["launch_ref"]],
                 "hardware_trace": expected, "candidate_trace": actual})
     return {"rule": "identical configuration excluding repeat, exact recorded pre/post beam; no shifting; counts are candidate cases, hardware observations may be reused",
-            "counts": dict(counts),
+            "counts": dict(counts), "signal_mismatches": dict(signals),
             "patterns": [{"width": (1, 16)[key[0]], "variant": key[1], "differences": key[2],
                           "count": len(rows), "first_divergent_read": key[2][0][0], "representatives": rows[:3]}
                          for key, rows in sorted(groups.items(), key=lambda item: (-len(item[1]), item[0]))]}
@@ -153,6 +170,7 @@ def main():
     if args.cohorts:
         report["phase_cohorts"] = compare_cohorts(hw, emu)
         print("Phase cohorts:", json.dumps(report["phase_cohorts"]["counts"], sort_keys=True))
+        print("Signals:", json.dumps(report["phase_cohorts"]["signal_mismatches"], sort_keys=True))
         print(json.dumps(report["phase_cohorts"]["patterns"][:3]))
     if args.case:
         key = tuple(map(int, args.case.split(":")))

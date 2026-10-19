@@ -21,6 +21,8 @@ import run_rom
 import rom_results
 
 SUITES = {
+    "bus-pressure": ("bus-pressure-v2", "references/bus-pressure-v2-run1"),
+    "bus-onset": ("bus-onset-v1", "references/bus-onset-v1-run1"),
     "bus-marker": ("bus-marker-focus-v2", "references/bus-marker-focus-v2-run1"),
     "bus-completion": ("bus-marker-completion-v3", "references/bus-marker-completion-v3-run1"),
     "cia-output": ("cia-hw-verify-v4", "references/cia-output-serial-v4-run1"),
@@ -72,7 +74,7 @@ def main(argv=None):
                     _, hw_rows = compare_cia_hardware.load(hardware)
                     _, emu_rows = compare_cia_hardware.load(destination)
                     raw = compare_cia_hardware.compare(hw_rows, emu_rows)
-                elif suite in ("bus-marker", "bus-completion"):
+                elif suite in ("bus-marker", "bus-completion", "bus-pressure", "bus-onset"):
                     if left["metadata"]["source_id"] != right["metadata"]["source_id"]:
                         raise ValueError("source_id mismatch")
                     _, hw_rows = compare_bus_marker.load(hardware)
@@ -88,8 +90,9 @@ def main(argv=None):
                 (destination / "raw-comparison.json").write_text(json.dumps(raw, indent=2) + "\n")
                 result = {"raw_counts": raw["counts"], "reference": str(hardware),
                           "source_id": left["metadata"]["source_id"], "report": str(destination / "raw-comparison.json")}
-                if suite in ("bus-marker", "bus-completion"):
+                if suite in ("bus-marker", "bus-completion", "bus-pressure", "bus-onset"):
                     result["phase_cohorts"] = raw["phase_cohorts"]["counts"]
+                    result["signal_mismatches"] = raw["phase_cohorts"]["signal_mismatches"]
                 if suite == "cia-irq":
                     result["eligible"] = raw["kind51_launch_eligibility"]
                 elif suite in ("irq-focus", "divider-irq"):
