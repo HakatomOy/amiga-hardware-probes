@@ -16,9 +16,11 @@ working files. Use staged builds, immutable captures and compact scripted report
    distinguish arbitration/sequencer timing, then six-plane/Copper neighbors.
    Stable no-start/read controls isolate blit-active timing; global E/BusFree
    candidate rejected by six-plane neighbors. See handoff focus plan.
-4. **In progress: 68000 contention.** Operand/prefetch/IRQ poll controls under DMA,
+4. **Measured: 68000 contention.** Operand/prefetch/IRQ poll controls under DMA,
    supported by #3 bus findings.
-5. **Pending: CIA serial buffering.** Drain initial state; active-output writes,
+   Repeated1920-case matrix isolates96 TST/six-plane+Copper handler-time
+   differences; all other timing controls match. See CPU DMA investigation.
+5. **In progress: CIA serial buffering.** Drain initial state; active-output writes,
    queued bytes and completion behavior, including repeatability.
 
 For each: competing hypotheses and discriminating test; emulator preflight;

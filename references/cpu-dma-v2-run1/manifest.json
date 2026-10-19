@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "reference_id": "cpu-dma-v2-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "captures\\cpu-dma-20261019\\a500-v2-run1",
+  "test_rom_sha256": "cdb43469328394efaa9dac4efc6d6754db3c6f85f900609fde437582a1d7c7f1",
+  "source_id": "26d663f7a794a338b14cb2689c386b1a904ef08347b219ca7251676f57f4dcea",
+  "results_sha256": "5322efb828d9bc2200975c04eef363c3c1a6609f9a9b2a5bc0ffafc97a6f9d50",
+  "record_count": 1920,
+  "metadata": {
+    "version": 1,
+    "source_id": "26d663f7a794a338b14cb2689c386b1a904ef08347b219ca7251676f57f4dcea",
+    "record_count": 1920,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "5322efb828d9bc2200975c04eef363c3c1a6609f9a9b2a5bc0ffafc97a6f9d50"
+  },
+  "restoration": {
+    "backup_sha256": "7c979b272e8cc2bfb0511bc3be554aaeb869a948a5dfe88c505e916fb53fb5f7",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "7c979b272e8cc2bfb0511bc3be554aaeb869a948a5dfe88c505e916fb53fb5f7",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 61,
+    "aligned": true,
+    "targets": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "sources": [
+      "CPU_PORTS_WRITE",
+      "CPU_EXTER_WRITE",
+      "CPU_PORTS_UNMASK",
+      "CPU_EXTER_UNMASK",
+      "CPU_COPER_WRITE",
+      "CPU_COPER_UNMASK"
+    ],
+    "masks": [
+      8,
+      8192,
+      8,
+      8192,
+      16,
+      16
+    ],
+    "phases": "0 or EXG selector2; prelaunch brackets authoritative",
+    "event_offset": "prelaunch NOP/DBRA pad0..3",
+    "watchdog": "STOP handler records original PC then resumes after STOP at ffcd1a; bounded preflight",
+    "units": "raw beam/flags/PC; no timestamp shifts",
+    "launch": "+12 pre-write beam;+14 zero; Copper/DMACON strobes after prebeam, then CPU IRQ write",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Prelaunch exact cohorts; bus contention and recognition separated by masked/running/STOP controls",
+    "variants": "source0..5 +8*DMA; DMA0=off,1=four planes,2=six,3=six+Copper32 NOOPs"
+  },
+  "repeatability": "Two independent physical runs agree on all1920 measured records.",
+  "uncontrolled_state": "96 TST/six-plane+Copper handler-time differences; diagnostic serial flags retained; no electrical IPL measurement."
+}

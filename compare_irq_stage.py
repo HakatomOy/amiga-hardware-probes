@@ -12,11 +12,17 @@ SOURCES = SOURCES + ("CIA_A_PRELATCHED_UNMASK", "CIA_B_PRELATCHED_UNMASK")
 MASKS = MASKS + (8, 0x2000)
 
 def source_name(row):
-    return (CPU_SOURCES if row["kind"] == 58 else SOURCES)[row["variant"]]
+    if row["kind"] in (58,61):
+        index=row["variant"]&7 if row["kind"]==61 else row["variant"]
+        suffix=f"_DMA{row['variant']>>3}" if row["kind"]==61 else ""
+        return CPU_SOURCES[index]+suffix
+    return SOURCES[row["variant"]]
 
 
 def source_mask(row):
-    return (CPU_MASKS if row["kind"] == 58 else MASKS)[row["variant"]]
+    if row["kind"] in (58,61):
+        return CPU_MASKS[row["variant"]&7 if row["kind"]==61 else row["variant"]]
+    return MASKS[row["variant"]]
 
 
 DESC = tuple(rom_results.FIELDS[:6])
@@ -50,8 +56,10 @@ def measures(row):
 
 
 def validate(row):
-    valid_source = row["variant"] in ((0, 2, 5, 6) if row["kind"] == 57 else range(6) if row["kind"] == 58 else range(5))
-    if row["kind"] not in (56, 57, 58) or not 0 <= row["target"] < 5 or not valid_source:
+    valid_source = row["variant"] in ((0, 2, 5, 6) if row["kind"] == 57 else range(6) if row["kind"] in (58,61) else range(5))
+    if row["kind"]==61:
+        valid_source=0 <= row["variant"] < 32 and (row["variant"]&7)<6
+    if row["kind"] not in (56, 57, 58,61) or not 0 <= row["target"] < 5 or not valid_source:
         raise ValueError("unexpected kind/target/source")
     if not 0 <= row["phase"] < 4 or not 0 <= row["delay"] < 8 or row["repeat"] not in (range(5) if row["kind"] == 57 else range(2)):
         raise ValueError("descriptor outside the experiment matrix")
@@ -62,7 +70,7 @@ def validate(row):
         mask_ok = row["kind"] == 57 or row["second_icr_or_level"] == source_mask(row)
         if not mask_ok or not settled & source_mask(row):
             raise ValueError(f"{key(row)}: masked source never latched")
-    elif row["aux"] != 1 or row["irq_level"] != ((2, 6, 2, 6, 3, 3) if row["kind"] == 58 else (2, 3, 6, 2, 6, 2, 6))[row["variant"]]:
+    elif row["aux"] != 1 or row["irq_level"] != ((2, 6, 2, 6, 3, 3) if row["kind"] in (58,61) else (2, 3, 6, 2, 6, 2, 6))[row["variant"]&7 if row["kind"]==61 else row["variant"]]:
         raise ValueError(f"{key(row)}: duplicate/wrong-level/watchdog event")
 
 
@@ -116,6 +124,39 @@ def compare(hardware, candidate):
                 for (t, s, diff), rows in sorted(groups.items(), key=lambda x: (-len(x[1]), x[0]))])
 
 
+def access_bracket_summary(hardware,candidate):
+    """Compare bus observations by launch, retaining strict visibility cohorts."""
+    def launch_key(r):
+        calibration=(r["end_beam"],r["second_counter_or_beam"]) if r["kind"]==57 else ()
+        return key(r)[:-1]+(r["launch_beam"],r["launch_ref"])+calibration
+    refs=defaultdict(list)
+    for r in hardware:
+        if r["target"]==4:refs[launch_key(r)].append(r)
+    counts=Counter(total=0,comparable=0,read_bracket_matches=0,read_bracket_mismatches=0,
+                   no_identical_launch=0,unstable_reference=0)
+    groups=defaultdict(list)
+    for r in candidate:
+        if r["target"]!=4:continue
+        counts['total']+=1
+        rows=refs.get(launch_key(r),[])
+        if not rows:counts['no_identical_launch']+=1;continue
+        values={beams(h) for h in rows}
+        if len(values)!=1:counts['unstable_reference']+=1;continue
+        expected=next(iter(values));actual=beams(r);counts['comparable']+=1
+        if expected==actual:counts['read_bracket_matches']+=1;continue
+        counts['read_bracket_mismatches']+=1
+        diff=tuple((i,h,e) for i,(h,e) in enumerate(zip(expected,actual)) if h!=e)
+        pattern=tuple((i,'same_line_h_delta',(e&255)-(h&255))
+                      if h>>8==e>>8 and abs((e&255)-(h&255))<=32 else (i,h,e)
+                      for i,h,e in diff)
+        groups[(source_name(r),pattern)].append(dict(case=key(r),hardware=[key(h) for h in rows],
+            expected_brackets=expected,actual_brackets=actual,differences=diff))
+    return dict(counts=dict(counts),groups=[dict(source=s,pattern=pattern,count=len(rows),
+                first_divergent_read=pattern[0][0],representatives=rows[:3])
+                for (s,pattern),rows in sorted(groups.items(),key=lambda item:(-len(item[1]),repr(item[0])))],
+                alignment='none; launch-only bus diagnostic; visibility still requires exact read brackets')
+
+
 def calibration_summary(rows):
     """Independent phase evidence, never derived from interrupt outcomes."""
     pairs = Counter((r["end_beam"], r["second_counter_or_beam"])
@@ -151,6 +192,7 @@ if __name__ == "__main__":
     h = [row for _, _, rows in captures for row in rows]
     report = compare(h, c)
     report["software_requests"] = software_summary(report)
+    report["access_brackets"] = access_bracket_summary(h,c)
     report["independent_calibration"] = dict(
         hardware=[dict(path=str(path), brackets=calibration_summary(rows))
                   for path, _, rows in captures], candidate=calibration_summary(c))
