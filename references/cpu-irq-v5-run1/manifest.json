@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "reference_id": "cpu-irq-v5-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "captures\\cpu-irq-20261019\\a500-v5-run1",
+  "test_rom_sha256": "edcd6716965ebb9ec486264fd488c82b37c22ded14081f28f75803a095b35cf0",
+  "source_id": "20ff65201acdbc8f56d79b9b9c3809c5b5f12b0dcdc64893506848d8bc227473",
+  "results_sha256": "24afdae350e21aaaea3cbab2a82246a0965f0f44273bb457a1ff175569bbd747",
+  "record_count": 1152,
+  "metadata": {
+    "version": 1,
+    "source_id": "20ff65201acdbc8f56d79b9b9c3809c5b5f12b0dcdc64893506848d8bc227473",
+    "record_count": 1152,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "24afdae350e21aaaea3cbab2a82246a0965f0f44273bb457a1ff175569bbd747"
+  },
+  "restoration": {
+    "backup_sha256": "cd4c65435b3800c25ab3645726a76ae2420897c6d20285f89de4c40bfb6cf937",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "cd4c65435b3800c25ab3645726a76ae2420897c6d20285f89de4c40bfb6cf937",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 58,
+    "aligned": true,
+    "targets": [
+      0,
+      2,
+      4
+    ],
+    "sources": [
+      "CPU_PORTS_WRITE",
+      "CPU_EXTER_WRITE",
+      "CPU_PORTS_UNMASK",
+      "CPU_EXTER_UNMASK",
+      "CPU_COPER_WRITE",
+      "CPU_COPER_UNMASK"
+    ],
+    "masks": [
+      8,
+      8192,
+      8,
+      8192,
+      16,
+      16
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "delay selects prelaunch NOP/DBRA padding, not source latency",
+    "watchdog": "disabled; request must wake STOP; bounded emulator preflight before hardware",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "+12 pre-write beam; +14 zero (no post-write read before STOP); SR lowered immediately before CPU write",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "CPU custom write and instruction-poll recognition remain combined; no electrical IPL measurement",
+    "stop_guard": "Handler records original stacked PC, then STOP cases resume after STOP to avoid a real-HW early-interrupt hang"
+  },
+  "repeatability": "Two independent physical runs: all 1152 measured records match; retain raw Agnus header differences.",
+  "uncontrolled_state": "Diagnostic CIA serial flags not drained; request readback is not an electrical IPL timestamp."
+}

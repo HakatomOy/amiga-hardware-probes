@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
-"""Compare kind56/57 exact release/read-bracket cohorts without timing alignment."""
+"""Compare kind56/57/58 exact release/read-bracket cohorts without timing alignment."""
 import argparse
 from collections import Counter, defaultdict
 import json
 from pathlib import Path
 import rom_results
 from build_irq_stage_rom import TARGETS, SOURCES, MASKS
+from build_cpu_irq_rom import SOURCES as CPU_SOURCES, MASKS as CPU_MASKS
 
 SOURCES = SOURCES + ("CIA_A_PRELATCHED_UNMASK", "CIA_B_PRELATCHED_UNMASK")
 MASKS = MASKS + (8, 0x2000)
+
+def source_name(row):
+    return (CPU_SOURCES if row["kind"] == 58 else SOURCES)[row["variant"]]
+
+
+def source_mask(row):
+    return (CPU_MASKS if row["kind"] == 58 else MASKS)[row["variant"]]
+
 
 DESC = tuple(rom_results.FIELDS[:6])
 
@@ -29,7 +38,7 @@ def cohort(row):
 
 def measures(row):
     if row["target"] == 4:
-        mask = MASKS[row["variant"]]
+        mask = source_mask(row)
         settled = "end_ref" if row["kind"] == 57 else "second_counter_or_beam"
         return {name: row[f] & mask for name, f in
                 (("raw0", "counter"), ("raw1", "icr"), ("raw2", "irq_beam"),
@@ -41,8 +50,8 @@ def measures(row):
 
 
 def validate(row):
-    valid_source = row["variant"] in ((0, 2, 5, 6) if row["kind"] == 57 else range(5))
-    if row["kind"] not in (56, 57) or not 0 <= row["target"] < 5 or not valid_source:
+    valid_source = row["variant"] in ((0, 2, 5, 6) if row["kind"] == 57 else range(6) if row["kind"] == 58 else range(5))
+    if row["kind"] not in (56, 57, 58) or not 0 <= row["target"] < 5 or not valid_source:
         raise ValueError("unexpected kind/target/source")
     if not 0 <= row["phase"] < 4 or not 0 <= row["delay"] < 8 or row["repeat"] not in (range(5) if row["kind"] == 57 else range(2)):
         raise ValueError("descriptor outside the experiment matrix")
@@ -50,10 +59,10 @@ def validate(row):
         raise ValueError(f"{key(row)}: failed/missed interrupt status={row['status']}")
     if row["target"] == 4:
         settled = row["end_ref"] if row["kind"] == 57 else row["second_counter_or_beam"]
-        mask_ok = row["kind"] == 57 or row["second_icr_or_level"] == MASKS[row["variant"]]
-        if not mask_ok or not settled & MASKS[row["variant"]]:
+        mask_ok = row["kind"] == 57 or row["second_icr_or_level"] == source_mask(row)
+        if not mask_ok or not settled & source_mask(row):
             raise ValueError(f"{key(row)}: masked source never latched")
-    elif row["aux"] != 1 or row["irq_level"] != (2, 3, 6, 2, 6, 2, 6)[row["variant"]]:
+    elif row["aux"] != 1 or row["irq_level"] != ((2, 6, 2, 6, 3, 3) if row["kind"] == 58 else (2, 3, 6, 2, 6, 2, 6))[row["variant"]]:
         raise ValueError(f"{key(row)}: duplicate/wrong-level/watchdog event")
 
 
@@ -82,7 +91,7 @@ def compare(hardware, candidate):
     for r in candidate:
         validate(r)
         matches = ref.get(cohort(r), [])
-        bucket = by_mode_source[TARGETS[r["target"]] + ":" + SOURCES[r["variant"]]]
+        bucket = by_mode_source[TARGETS[r["target"]] + ":" + source_name(r)]
         if not matches:
             counts["no_identical_bracket"] += 1
             bucket["excluded"] += 1
@@ -97,12 +106,12 @@ def compare(hardware, candidate):
         counts[outcome] += 1
         bucket[outcome] += 1
         if diff:
-            groups[(r["target"], r["variant"], diff)].append(
+            groups[(r["target"], source_name(r), diff)].append(
                 dict(candidate=key(r), hardware=[key(h) for h in matches],
                      release_brackets=[r["launch_beam"], r["launch_ref"]],
                      differences=diff, expected=expected, actual=actual))
     return dict(counts=dict(counts), by_mode_source={k: dict(v) for k, v in by_mode_source.items()},
-        groups=[dict(target=TARGETS[t], source=SOURCES[s], count=len(rows),
+        groups=[dict(target=TARGETS[t], source=s, count=len(rows),
                      first_divergent_field=diff[0][0], representatives=rows[:3])
                 for (t, s, diff), rows in sorted(groups.items(), key=lambda x: (-len(x[1]), x[0]))])
 
@@ -117,10 +126,10 @@ def calibration_summary(rows):
 
 def software_summary(report):
     total = sum(v.get("matches", 0) + v.get("mismatches", 0)
-                for k, v in report["by_mode_source"].items() if ":COPPER_" in k)
+                for k, v in report["by_mode_source"].items() if ":COPPER_" in k or ":CPU_" in k)
     timing = diagnostic = 0
     for g in report["groups"]:
-        if not g["source"].startswith("COPPER_"):
+        if not g["source"].startswith(("COPPER_", "CPU_")):
             continue
         fields = {d[0] for d in g["representatives"][0]["differences"]}
         timing += g["count"] if fields - {"end_ref"} else 0

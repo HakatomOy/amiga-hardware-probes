@@ -8,9 +8,11 @@ working files. Use staged builds, immutable captures and compact scripted report
    scheduled Paula unmask. Record hidden-phase exclusions.
    Two repeatable kind57 runs; qualified underflow readback differs, prelatched
    readback matches. See `cia-phase-investigation-2026-10-19.md`; no blanket delay.
-2. **In progress: CPU-written PORTS/EXTER.** INTREQ writes versus INTENA unmask,
+2. **Fixed: CPU-written PORTS/EXTER.** INTREQ writes versus INTENA unmask,
    STOP/running controls; extend origin handling only with physical evidence.
-3. **Pending: four-plane blitter handoff.** One family plus no-blit controls;
+   Repeated hardware and held-out STORE/TST:1408 timing repairs,zero remaining
+   in1920 qualified cases;3632 core tests pass. See CPU IRQ investigation.
+3. **In progress: four-plane blitter handoff.** One family plus no-blit controls;
    distinguish arbitration/sequencer timing, then six-plane/Copper neighbors.
 4. **Pending: 68000 contention.** Operand/prefetch/IRQ poll controls under DMA,
    supported by #3 bus findings.

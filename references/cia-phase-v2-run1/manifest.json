@@ -59,8 +59,10 @@
       "irq_level": "beam0",
       "saved_pc_offset": "beam1:beam2",
       "aux": "beam3",
-      "second_counter_or_beam": "settled INTREQR",
-      "second_icr_or_level": "expected source mask"
+      "end_ref": "settled INTREQR",
+      "end_beam": "calibration pre-beam",
+      "second_counter_or_beam": "calibration post-beam",
+      "second_icr_or_level": "raw PRA diagnostic"
     },
     "limitations": "Request readback is not an electrical IPL timestamp; instruction polls and exception entry remain combined in handler beam",
     "calibration": "+16 pre-CIA-A-PRA beam; +36 post-read beam; +38 raw PRA diagnostic",
@@ -78,5 +80,6 @@
     "write_attempted": true
   },
   "repeatability": "Two independent runs: 384 exact calibration/release/read cohorts agree; 384 excluded. Same-descriptor phase rotates; do not compare unqualified observations.",
-  "uncontrolled_state": "Independent E-clock calibration recorded; keyboard diagnostic serial flags not drained."
+  "uncontrolled_state": "Independent E-clock calibration recorded; keyboard diagnostic serial flags not drained.",
+  "annotation_corrections": "masked_fields describes the actual kind57 offsets; original build inherited kind56 labels. ROM/source hashes and raw packet unchanged."
 }

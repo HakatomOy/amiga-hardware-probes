@@ -135,6 +135,10 @@ def build(assembler, wsl, out):
     return base.build(assembler, wsl, out, aligned=True, rows=trials(), transform=transform,
         profile=dict(kind=57, sources=list(SOURCES), targets=list(TARGETS),
             calibration="+16 pre-CIA-A-PRA beam; +36 post-read beam; +38 raw PRA diagnostic",
+            masked_fields=dict(counter="raw0", icr="raw1", irq_beam="raw2", irq_level="beam0",
+                saved_pc_offset="beam1:beam2", aux="beam3", end_ref="settled INTREQR",
+                end_beam="calibration pre-beam", second_counter_or_beam="calibration post-beam",
+                second_icr_or_level="raw PRA diagnostic"),
             prelatched="variants5/6: prime flag masked; CPU ICR mask-enable; Copper INTENA unmask line68 for recognition",
             masked="direct CIA write then INTREQR/beam pairs; timer streams pad76 NOP, mask-enable no pad; +18 settled INTREQR",
             limits="Calibration brackets condition evidence; no trace shifts. Prelatched recognition isolates Paula unmask; raw streams isolate CIA mask enable."))
