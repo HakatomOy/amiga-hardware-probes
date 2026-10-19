@@ -16,11 +16,13 @@ import compare_cia_hardware
 import compare_bus_marker
 import compare_copper_busy
 import compare_divider_irq
+import compare_irq_stage
 import compare_irq_focus
 import run_rom
 import rom_results
 
 SUITES = {
+    "irq-stages": ("irq-stage-v7", "references/irq-stage-v7-run1"),
     "bus-phasepad": ("bus-phasepad-v1", "references/bus-phasepad-v1-run1"),
     "bus-phase-entry": ("bus-phase-entry-v1", "references/bus-phase-entry-v1-run1"),
     "bus-phase-completion": ("bus-phase-completion-v1", "references/bus-phase-completion-v1-run1"),
@@ -84,6 +86,16 @@ def main(argv=None):
                     _, emu_rows = compare_bus_marker.load(destination)
                     raw = compare_bus_marker.compare(hw_rows, emu_rows)
                     raw["phase_cohorts"] = compare_bus_marker.compare_cohorts(hw_rows, emu_rows)
+                elif suite == "irq-stages":
+                    second = ROOT / "references/irq-stage-v7-run2"
+                    hm, h = compare_irq_stage.load(hardware)
+                    hm2, h2 = compare_irq_stage.load(second)
+                    cm, c = compare_irq_stage.load(destination)
+                    if len({m["source_id"] for m in (hm, hm2, cm)}) != 1:
+                        raise ValueError("source_id mismatch")
+                    raw = compare_irq_stage.compare(h + h2, c)
+                    raw["software_requests"] = compare_irq_stage.software_summary(raw)
+                    raw["references"] = [str(hardware), str(second)]
                 elif suite == "copper-busy":
                     _, hw_rows = compare_copper_busy.load(hardware)
                     _, emu_rows = compare_copper_busy.load(destination)
@@ -96,6 +108,8 @@ def main(argv=None):
                 if suite.startswith("bus-"):
                     result["phase_cohorts"] = raw["phase_cohorts"]["counts"]
                     result["signal_mismatches"] = raw["phase_cohorts"]["signal_mismatches"]
+                if suite == "irq-stages":
+                    result["software_requests"] = raw["software_requests"]
                 if suite == "cia-irq":
                     result["eligible"] = raw["kind51_launch_eligibility"]
                 elif suite in ("irq-focus", "divider-irq"):

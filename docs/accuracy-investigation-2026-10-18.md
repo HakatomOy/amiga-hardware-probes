@@ -56,3 +56,13 @@ serial completion differences. See
 [the current hardware record](cia-hardware-verification-2026-10-19.md) and its
 versioned v3/v4 reference packets. Earlier qualified IRQ/divider matches remain
 useful neighbors; they do not imply that all CIA behavior matches hardware.
+
+
+## Source/recognition follow-up, 19 October
+
+Paired physical STOP/running/masked-read controls distinguish Copper-written
+PORTS/EXTER from external CIA requests. The bounded origin correction repairs
+133 full records with zero regressions on668 stable pooled cohorts; the six-clock
+default remains. CIA transition phase is still unresolved and some hardware
+cohorts conflict. See the current [IRQ investigation](irq-stage-investigation-2026-10-19.md)
+for reference IDs, acceptance evidence and the next discriminating control.

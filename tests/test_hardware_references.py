@@ -26,6 +26,9 @@ class HardwareReferenceTests(unittest.TestCase):
                 elif isinstance(manifest.get("observation_profile"), dict) and manifest["observation_profile"].get("kind") == 55:
                     import compare_bus_marker
                     self.assertEqual(compare_bus_marker.load(path.parent)[0], metadata)
+                elif isinstance(manifest.get("observation_profile"), dict) and manifest["observation_profile"].get("kind") == 56:
+                    import compare_irq_stage
+                    self.assertEqual(compare_irq_stage.load(path.parent)[0], metadata)
                 else:
                     self.assertFalse(any(r["status"] for r in rows))
                 self.assertEqual(len(manifest["test_rom_sha256"]), 64)

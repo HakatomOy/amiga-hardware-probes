@@ -24,7 +24,7 @@ def _write_invocation(out,binary,command,binary_sha256,wall_seconds):
         raise RuntimeError('Emulator binary changed during the run; capture rejected '
                            '(see invocation.json binary_changed_during_run).')
 
-def run(binary,out,config=None,romdir=None):
+def run(binary,out,config=None,romdir=None,seconds=500):
     romdir=romdir or ROOT/'build/rom'
     out.mkdir(parents=True,exist_ok=False)
     manifest_path=out/'build-manifest.json'
@@ -65,7 +65,7 @@ def run(binary,out,config=None,romdir=None):
             rpc('hello',dict(token=details['token']))
             started=time.monotonic()
             rpc('break.add',dict(kind='pc',addr=manifest['collection_done_pc']))
-            stop=rpc('run_until',dict(seconds=500))
+            stop=rpc('run_until',dict(seconds=seconds))
             (out/'stop.json').write_text(json.dumps(stop,indent=2))
             result=rpc('mem.read',dict(addr=manifest['result_address'],len=manifest['result_bytes'],encoding='base64'))
             (out/'memory-response-fields.json').write_text(json.dumps(list(result.keys())))
@@ -168,4 +168,4 @@ def run(binary,out,config=None,romdir=None):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--binary',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
-    p.add_argument('--config',type=Path);p.add_argument('--romdir',type=Path);a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None,a.romdir.resolve() if a.romdir else None)
+    p.add_argument('--config',type=Path);p.add_argument('--romdir',type=Path);p.add_argument('--seconds',type=float,default=500);a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None,a.romdir.resolve() if a.romdir else None,a.seconds)

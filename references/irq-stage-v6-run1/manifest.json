@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS; raw VPOSR a000",
+    "denise": "OCS; raw ID floats",
+    "silicon_revisions": "unconfirmed"
+  },
+  "capture_method": "OneROM live ROM substitution; checksum-protected RBCP; original backup restored and readback verified",
+  "reference_id": "irq-stage-v6-run1",
+  "original_capture": "captures\\irq-stage-20261019\\a500-v6-run1",
+  "test_rom_sha256": "9964ed4fe6fadcde926ed7fe3d9ea18f402b4f76c2b28714de27cc3dcea6f945",
+  "source_id": "bc80366ffd7c2f08e3d564c1cdadb4e3e5458f08ed2f99d117c868124a559385",
+  "results_sha256": "f2a2f55eef0aadfc54249f8ccaf662bfadf5832f44023c787709ea03bef904c6",
+  "record_count": 1600,
+  "metadata": {
+    "version": 1,
+    "source_id": "bc80366ffd7c2f08e3d564c1cdadb4e3e5458f08ed2f99d117c868124a559385",
+    "record_count": 1600,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "f2a2f55eef0aadfc54249f8ccaf662bfadf5832f44023c787709ea03bef904c6"
+  },
+  "observation_profile": {
+    "kind": 56,
+    "aligned": true,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Request readback is not an electrical IPL timestamp; instruction polls and exception entry remain combined in handler beam"
+  },
+  "restoration": {
+    "backup_sha256": "0eb960273f70c581ee478286691457310ec3cc1c3b442645f3e0f1be1cf40f79",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "0eb960273f70c581ee478286691457310ec3cc1c3b442645f3e0f1be1cf40f79",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "repeatability": "Single aligned run; neighboring controls only. See independent v7 runs for stability.",
+  "uncontrolled_state": "Absolute CIA E-clock phase and diagnostic keyboard serial flags not fully preconditioned.",
+  "profile_corrections": "Archived v6 text incorrectly labels Copper event line66/watchdog70. Actual archived assembly executes line68/watchdog72."
+}

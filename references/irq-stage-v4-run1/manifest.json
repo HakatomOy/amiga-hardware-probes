@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "agnus": "ECS; raw VPOSR a000",
+    "denise": "OCS; raw ID floats",
+    "silicon_revisions": "unconfirmed"
+  },
+  "capture_method": "OneROM live ROM substitution; checksum-protected RBCP; original backup restored and readback verified",
+  "reference_id": "irq-stage-v4-run1",
+  "original_capture": "captures\\irq-stage-20261019\\a500-v4-run1",
+  "test_rom_sha256": "36f44d21d3bf0c258784134296ff50fcf2a837c528588e6e4040d21462fc0ac3",
+  "source_id": "ceabc1530c173018cbad975f23b3be89efe0c7c1239f2a14673dd5dc099367bd",
+  "results_sha256": "1884a81eb60870d017bedb2042431bd42c4d8447a2bfc782a47d89f101c68781",
+  "record_count": 1600,
+  "metadata": {
+    "version": 1,
+    "source_id": "ceabc1530c173018cbad975f23b3be89efe0c7c1239f2a14673dd5dc099367bd",
+    "record_count": 1600,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "1884a81eb60870d017bedb2042431bd42c4d8447a2bfc782a47d89f101c68781"
+  },
+  "observation_profile": {
+    "kind": 56,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); dispatch costs unchanged",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Request readback is not an electrical IPL timestamp; instruction polls and exception entry remain combined in handler beam"
+  },
+  "restoration": {
+    "backup_sha256": "3c0b139f67ea6f7a004cce1611465d5baec218dbd1c909e5c1e18597b407eec2",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "3c0b139f67ea6f7a004cce1611465d5baec218dbd1c909e5c1e18597b407eec2",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "repeatability": "Two independent runs;158 exact release/read-bracket matches,0 mismatches;1442 unavailable brackets; no general repeatability claim for excluded CIA launch phases."
+}
