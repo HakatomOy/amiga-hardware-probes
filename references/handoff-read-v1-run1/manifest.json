@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-read-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "captures\\handoff-focus-20261019\\a500-read-v1-run1",
+  "test_rom_sha256": "91e8277c53239b516b925de75f49120d1cf9b962bca218f305312f76a16159c7",
+  "source_id": "1eb2d6a2cc5748ab9e6f057453ef40883b90b191f216570b4eede7bcd99056da",
+  "results_sha256": "5bf66180d82f542bbdc92281db66e33650bcb15ae17536011dc3d2f3d9b7d208",
+  "record_count": 256,
+  "metadata": {
+    "version": 1,
+    "source_id": "1eb2d6a2cc5748ab9e6f057453ef40883b90b191f216570b4eede7bcd99056da",
+    "record_count": 256,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "5bf66180d82f542bbdc92281db66e33650bcb15ae17536011dc3d2f3d9b7d208"
+  },
+  "restoration": {
+    "backup_sha256": "d4ba2cbd4c2b1fd06224a4bd55e7e5f0a5155261d2f0f42bd0f1aaddece41746",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "d4ba2cbd4c2b1fd06224a4bd55e7e5f0a5155261d2f0f42bd0f1aaddece41746",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 60,
+    "aligned": false,
+    "units": "Encoded beam words; register/data words; never subtract packed beam across lines",
+    "launch": "+12 pre-write beam; fixed indirect write to BLTSIZE or inert register, address selected before alignment",
+    "limitations": "CPU observations combine arbitration and sequencer timing; no-blit pair discriminates them",
+    "family": "AD one word; four planes or six-plane/Copper neighbors",
+    "variants": "bit0 BLTPRI; bits2:1 DMA mode1=four planes,2=six,3=six+Copper; bit3=no start; kind60 bit4=early ROM read instead of chip destination",
+    "poll_count": "kind60 +34: remaining DBRA counter, busy samples=4095-value; one final clear sample",
+    "measurement_fields": {
+      "launch_beam": "pre-write beam",
+      "launch_ref": "first clear DMACONR",
+      "end_beam": "early D/ROM word",
+      "end_ref": "postwrite DMACONR",
+      "counter": "handoff beam",
+      "icr": "postwrite beam",
+      "irq_beam": "final first D",
+      "irq_level": "final last D",
+      "saved_pc_offset": "INTREQR:final beam",
+      "aux": "kind60 remaining poll counter"
+    }
+  },
+  "repeatability": "Two repetitions per condition; poll-count and ROM/chip-path patterns agree.",
+  "uncontrolled_state": "No independent physical repeat yet; encoded beam wraps retained; silicon revisions unconfirmed.",
+  "annotation_corrections": "Removed inherited kind56 IRQ labels; authoritative handoff fields listed. Raw packet and original build/capture unchanged."
+}

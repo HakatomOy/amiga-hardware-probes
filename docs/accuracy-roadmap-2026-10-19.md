@@ -12,9 +12,11 @@ working files. Use staged builds, immutable captures and compact scripted report
    STOP/running controls; extend origin handling only with physical evidence.
    Repeated hardware and held-out STORE/TST:1408 timing repairs,zero remaining
    in1920 qualified cases;3632 core tests pass. See CPU IRQ investigation.
-3. **In progress: four-plane blitter handoff.** One family plus no-blit controls;
+3. **Measured: four-plane blitter handoff.** One family plus no-blit controls;
    distinguish arbitration/sequencer timing, then six-plane/Copper neighbors.
-4. **Pending: 68000 contention.** Operand/prefetch/IRQ poll controls under DMA,
+   Stable no-start/read controls isolate blit-active timing; global E/BusFree
+   candidate rejected by six-plane neighbors. See handoff focus plan.
+4. **In progress: 68000 contention.** Operand/prefetch/IRQ poll controls under DMA,
    supported by #3 bus findings.
 5. **Pending: CIA serial buffering.** Drain initial state; active-output writes,
    queued bytes and completion behavior, including repeatability.

@@ -1,0 +1,17 @@
+diff --git a/src/chipset/blitter.rs b/src/chipset/blitter.rs
+index e9b856c2..4f7c4dae 100644
+--- a/src/chipset/blitter.rs
++++ b/src/chipset/blitter.rs
+@@ -1950,10 +1950,8 @@ impl NormalBlitState {
+                     BlitSlotClass::BusFree
+                 }
+             }
+-            NormalBlitPhase::Init | NormalBlitPhase::E | NormalBlitPhase::Done => {
+-                BlitSlotClass::Internal
+-            }
+-            NormalBlitPhase::FillIdle => BlitSlotClass::BusFree,
++            NormalBlitPhase::Init | NormalBlitPhase::Done => BlitSlotClass::Internal,
++            NormalBlitPhase::E | NormalBlitPhase::FillIdle => BlitSlotClass::BusFree,
+             NormalBlitPhase::A | NormalBlitPhase::B | NormalBlitPhase::C | NormalBlitPhase::D => {
+                 if self.current_slot_needs_bus() {
+                     BlitSlotClass::Bus

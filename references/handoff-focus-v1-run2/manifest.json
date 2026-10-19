@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-focus-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "captures\\handoff-focus-20261019\\a500-v1-run2",
+  "test_rom_sha256": "eb3badf88bbc517b2f78154f9ee416c22033fa60b7147c425a20a320b2edfabd",
+  "source_id": "3dce7f26ef2f7a2578d6044d570ee8ded2523c7113e695fd371ca6094c7ac8c3",
+  "results_sha256": "e4c242b629917189fe469eef182737088621e045cfe89e82a4412beca823eeaf",
+  "record_count": 128,
+  "metadata": {
+    "version": 1,
+    "source_id": "3dce7f26ef2f7a2578d6044d570ee8ded2523c7113e695fd371ca6094c7ac8c3",
+    "record_count": 128,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "e4c242b629917189fe469eef182737088621e045cfe89e82a4412beca823eeaf"
+  },
+  "restoration": {
+    "backup_sha256": "6eef2482648ecd734f8ce05c3ebe195e40f4402dfe18a445dfb00738710e8cba",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "6eef2482648ecd734f8ce05c3ebe195e40f4402dfe18a445dfb00738710e8cba",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 59,
+    "aligned": false,
+    "units": "Encoded beam words; register/data words; never subtract packed beam across lines",
+    "launch": "+12 pre-write beam; fixed indirect write to BLTSIZE or inert register, address selected before alignment",
+    "limitations": "CPU observations combine arbitration and sequencer timing; no-blit pair discriminates them",
+    "family": "AD one word; four planes or six-plane/Copper neighbors",
+    "variants": "bit0 BLTPRI; bits2:1 DMA mode1=four planes,2=six,3=six+Copper; bit3=no start",
+    "measurement_fields": {
+      "launch_beam": "pre-write beam",
+      "launch_ref": "first clear DMACONR",
+      "end_beam": "early D/ROM word",
+      "end_ref": "postwrite DMACONR",
+      "counter": "handoff beam",
+      "icr": "postwrite beam",
+      "irq_beam": "final first D",
+      "irq_level": "final last D",
+      "saved_pc_offset": "INTREQR:final beam",
+      "aux": "kind60 remaining poll counter"
+    }
+  },
+  "repeatability": "Two independent physical runs agree on all 128 measured records.",
+  "uncontrolled_state": "Encoded beam wrap retained; silicon revisions unconfirmed.",
+  "annotation_corrections": "Removed inherited kind56 IRQ labels; authoritative handoff fields listed. Raw packet and original build/capture unchanged."
+}
