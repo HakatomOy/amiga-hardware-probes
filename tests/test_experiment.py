@@ -226,6 +226,10 @@ class ExperimentTests(unittest.TestCase):
         with patch.object(e, 'command_run', self.fake_command(calls)):
             result = self.execute()
         self.assertEqual(result['status'], 'review')
+        packet = e.read(Path(result['evidence']))
+        self.assertEqual(packet['delta']['repairs'], 1)
+        self.assertEqual(packet['changed_families'][0]['change'], 'resolved')
+        self.assertEqual(packet['unchanged_families'], 0)
         self.assertEqual(calls[0]['argv'][-1], '500')
         self.assertEqual([c['name'] for c in calls], ['preflight'] + list(e.TIERS))
         e.decide('run', 'accept', 'one repair, no regressions', ['run/comparison.json'])

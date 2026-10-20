@@ -6,6 +6,48 @@ No agent needs to read thousands of matching records. All paths below are
 relative to this repository, including when invoked from another directory;
 command `cwd` defaults to the repository root. Python requires3.9+.
 
+## Start with a decision packet
+
+New `run` and `resume` comparisons write `evidence.json` and return its path.
+Read this packet before opening cases or logs:
+
+```powershell
+python tools/experiment.py evidence captures/RUN --limit 3
+# Older reports lack stored family deltas; supply a comparable prior run:
+python tools/experiment.py evidence captures/RUN --baseline captures/PRIOR --limit 3
+```
+
+The packet returns identity, counts, case/field regression totals, up to three
+case IDs per changed category, changed families, qualification/units and detail
+commands. Unchanged families appear only as counts. `--limit` bounds listed
+families (default five, maximum sixteen); full comparisons and traces remain in
+files. A resolved family's examples belong to the baseline; follow `detail_run`
+or `baseline_capture`, not the current case's repaired observation.
+
+Family IDs hash the experiment ID, exact comparison contract and mismatch
+signature. They survive representative/order/count changes. Changing units or
+qualification creates a different scope. IDs group symptoms, not proven causes;
+do not automatically merge cross-suite failures. Equal family counts can hide
+different affected cases, so always inspect case and field deltas too. Explicit
+baseline packets recompute those deltas and reject different contracts or
+hardware reference hashes. Without a baseline, older groups are reported as new.
+
+Use scripts for parsing, batches, filtering and report generation; do not introduce
+Luna delegation yet. Sol spends investigation context on the hypothesis and
+decision. Retrieve a representative trace only to answer a specific uncertainty;
+expand the budget only when the current examples cannot distinguish explanations.
+Keep the existing focused → neighbor → broad gates and stop at the first failure.
+Never replace field-level regression checks with a better aggregate match count.
+
+File caches, retention and existing result locations are documented in
+[result storage](result-storage.md). A report cache hit saves analysis work; it
+does not make a previously rejected experiment acceptable. At a natural boundary,
+update confirmed/rejected findings and export `restart`, then retrieve additional
+history selectively. Before a performance-sensitive emulator change, preserve
+before/after release binaries and benchmark fixed emulated workloads repeatedly;
+store full output and return median/spread alongside accuracy results. Do not
+infer host performance from corrected guest wait times or build duration.
+
 ## One batch, explicit contract
 
 Start from `experiments/workflows/serial-buffer.json`. It is a runnable replay

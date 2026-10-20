@@ -19,6 +19,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import rom_results
+from tools import evidence
 
 DESCRIPTOR = rom_results.FIELDS[:6]
 TIERS = ('focused', 'neighbor', 'broad')
@@ -560,6 +561,8 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
             report['delta'] = delta(previous_cases, cases,[f.get('name',f['field']) for f in spec['comparison']['measurements']])
         else:
             previous_report = dict(groups=[])
+        report['family_delta'] = evidence.family_delta(
+            report, previous_report, dict(experiment=spec['id'], comparison=spec['comparison']))
         prior_patterns = {json.dumps(g['pattern']) for g in previous_report['groups']}
         current_patterns = {json.dumps(g['pattern']) for g in report['groups']}
         report['pattern_delta'] = dict(new=len(current_patterns-prior_patterns),
@@ -613,13 +616,17 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
                       if record.get('evidence_fingerprint') == fingerprint else 0,
                       evidence_fingerprint=fingerprint, decision='validation failed')
         write(record_path, record)
+    if (out / 'comparison.json').is_file():
+        summary['evidence'] = str(out / 'evidence.json')
     write(out / 'summary.json', summary)
+    if (out / 'comparison.json').is_file():
+        evidence.packet(out, cache)
     emit(out, 'complete', compact(summary), events)
     return summary
 
 
 def compact(summary):
-    return {k: summary[k] for k in ('status', 'output', 'counts', 'delta', 'patterns', 'validation_through', 'error', 'logs', 'investigation', 'next_step') if k in summary}
+    return {k: summary[k] for k in ('status', 'output', 'counts', 'delta', 'patterns', 'validation_through', 'error', 'logs', 'investigation', 'next_step', 'evidence') if k in summary}
 
 
 def retry_output_command(command, variables, logs, redirects):
@@ -703,7 +710,10 @@ def resume(out, through='broad', repeat=()):
     except Exception as error:
         summary.update(status='failed',error=str(error)[:2000],logs=dict(directory=str(logs)))
         record['decision']='validation failed'
-    write(record_path,record);write(out/'summary.json',summary);emit(out,'complete',compact(summary))
+    summary['evidence'] = str(out/'evidence.json')
+    write(record_path,record);write(out/'summary.json',summary)
+    evidence.packet(out,cache)
+    emit(out,'complete',compact(summary))
     return summary
 
 
@@ -898,8 +908,19 @@ def main():
     p.add_argument('run')
     p.add_argument('--through', choices=TIERS,default='broad')
     p.add_argument('--repeat',action='append',default=[])
+    p = sub.add_parser('evidence', help='bounded delta packet; full detail stays in files')
+    p.add_argument('run')
+    p.add_argument('--baseline', help='prior run with identical comparison contract and references')
+    p.add_argument('--limit', type=int, default=5, choices=range(1,17))
+    p.add_argument('--refresh', action='store_true')
     args = parser.parse_args()
     try:
+        if args.command == 'evidence':
+            result = evidence.packet(resolve(args.run), ROOT/'captures/.experiment-cache',
+                                     resolve(args.baseline) if args.baseline else None,
+                                     args.limit, args.refresh)
+            print(json.dumps(result))
+            return 0
         if args.command == 'run':
             overrides={k:getattr(args,k) for k in ('binary','config') if getattr(args,k)}
             result = run(args.manifest, args.out, args.hardware, args.events, args.through,overrides)

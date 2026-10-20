@@ -28,6 +28,9 @@ Keep units, field meanings and qualification rules explicit. Never align away
 timing differences. Inspect compact deltas and new patterns before retrieving
 specific cases with `detail --case ID --window N`. Emulator agreement does not
 override valid hardware evidence. Exclusions and unstable repeats are not matches.
+Read `evidence RUN` first: bounded family/case deltas, with unchanged families
+as counts. Use `--baseline PRIOR_RUN` for older runs; retrieve detail only for a
+stated uncertainty. Family IDs identify signatures, not proven shared causes.
 
 Validate focused cases, neighbors, then the broader suite before acceptance.
 Rebuild only for changed executable inputs; use immutable binary snapshots.
@@ -41,3 +44,6 @@ Keep confirmed facts, rejected hypotheses with evidence, accepted commits,
 capture IDs, source paths and the next question in the short investigation
 record. Move chronology and traces to linked files. Generate a bounded `restart`
 packet at a natural boundary instead of carrying the full conversation forward.
+Use scripts for repetitive work; do not delegate to Luna yet. File-backed cache
+rules and the results storage map are in `docs/result-storage.md`. Cached reports
+are conveniences, never substitutes for capture qualification or acceptance.
