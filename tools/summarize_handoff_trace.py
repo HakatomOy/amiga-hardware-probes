@@ -27,7 +27,7 @@ def beam_delta(hardware, candidate):
     return clocks(hardware)-clocks(candidate)
 
 
-def bind_trace(lines, rows):
+def bind_trace(lines, rows, access_addresses=(0xdff002,)):
     real=[r for r in rows if not r['variant']&8]
     blocks=[]
     current=None
@@ -49,8 +49,10 @@ def bind_trace(lines, rows):
         if current is not None:
             if line.startswith('BLTP ') and (' TICK ' in line or ' END ' in line):
                 current['slots'].append(dict(line=number,text=line.rstrip()))
-            if line.startswith('CPUBUS ') and 'addr=00dff002' in line and len(current['accesses'])<2:
-                current['accesses'].append(dict(line=number,text=line.rstrip()))
+            if line.startswith('CPUBUS ') and len(current['accesses'])<2:
+                address=re.search(r'addr=([0-9a-f]+)',line)
+                if address and int(address[1],16) in access_addresses:
+                    current['accesses'].append(dict(line=number,text=line.rstrip()))
     if len(blocks)!=len(real):
         raise ValueError('start/descriptor count differs')
     return blocks
@@ -77,13 +79,15 @@ if __name__=='__main__':
     p.add_argument('--trace-run',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--case')
+    p.add_argument('--addresses', default='0xdff002',
+                   help='CPU witness addresses to index; retain the first two accesses per case')
     a=p.parse_args()
     packet=(a.run/'candidate/results.bin').read_bytes()
     if packet!=(a.trace_run/'results.bin').read_bytes():
         raise ValueError('trace replay packet differs')
     _,rows=e.rom_results.decode(packet)
     with (a.trace_run/'run.log').open() as stream:
-        blocks=bind_trace(stream,rows)
+        blocks=bind_trace(stream,rows,tuple(int(v,0) for v in a.addresses.split(',')))
     spec=e.read(a.run/'experiment.json')
     groups=summarize(e.read(a.run/'cases.json'),spec['comparison']['measurements'])
     e.write(a.out,dict(packet_sha256=e.digest(packet),units='PAL227 CCK/line; signed HW minus emulator on known adjacent lines; no frame alignment',groups=groups,trace_cases=blocks))

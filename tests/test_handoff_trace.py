@@ -32,3 +32,12 @@ class HandoffTraceTests(unittest.TestCase):
         self.assertIn('granted=124', blocks[0]['start_grant']['text'])
         self.assertIn('granted=140', blocks[1]['start_grant']['text'])
         self.assertFalse(blocks[0]['accesses'])
+
+    def test_optional_chip_witness_keeps_first_read_in_index(self):
+        rows = [dict(kind=76,target=6,variant=16,phase=0,delay=0,repeat=0)]
+        lines = ['BLTP 1 66 126 START size=0041',
+                 'CPUBUS kind=read addr=00010000',
+                 'CPUBUS kind=custom addr=00dff002',
+                 'CPUBUS kind=read addr=00010000']
+        block = trace.bind_trace(lines, rows, (0x10000, 0xdff002))[0]
+        self.assertEqual([v['line'] for v in block['accesses']], [2,3])

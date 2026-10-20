@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-request-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-request-20261020\\baseline-v1\\hardware-2",
+  "test_rom_sha256": "862672cd471922140a969f3f16554accae26b5983b04e84efe89aaf10819ff1e",
+  "source_id": "9cc4c4674e33009a3c77aba7f2d29176f716a7cd1286f45c2528ce4249eccc56",
+  "results_sha256": "7f1d8acc35fa49ecab5bf38baccb8ca36b9fe403a526fb5e53b21475f907585d",
+  "record_count": 2304,
+  "metadata": {
+    "version": 1,
+    "source_id": "9cc4c4674e33009a3c77aba7f2d29176f716a7cd1286f45c2528ce4249eccc56",
+    "record_count": 2304,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "7f1d8acc35fa49ecab5bf38baccb8ca36b9fe403a526fb5e53b21475f907585d"
+  },
+  "restoration": {
+    "backup_sha256": "55e595264f568d617aa2aa4b9e8a1d650d02483ad20310e50bd7d70d8abddab5",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "55e595264f568d617aa2aa4b9e8a1d650d02483ad20310e50bd7d70d8abddab5",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 76,
+    "aligned": false,
+    "targets": [
+      "0 D-only 01ff",
+      "3 AD 09f0",
+      "6 A-only 08f0"
+    ],
+    "sources": [
+      "CPU BLTSIZE or inert write"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "phase0/1;launch NOP pad0/1; exact launch witness authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "packed beam/data/register words; no alignment",
+    "launch": "Identical MOVE.W (A1),D0 after indirect start/inert write",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "A-only has no destination transfer; scratch destination must stay zero. No Copper enable. Software observations do not establish electrical edge timing.",
+    "widths_words": [
+      1
+    ],
+    "variants": "bit0 priority;bits2:1 no/four/six planes;bit3 no-start;bit4 first-read chip instead of DMACONR;bits6:5 NOP0..3",
+    "measurement_fields": "kind71 except end_beam is first-read word; launch_ref/end_ref/icr are three post-read beams; aux second DMACONR; irq_beam/irq_level settled D"
+  },
+  "repeatability": "Repeatability computed below; inspect repeatability.json before versioning.",
+  "uncontrolled_state": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-request-20261020\\baseline-v1\\reference-2"
+}

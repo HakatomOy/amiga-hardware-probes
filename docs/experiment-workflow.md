@@ -337,3 +337,13 @@ in already-mismatching six-plane cases. Require zero new field regressions,
 not merely a lower mismatch total. Finish these inexpensive held-out comparisons
 before starting a broad test rebuild; preserve rejected binaries and summaries
 for reuse rather than recompiling them to rediscover the same counterexamples.
+
+For fixed-window status probes, prefer an active-first/clear-second coverage
+check on the same descriptors when both samples already exist. Requiring both
+values in only the first sample may reject a useful capture precisely because
+hardware retains busy longer than the model. Preserve the failed contract and
+original captures, explain any revised witness contract, then revalidate every
+control and reference without changing qualification/regression budgets. If no
+existing sample brackets the transition, widen the actual observer before
+requesting hardware again. Post-read beam witnesses also include contention in
+the following beam read; do not present them as the preceding bus grant time.

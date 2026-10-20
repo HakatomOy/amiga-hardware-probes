@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "id": "handoff-request-regression",
+  "hypothesis": "The CPU/blitter request handoff has a pipeline phase; removing USED removes a terminal-request contribution to the CPU read-slot mismatch.",
+  "competitor": "The source/startup engine sequence or fixed-DMA CPU grant model is misplaced independent of the terminal D request.",
+  "test": "One-word D-only,AD,A-only; identical first-read opcode for custom/chip; no/four/six-plane,normal/nasty,no-start,launch phase0/1,pad0/1,NOP0..3. Compare exact launches without alignment.",
+  "outcomes": {
+    "only USED changes CPU read slot": "Investigate terminal D request/grant handoff.",
+    "A-only also changes CPU read slot": "Investigate source/start request phase rather than only terminal D.",
+    "no-start controls differ": "Isolate fixed-DMA CPU grants before blitter changes."
+  },
+  "next_question": "Does the CPU timing mismatch require the destination channel?",
+  "investigation": "investigations/handoff-request-regression.json",
+  "binary": "captures/accuracy-round-20261020/pointer-candidate-v2/emulator.exe",
+  "romdir": "build/handoff-request-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "862672cd471922140a969f3f16554accae26b5983b04e84efe89aaf10819ff1e",
+  "capture": {
+    "minimum_seconds": 300,
+    "expected_cases": 2304,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 16384,
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 255,
+            "equals": 4
+          }
+        },
+        "unit": "BBUSY",
+        "meaning": "Earliest six-plane AD sample is busy on model and HW",
+        "require_values": [
+          16384
+        ],
+        "allowed_values": [
+          16384
+        ]
+      },
+      {
+        "field": "aux",
+        "mask": 16384,
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 255,
+            "equals": 4
+          }
+        },
+        "unit": "BBUSY",
+        "meaning": "Same cases second fixed status is clear: paired active/clear witness without polling",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 6
+        },
+        "unit": "word",
+        "meaning": "A-only never writes destination",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "where": {
+          "target": 6,
+          "variant": {
+            "mask": 16,
+            "equals": 16
+          }
+        },
+        "unit": "word",
+        "meaning": "A-only early chip read remains zero",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "unit": "word",
+        "meaning": "No-start never writes destination",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "Settled AD destination confirms source path",
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 0,
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "Settled D-only confirms destination path",
+        "require_values": [
+          65535
+        ],
+        "allowed_values": [
+          65535
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/handoff-request-v1/run1",
+    "references/handoff-request-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "First read: DMACONR when variant bit4=0,chip destination when bit4=1; identical opcode"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "status1",
+        "field": "aux",
+        "mask": 24576,
+        "unit": "DMACONR bits",
+        "meaning": "Second fixed status sample"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 360,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "baseline": "captures/handoff-request-20261020/baseline-reviewed-v1/candidate"
+}
