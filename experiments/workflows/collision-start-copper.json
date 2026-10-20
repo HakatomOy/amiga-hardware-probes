@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "id": "collision-start-copper",
+  "hypothesis": "CLXDAT latches at grant start; sampling after that word sees collisions from the following CCK.",
+  "competitor": "Pixels become observable too early; moving read phase would break other matching boundaries.",
+  "test": "Sample CLXDAT at grant start while INTREQR/RAM retain their phases. Require repair and zero field/qualification regressions in both prior sweeps and a new paired-read aperture.",
+  "outcomes": {
+    "all residuals repair without new fields": "Replay independent apertures then full neighbors and broad checks.",
+    "regressions or no improvement": "Reject phase-only change; isolate pixel output."
+  },
+  "next_question": "Does start-of-slot sampling remove the remaining early family?",
+  "investigation": "investigations/collision-start-copper.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/copper-dma-collision-v3",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "adc7db8a28fda1034d820e576c5f3c6ef4201ca237b8de66af0a2c5128e8394f",
+  "capture": {
+    "minimum_seconds": 300,
+    "expected_cases": 800,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Both matching and nonmatching pixel witnesses must occur",
+        "require_values": [
+          0,
+          1
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 1
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 2
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 3
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-dma-collision-v3/run1",
+    "references/copper-dma-collision-v3/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 362,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Identical setup launch beam"
+      },
+      {
+        "name": "read_before",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before CLXDAT read"
+      },
+      {
+        "name": "read_after",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After CLXDAT read"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "collision",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "PF1/PF2 match"
+      },
+      {
+        "name": "second_collision",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Immediate read-to-clear control"
+      }
+    ],
+    "required_field_repairs": {
+      "collision": 1
+    }
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/collision-sampling-20261020/copper-v2/candidate"
+}

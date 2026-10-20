@@ -437,3 +437,29 @@ that only clears an already-clear flag cannot distinguish cancellation models.
 Source-delay screens must reject zero qualified support, report pairwise common
 support, and remain separate from full fix validation. Their counts include each
 physical reference packet and are not automatically unique-case counts.
+
+
+## Collision producers and clock domains
+
+A snapshot mismatch does not identify which scanline set a sticky latch. For
+CLXDAT bit0, enable CPU-bus diagnostics includingDFF00E and index the first
+`CLXPROBE` producer with `tools/summarize_collision_trace.py`. It requires a
+byte-identical packet and exact read/descriptor coverage, retains DMA/manual
+source, true scanline and word evidence, and returns only selected mismatches.
+Never shift a trace to fit a pixel. Register-write coordinates and absolute
+pixel-comparator coordinates are separate domains; test an absolute DIW edge
+so a fixture conversion cannot conceal the mistake.
+
+For a read aperture, clear a sticky latch after the preceding scanline; otherwise
+that line can mask the event under study. Keep preflight control and transition
+gates. If a new matrix lacks exact hardware/model timing cohorts, report its
+comparable subset and exclusions explicitly; do not raise its budget or claim a
+full pass. Preserve failed observer designs as records instead of exposing an
+unvalidated tool as an accepted experiment.
+
+`tools/benchmark_pair.py` interleaves immutable before/after binaries, warms each,
+pins binary/config/ROM hashes and saves stdout/stderr per run. Supply the actual
+matching build profile with `--profile`, plus `--before`, `--after`, `--config`,
+`--rom`, `--out`, and optionally `--seconds 2 --repeats 5`. It returns median/spread
+of whole-process wall time. CI results include startup and do not establish
+release performance; production speed claims need comparable release binaries.

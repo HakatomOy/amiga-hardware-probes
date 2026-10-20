@@ -1,0 +1,125 @@
+{
+  "experiment": "collision-pixel-pointer",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1",
+  "identity": {
+    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "89e928cb35641a5e0d5519d6103ebcfc97a2d7ec206fab8feb9ac8a64c013aaf",
+    "source_id": "6386f8702df804478280c5f0639af82f9a4301d4817512fcfe02d6f1fde28aaf"
+  },
+  "hypothesis": "The live scan confuses the render-write anchor with the absolute2H pixel comparator, and CLXDAT must latch before pixels clocked in its granted slot.",
+  "competitor": "The captured pixel or pointer data itself is early; correcting coordinates and sampling would regress neighboring hardware cases.",
+  "test": "Use2H minus DIW framebuffer-origin for collision cursor only, sample CLXDAT at word start, preserve all other reads, CPU/DMA clocks and pixel rendering. Replay both saved sweeps and the independent paired aperture before broad validation.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "all residuals repair without new fields": "Replay independent apertures then full neighbors and broad checks.",
+    "regressions or no improvement": "Reject phase-only change; isolate pixel output."
+  },
+  "next_question": "Known early family resolved. A broader pulse observer must first pass informative controls and exact bracket qualification; CPU-Copper and CIA investigations remain separate.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\pointer-collision-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\pointer-collision-v2\\run2"
+  ],
+  "evidence_fingerprint": "913d878834480434b350f587d1e43b6c3dc44b7c7ea15e90fbd16be8a77d3acb",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    },
+    {
+      "name": "copper-pointer-neighbor",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "native-blit-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "operand-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "cpu-dma-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-onset",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-completion",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-pressure",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-focus",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-read",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-packets",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-preservation",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "strict-clippy",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "rust-format",
+      "exit": 0,
+      "tier": "broad"
+    }
+  ],
+  "decision": "accept",
+  "decision_reason": "Combined absolute2H pixel-cursor conversion and transfer-start CLXDAT sampling repair all eight residuals across719qualified cases; zero new field/qualification regressions; focused/neighbor/legacy and full3665core tests plus strictClippy/format pass.",
+  "evidence": [
+    "captures/collision-aperture-20261020/pointer-pixel-v1/summary.json",
+    "captures/collision-aperture-20261020/copper-pixel-v1/comparison.json"
+  ],
+  "accepted_commits": [
+    "dec76065"
+  ],
+  "history": [
+    "docs/collision-readback-2026-10-20.md"
+  ],
+  "confirmed_facts": [
+    "All719qualified kind72/73cases match, repairing final8;561prior exclusions remain excluded;zero new fields or qualification regressions.",
+    "Verified trace localizes5pointer residuals to current line43firstDMAword0;no previous-line producer.",
+    "Pixel cursor usesabsolute2H comparator;CLXDAT usestransferstart. Each correction alone is insufficient;source/DMA/rendering and other read phases unchanged.",
+    "Newkind86v3 diagnostic:895qualifiedmatch,38case/50fieldrepairs,0regressions;545excluded means matrix is not accepted.",
+    "Fullcore3665passed/37ignored/559windowfiltered,445buspassed,strictClippy andformat;neighbor/legacy gates pass."
+  ]
+}

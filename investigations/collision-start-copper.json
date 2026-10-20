@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\copper-start-v1",
+  "hypothesis": "CLXDAT latches at grant start; sampling after that word sees collisions from the following CCK.",
+  "test": "Sample CLXDAT at grant start while INTREQR/RAM retain their phases. Require repair and zero field/qualification regressions in both prior sweeps and a new paired-read aperture.",
+  "smaller_reproducer": null,
+  "next_question": "Does start-of-slot sampling remove the remaining early family?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "16fde5c6abfb1b1080ec1e268b96265319b59e90c7c725f2e51333da16761c8a",
+  "decision": "validation failed"
+}

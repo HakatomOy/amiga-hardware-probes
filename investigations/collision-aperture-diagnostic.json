@@ -1,0 +1,18 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\aperture-pixel-diagnostic-v1",
+  "hypothesis": "The remaining early reads sample CLXDAT at the end rather than the start of the granted word slot.",
+  "test": "Diagnostic replay of already captured data only; no new hardware. Preserve every exact qualification and zero exclusion budget. Candidate edge movement may change old coverage, so report existing-qualified fields without treating partial matrix as acceptance.",
+  "smaller_reproducer": null,
+  "next_question": "Does earlier CLXDAT sampling generalize across exact read apertures and pointer halves?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "80ca716a66a62f7161c6ed3d3c25a9cf9b9dedad10694d6c60d8f96901ef9cb3",
+  "decision": "preserve",
+  "decision_reason": "All895comparablecasesmatchwith38repairs/50fieldsand0regressions;545excluded keep the full matrix failed. Corroboration only, not full acceptance.",
+  "confirmed_facts": [
+    "Independent kind86v3 hardware cases support the correction on895matched-cohort cases.",
+    "Zero-exclusion budget unchanged;545rows remain unqualified and are not counted as matches."
+  ],
+  "history": [
+    "docs/collision-readback-2026-10-20.md"
+  ]
+}

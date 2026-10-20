@@ -1,0 +1,140 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index 5a571b9c..16c710fb 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -1766,6 +1766,13 @@ pub enum CpuBusAccessKind {
+     Custom,
+ }
+ 
++#[derive(Clone, Copy, PartialEq, Eq)]
++enum CpuBusSamplePhase {
++    Start,
++    End,
++}
++
++
+ #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+ pub enum ChipBusOwner {
+     Refresh,
+@@ -7151,6 +7158,21 @@ impl Bus {
+         size: usize,
+         kind: CpuBusAccessKind,
+         mut sample: impl FnMut(&mut Self, u32, usize),
++    ) {
++        self.grant_cpu_bus_access_sampled_phased(addr, size, kind, |bus, slot, stride, phase| {
++            if phase == CpuBusSamplePhase::End {
++                sample(bus, slot, stride);
++            }
++        });
++    }
++
++    /// Observe either boundary of a granted word without changing its duration.
++    fn grant_cpu_bus_access_sampled_phased(
++        &mut self,
++        addr: Option<u32>,
++        size: usize,
++        kind: CpuBusAccessKind,
++        mut sample: impl FnMut(&mut Self, u32, usize, CpuBusSamplePhase),
+     ) {
+         if !self.cpu_bus_arbitration_enabled {
+             return;
+@@ -7267,6 +7289,9 @@ impl Bus {
+                 self.cpu_trace_access =
+                     addr.map(|addr| cpu_trace_access_for_slot(addr, size, kind, wide_bus, slot));
+             }
++            if !self.cpu_short_bus_cycle {
++                sample(self, slot, slot_stride, CpuBusSamplePhase::Start);
++            }
+             let slot_start_cck = self.emulated_cck;
+             let (cck, tick) = self.advance_one_chip_bus_quantum(Some(ChipBusOwner::Cpu));
+             self.cpu_trace_access = None;
+@@ -7282,7 +7307,7 @@ impl Bus {
+             // data-return colour clock billed below, and where the CPU resumes
+             // inside that clock is carried by `cpu_chip_clock_phase`.
+             if !self.cpu_short_bus_cycle {
+-                sample(self, slot, slot_stride);
++                sample(self, slot, slot_stride, CpuBusSamplePhase::End);
+                 let (cck, tick) = self.advance_one_chip_bus_quantum(None);
+                 self.record_slice_bus_advance(cck, tick);
+             }
+@@ -9654,17 +9679,22 @@ impl Bus {
+     pub fn custom_read(&mut self, addr: u64, size: usize) -> u64 {
+         let off = (addr & 0xFFF) as u16;
+         let mut sampled_words = [None; 2];
+-        self.grant_cpu_bus_access_sampled(
++        self.grant_cpu_bus_access_sampled_phased(
+             Some(custom_register_cpu_addr(addr)),
+             size,
+             CpuBusAccessKind::Custom,
+-            |bus, slot, stride| {
++            |bus, slot, stride, phase| {
+                 let word_off = off.wrapping_add((slot as usize * stride) as u16) & 0xFFE;
+-                if matches!(word_off, 0x00E | 0x01E) {
+-                    // Capture INTREQR and read/clear CLXDAT on the granted
+-                    // transfer. Events during the CPU bus-cycle tail belong
+-                    // to the next read, after this value is already captured.
+-                    // Keep other registers' independently calibrated phases.
++                let sample_phase = if word_off == 0x00E {
++                    CpuBusSamplePhase::Start
++                } else {
++                    CpuBusSamplePhase::End
++                };
++                if matches!(word_off, 0x00E | 0x01E) && phase == sample_phase {
++                    // Denise's collision latch is sampled/cleared at the
++                    // start of the granted word, before pixels clocked during
++                    // that slot can enter it. Paula INTREQR retains its
++                    // separately calibrated end-of-slot sampling phase.
+                     bus.flush_timed_devices();
+                     sampled_words[slot as usize] = Some(bus.read_custom_word(word_off));
+                 }
+diff --git a/src/bus/tests.rs b/src/bus/tests.rs
+index f74bf371..755287dd 100644
+--- a/src/bus/tests.rs
++++ b/src/bus/tests.rs
+@@ -13358,6 +13358,46 @@ fn clxdat_transfer_leaves_bus_tail_collision_for_next_read() {
+     }
+ }
+ 
++#[test]
++fn clxdat_granted_slot_collision_is_not_returned_by_that_transfer() {
++    for (addr, size, first, second) in [
++        (0x00E, 2, 0x8000, 0x8200),
++        (0x00E, 1, 0x80, 0x82),
++        (0x00E, 4, 0x8000_0000, 0x8200_0000),
++        (0x00C, 4, 0x8000, 0x8200),
++    ] {
++        let mut bus = empty_bus();
++        let (pos, ctl) = sprite_control_words(0x2C, 0x2D, 0x0083);
++        bus.agnus.vpos = 0x2C;
++        bus.agnus.hpos = 0x34;
++        bus.denise.diwstrt = 0x2C83;
++        bus.denise.diwstop = 0x2DC1;
++        for sprite in [0, 2] {
++            bus.denise.sprpos[sprite] = pos;
++            bus.denise.sprctl[sprite] = ctl;
++        }
++        bus.current_frame_sprite_display_enable_x_by_y[0] = Some(0);
++        bus.current_frame_render_base = bus.capture_render_snapshot();
++        bus.write_custom_word_from(0x144, 0x8000, BeamWriteSource::Cpu);
++        bus.write_custom_word_from(0x154, 0x8000, BeamWriteSource::Cpu);
++        // The single overlapping pixel is clocked during the granted slot.
++        // For a long read at $00C, CLXDAT is the second bus transfer.
++        bus.advance_chipset(if addr == 0x00C { 3 } else { 5 });
++        bus.set_cpu_bus_arbitration_enabled(true);
++        assert_eq!(
++            bus.custom_read(addr, size),
++            first,
++            "first size={size} addr={addr:x}"
++        );
++        assert_eq!(
++            bus.custom_read(addr, size),
++            second,
++            "next size={size} addr={addr:x}"
++        );
++        assert_eq!(bus.custom_read(0x00E, 2), 0x8000);
++    }
++}
++
+ #[test]
+ fn clxdat_reads_and_clears_collision_latch() {
+     let mut bus = empty_bus();

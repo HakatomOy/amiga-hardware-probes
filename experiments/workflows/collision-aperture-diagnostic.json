@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "id": "collision-aperture-diagnostic",
+  "hypothesis": "The remaining early reads sample CLXDAT at the end rather than the start of the granted word slot.",
+  "competitor": "Fetched pixels or collision generation become visible too early; shifting all read phases would regress an independent aperture.",
+  "test": "Diagnostic replay of already captured data only; no new hardware. Preserve every exact qualification and zero exclusion budget. Candidate edge movement may change old coverage, so report existing-qualified fields without treating partial matrix as acceptance.",
+  "outcomes": {
+    "start-of-slot sampling repairs residuals and aperture with no new fields": "Validate broader suites before acceptance.",
+    "aperture or matching fields regress": "Reject read-phase change; isolate fetched-pixel timing.",
+    "no paired0to1 transition in preflight": "Do not run hardware; move observation aperture."
+  },
+  "next_question": "Does earlier CLXDAT sampling generalize across exact read apertures and pointer halves?",
+  "investigation": "investigations/collision-aperture-diagnostic.json",
+  "binary": "captures/collision-aperture-20261020/pointer-pixel-v1/emulator.exe",
+  "romdir": "build/collision-aperture-v3",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 400,
+    "expected_cases": 1440,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": []
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/collision-aperture-v3/run1",
+    "references/collision-aperture-v3/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Identical setup launch beam"
+      },
+      {
+        "name": "read_before",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before CLXDAT read"
+      },
+      {
+        "name": "read_after",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After CLXDAT read"
+      },
+      {
+        "name": "settled_before",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "Settled collision read bracket"
+      },
+      {
+        "name": "settled_after",
+        "field": "saved_pc_offset",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "Settled collision read bracket"
+      },
+      {
+        "name": "write_before",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket; zero for Copper"
+      },
+      {
+        "name": "write_after",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket; zero for Copper"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "collision",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "PF1/PF2 match"
+      },
+      {
+        "name": "second_collision",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Immediate read-to-clear control"
+      },
+      {
+        "name": "settled_collision",
+        "field": "end_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Following full line detects accepted pointer retargeting"
+      }
+    ]
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "baseline": "captures/collision-aperture-20261020/hardware-v3/candidate"
+}

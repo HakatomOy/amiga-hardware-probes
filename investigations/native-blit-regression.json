@@ -1,8 +1,8 @@
 {
   "experiment": "native-blit-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-sampling-20261020\\pointer-v1\\native-blit-neighbor",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1\\native-blit-neighbor",
   "identity": {
-    "binary_sha256": "143db3c695ab4af8f1adc72aef932d52241f1b240f1cb317ffd237aae11bca9d",
+    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "50a54642b7a32579e55895460fd8cc0e557022848a1304e1f76a9cc73e2ab22f",
     "source_id": "3f8596f74d419cb1185867d62154bf020c7d39b7071c25fccd3080bcb17b3fef"
@@ -22,7 +22,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run2"
   ],
   "evidence_fingerprint": "a7cfa8b21a8e286e9797177096920a0f8c54cc1c0403a57ae7cf0cb157dbca84",
-  "no_new_evidence": 3,
+  "no_new_evidence": 4,
   "validation": [
     {
       "name": "preflight",

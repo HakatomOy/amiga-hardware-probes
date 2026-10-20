@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "reference_id": "collision-aperture-v7-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\hardware-v7\\hardware-1",
+  "test_rom_sha256": "5c7c4bbbacd4d659c22f09c261e103f11453c24bdec723730bb1c29769fad3d6",
+  "source_id": "6ece1bc9f7ec896d322d75584f0c4a09f9f9844f8af8d86790d52c74f80fb399",
+  "results_sha256": "c820790e09d2c6db6239011caaa51ca5459f0b0d9996adcf395c234094b057d2",
+  "record_count": 1440,
+  "metadata": {
+    "version": 1,
+    "source_id": "6ece1bc9f7ec896d322d75584f0c4a09f9f9844f8af8d86790d52c74f80fb399",
+    "record_count": 1440,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "c820790e09d2c6db6239011caaa51ca5459f0b0d9996adcf395c234094b057d2"
+  },
+  "restoration": {
+    "backup_sha256": "cda5dd2d87be9fe8b92dc542118562b4a205ce7b4ec8758a9df0d962b03c72bb",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "cda5dd2d87be9fe8b92dc542118562b4a205ce7b4ec8758a9df0d962b03c72bb",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 86,
+    "aligned": false,
+    "targets": [
+      "BPL2PTL",
+      "BPL2PTH",
+      "BPL1PTL"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "CPU write neighbors6/7/8/9/10/20; five phase repeats",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Exact brackets; no electrical sampling edge or trace alignment inferred.",
+    "aperture": "delay index selects6/7/14/15 CCK before consecutive CLXDAT reads",
+    "measurement_fields": "kind73 first/second/settled CLXDAT; stores after paired reads"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 342,
+    "independently_repeated_cohorts": 342,
+    "candidate_cases_with_independent_repeats": 360,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock 68000, 512KiB chip/512KiB slow; silicon revisions unconfirmed. CLXDAT is a digital pixel witness, not an electrical pointer bus measurement. Exact write/read beam brackets are retained; no alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\hardware-v7\\reference-1"
+}

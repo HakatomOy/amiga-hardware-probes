@@ -1,0 +1,45 @@
+{
+  "experiment": "collision-pixel-copper",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\copper-pixel-v1",
+  "identity": {
+    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "adc7db8a28fda1034d820e576c5f3c6ef4201ca237b8de66af0a2c5128e8394f",
+    "source_id": "834af823af2b3b253542af941006a52509b466095661e3d906788ebea38d5e7c"
+  },
+  "hypothesis": "The live scan confuses the render-write anchor with the absolute2H pixel comparator, and CLXDAT must latch before pixels clocked in its granted slot.",
+  "competitor": "The captured pixel or pointer data itself is early; correcting coordinates and sampling would regress neighboring hardware cases.",
+  "test": "Use2H minus DIW framebuffer-origin for collision cursor only, sample CLXDAT at word start, preserve all other reads, CPU/DMA clocks and pixel rendering. Replay both saved sweeps and the independent paired aperture before broad validation.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "all residuals repair without new fields": "Replay independent apertures then full neighbors and broad checks.",
+    "regressions or no improvement": "Reject phase-only change; isolate pixel output."
+  },
+  "next_question": "Known early family resolved. A broader pulse observer must first pass informative controls and exact bracket qualification; CPU-Copper and CIA investigations remain separate.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run2"
+  ],
+  "evidence_fingerprint": "03c5256c81823d548c79947d83ba18908dac80404780e4e6ada407bef6e73e52",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "accepted_commits": [
+    "dec76065"
+  ],
+  "history": [
+    "docs/collision-readback-2026-10-20.md"
+  ],
+  "confirmed_facts": [
+    "All719qualified kind72/73cases match, repairing final8;561prior exclusions remain excluded;zero new fields or qualification regressions.",
+    "Verified trace localizes5pointer residuals to current line43firstDMAword0;no previous-line producer.",
+    "Pixel cursor usesabsolute2H comparator;CLXDAT usestransferstart. Each correction alone is insufficient;source/DMA/rendering and other read phases unchanged.",
+    "Newkind86v3 diagnostic:895qualifiedmatch,38case/50fieldrepairs,0regressions;545excluded means matrix is not accepted.",
+    "Fullcore3665passed/37ignored/559windowfiltered,445buspassed,strictClippy andformat;neighbor/legacy gates pass."
+  ]
+}

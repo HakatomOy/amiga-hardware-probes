@@ -1,0 +1,15 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-denise-v1",
+  "hypothesis": "Collision replay advances in Agnus coordinates although Denise pixel output is fourCCK behind; sample at unchanged CPU transfer against the correct pixel counter.",
+  "test": "Convert only collision replay cursor to Denise time including short/long line carry; leave CPU read timing, bus grants, pixel data and rendering positions unchanged.",
+  "smaller_reproducer": null,
+  "next_question": "Does the documented fourCCK clock-domain conversion repair both early and missed paired-read events without regressions?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "307a0bf42912d41506d0fa6d85da197deadec54ddd6890d7384e6be1375e7b0d",
+  "decision": "narrow",
+  "decision_reason": "A fourCCK cursor shift alone repairs zero cases and breaks the tail-collision regression; rejected. Diagnostic replay localizes residuals to current line first DMA word, not previous line.",
+  "evidence": [
+    "captures/collision-aperture-20261020/denise-cursor-rejected/source.patch",
+    "captures/collision-aperture-20261020/pointer-latch-sources.json"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pulse-hardware-v3",
+  "hypothesis": "Correct absolute pixel-clock coordinates plus transfer-start sampling generalize to a fresh single-word pulse, independently of pointer races.",
+  "test": "Two known pixel patterns with two DMA fetch units with modulo-4, a fresh-line CLXDAT clear,16ROM-only read gaps, four controls and exact observation beams; no Copper or active pointer writes.",
+  "smaller_reproducer": null,
+  "next_question": "A future pulse observer must first demonstrate trustworthy positive data and both sides of the read boundary. Original prototype source retained in ignored build/collision-pulse-v3/source_snapshot/.",
+  "no_new_evidence": 2,
+  "evidence_fingerprint": "c3e5ee82a0c732f87619a9359e00f3f4409a7f54efb6d4137f3b8df0b9401994",
+  "decision": "narrow",
+  "decision_reason": "Prototype failed positive/transition preflight coverage; no physical capture was attempted. Do not use it as validation or relax gates."
+}

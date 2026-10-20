@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\copper-denise-v1",
+  "hypothesis": "Collision replay advances in Agnus coordinates although Denise pixel output is fourCCK behind; sample at unchanged CPU transfer against the correct pixel counter.",
+  "test": "Convert only collision replay cursor to Denise time including short/long line carry; leave CPU read timing, bus grants, pixel data and rendering positions unchanged.",
+  "smaller_reproducer": null,
+  "next_question": "Does the documented fourCCK clock-domain conversion repair both early and missed paired-read events without regressions?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "16fde5c6abfb1b1080ec1e268b96265319b59e90c7c725f2e51333da16761c8a",
+  "decision": "validation failed"
+}

@@ -1,8 +1,8 @@
 {
   "experiment": "regression-bus-pressure",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-sampling-20261020\\pointer-v1\\bus-pressure",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1\\bus-pressure",
   "identity": {
-    "binary_sha256": "143db3c695ab4af8f1adc72aef932d52241f1b240f1cb317ffd237aae11bca9d",
+    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "e1a1a333720a545c82b5723c0a1e05c223fac9128a6f7468ccd8985fb039220a",
     "source_id": "82d77772a7896fa1c356097d29ee742567f07f0365cacd0fc89459671715e002"
@@ -20,7 +20,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\bus-pressure-v2-run1"
   ],
   "evidence_fingerprint": "ecab3b6235c59bd85af5da18fb7164e787bbc05c99349ff27af1b78e871ea97f",
-  "no_new_evidence": 2,
+  "no_new_evidence": 3,
   "validation": [
     {
       "name": "preflight",

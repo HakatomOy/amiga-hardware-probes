@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\hardware-v8",
+  "hypothesis": "The remaining early reads sample CLXDAT at the end rather than the start of the granted word slot.",
+  "test": "CPU plane1/2 pointer high/low neighbors with four one-CCK-spaced aperture choices; paired back-to-back reads, settled following-line controls, five repeats and exact transfer/observation brackets. Use existing ROM-only horizontal feedback before enabling DMA; v3 lacked exact launch-cohort overlap for545cases and cannot qualify the full matrix. Enable DMA at least one complete scanline before the line44 retarget; observe line45 and settled46, so horizontal feedback cannot create a late-enable positive-control failure. Disable the inherited dummy Copper stream: this is a CPU/display/read experiment, not a Copper-pressure experiment.",
+  "smaller_reproducer": null,
+  "next_question": "Does earlier CLXDAT sampling generalize across exact read apertures and pointer halves?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "139194731bc29f8f2be584e40fd884d8d2d1af0cf8a7601c532cdf8a28d6cade",
+  "decision": "validation failed"
+}

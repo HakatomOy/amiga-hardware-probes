@@ -1,0 +1,28 @@
+diff --git a/src/bus/collisions.rs b/src/bus/collisions.rs
+index adedd032..923a62f7 100644
+--- a/src/bus/collisions.rs
++++ b/src/bus/collisions.rs
+@@ -14,8 +14,21 @@ impl Bus {
+         let visible_start_vpos = self.current_frame_visible_start_vpos;
+         let visible_end_vpos =
+             visible_start_vpos + self.current_frame_geometry.visible_lines as u32;
+-        let mut end_vpos = self.agnus.vpos;
+-        let mut end_hpos = self.agnus.hpos.min(VISIBLE_END_HPOS);
++        // Collision replay uses Denise pixel coordinates. Agnus' DMA beam
++        // leads that counter by four CCK, as in the render-event conversion.
++        let (mut end_vpos, pixel_hpos) = if self.agnus.hpos >= DENISE_HPOS_LAG_CCK {
++            (self.agnus.vpos, self.agnus.hpos - DENISE_HPOS_LAG_CCK)
++        } else if self.agnus.vpos != 0 {
++            let previous_lol = self.agnus.lol ^ self.agnus.long_line_toggles();
++            (
++                self.agnus.vpos - 1,
++                self.agnus.line_cck_for(previous_lol) + self.agnus.hpos - DENISE_HPOS_LAG_CCK,
++            )
++        } else {
++            // The previous frame was flushed before the beam wrapped.
++            return;
++        };
++        let mut end_hpos = pixel_hpos.min(VISIBLE_END_HPOS);
+ 
+         if end_vpos < visible_start_vpos {
+             return;

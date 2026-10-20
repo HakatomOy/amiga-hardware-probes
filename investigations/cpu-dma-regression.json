@@ -1,8 +1,8 @@
 {
   "experiment": "cpu-dma-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-sampling-20261020\\pointer-v1\\cpu-dma",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1\\cpu-dma",
   "identity": {
-    "binary_sha256": "143db3c695ab4af8f1adc72aef932d52241f1b240f1cb317ffd237aae11bca9d",
+    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "cdb43469328394efaa9dac4efc6d6754db3c6f85f900609fde437582a1d7c7f1",
     "source_id": "26d663f7a794a338b14cb2689c386b1a904ef08347b219ca7251676f57f4dcea"
@@ -21,7 +21,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-dma-v2-run2"
   ],
   "evidence_fingerprint": "a4d536c77b49a05a00b235f9bcff77bf9d3a26d8ce20cfb9cc1d13410b935c27",
-  "no_new_evidence": 8,
+  "no_new_evidence": 9,
   "validation": [
     {
       "name": "preflight",

@@ -1,0 +1,512 @@
+{
+  "version": 1,
+  "id": "collision-denise-pointer",
+  "hypothesis": "Collision replay advances in Agnus coordinates although Denise pixel output is fourCCK behind; sample at unchanged CPU transfer against the correct pixel counter.",
+  "competitor": "Pixels become observable too early; moving read phase would break other matching boundaries.",
+  "test": "Convert only collision replay cursor to Denise time including short/long line carry; leave CPU read timing, bus grants, pixel data and rendering positions unchanged.",
+  "outcomes": {
+    "all residuals repair without new fields": "Replay independent apertures then full neighbors and broad checks.",
+    "regressions or no improvement": "Reject phase-only change; isolate pixel output."
+  },
+  "next_question": "Does the documented fourCCK clock-domain conversion repair both early and missed paired-read events without regressions?",
+  "investigation": "investigations/collision-denise-pointer.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/pointer-collision-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "89e928cb35641a5e0d5519d6103ebcfc97a2d7ec206fab8feb9ac8a64c013aaf",
+  "capture": {
+    "minimum_seconds": 60,
+    "expected_cases": 480,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Both matching and nonmatching pixel witnesses must occur",
+        "require_values": [
+          0,
+          1
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 1
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 2
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 3
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 1
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Settled constant control after a complete following scanline",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 2
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Settled constant control after a complete following scanline",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 3
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Settled constant control after a complete following scanline",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/pointer-collision-v2/run1",
+    "references/pointer-collision-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 199,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Identical setup launch beam"
+      },
+      {
+        "name": "read_before",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before CLXDAT read"
+      },
+      {
+        "name": "read_after",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After CLXDAT read"
+      },
+      {
+        "name": "settled_before",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "Settled collision read bracket"
+      },
+      {
+        "name": "settled_after",
+        "field": "saved_pc_offset",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "Settled collision read bracket"
+      },
+      {
+        "name": "write_before",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket; zero for Copper"
+      },
+      {
+        "name": "write_after",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket; zero for Copper"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "collision",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "PF1/PF2 match"
+      },
+      {
+        "name": "second_collision",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Immediate read-to-clear control"
+      },
+      {
+        "name": "settled_collision",
+        "field": "end_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Following full line detects accepted pointer retargeting"
+      }
+    ],
+    "required_field_repairs": {
+      "collision": 1
+    }
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "PAL A500 stock 68000, 512KiB chip/512KiB slow; silicon revisions unconfirmed. CLXDAT is a digital pixel witness, not an electrical pointer bus measurement. Exact write/read beam brackets are retained; no alignment."
+  },
+  "build": [],
+  "validation": [
+    {
+      "name": "copper-pointer-neighbor",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-pointer-regression.json",
+        "--out",
+        "{out}/copper-pointer-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "native-blit-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/native-blit-regression.json",
+        "--out",
+        "{out}/native-blit-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "operand-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/cpu-operand-regression.json",
+        "--out",
+        "{out}/operand-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cpu-dma-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/cpu-dma-regression.json",
+        "--out",
+        "{out}/cpu-dma",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-onset",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-onset.json",
+        "--out",
+        "{out}/bus-onset",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-completion",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-completion.json",
+        "--out",
+        "{out}/bus-completion",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-pressure",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-pressure.json",
+        "--out",
+        "{out}/bus-pressure",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-focus",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-focus.json",
+        "--out",
+        "{out}/handoff-focus",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-read",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-read.json",
+        "--out",
+        "{out}/handoff-read",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-neighbor.json",
+        "--out",
+        "{out}/handoff-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "legacy-packets",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/replay_accuracy.py",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/legacy",
+        "--suite",
+        "bzero-edges",
+        "--suite",
+        "copper-busy"
+      ]
+    },
+    {
+      "name": "legacy-preservation",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "packets",
+        "--before",
+        "captures/accuracy-round-20261020/blit-request-candidate-v1/legacy",
+        "--after",
+        "{out}/legacy",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--suite",
+        "bzero-edges",
+        "--suite",
+        "copper-busy"
+      ]
+    },
+    {
+      "name": "core-tests",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "test",
+        "--locked",
+        "--profile",
+        "ci",
+        "--lib",
+        "--",
+        "--skip",
+        "video::window::"
+      ]
+    },
+    {
+      "name": "strict-clippy",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "clippy",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "name": "rust-format",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "fmt",
+        "--",
+        "--check"
+      ]
+    }
+  ],
+  "baseline": "captures/collision-sampling-20261020/pointer-v1/candidate"
+}
