@@ -435,6 +435,22 @@ The hypothesis was prompted by [Toni Wilen's EAB discussion](https://eab.abime.n
 WinUAE's developer. The ROM encodes a new measurement and does not copy WinUAE
 implementation code.
 
+The kind51 CPU/CIA probe compares matched NOP and `MOVE.B D0,-(A1)` loops from
+ROM or CHIP RAM, interrupted by CIA-A Timer-A/PORTS, Copper COPER, or the
+CIA-B Timer-A/EXTER route. `compare_cia_cpu_irq.py` compares the WinUAE and
+Copperline captures by descriptor and exact captured VHPOSR both before source
+start (`+14`) and immediately after it (`+12`); its report keeps rows with
+unmatched observed start phases out of the primary comparison and lists
+cross-phase matches separately as exploratory. The review1 and review2 captures
+passed the record/status checks. The review3 CIA-B EXTER extension has two
+versioned A500 captures in `references/cia-irq-kind51-review3-run1` and `run2`;
+only 99 descriptor pairs share both observed start samples, and all 99 match.
+Other start phases are not equivalent timing evidence. The EAB discussion motivated the separate
+BZERO/blitter hypothesis above, not this IRQ matrix. WinUAE,
+developed by Toni Wilen, and its cycle-exact CPU/CIA behavior provide an
+independent comparison and diagnostic reference for kind51; no WinUAE
+implementation code was copied.
+
 `build_line_a_bit_rom.py` builds kind48 (1,536 trials) to measure line-mode BZERO behavior across all 16 one-hot BLTADAT bits, ASHIFT 0/2/4, BLTBDAT 0/$FFFF with USEB disabled, and one/two-pixel lines with C=0. Each trial records eight immediate DMACONR reads and the post-busy words at `$10000` and `$11050`. The shared FF7800 observer also writes zero to its `$18000` scratch word between launch and those reads; the archive manifest records that observer write. This is a measurement matrix, not a hardware finding.
 
 The opt-in `--truth-control` mode preserves those legacy rows and uses a separate

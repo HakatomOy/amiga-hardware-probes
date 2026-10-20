@@ -157,6 +157,8 @@ main:
         beq .blitter_handoff
         cmpi.w #50,(a4)
         beq .copper_start_busy
+        cmpi.w #51,(a4)
+        beq .cia_cpu_irq
         cmpi.w #20,(a4)
         beq .divirq
         cmpi.w #19,(a4)
@@ -253,6 +255,9 @@ main:
         bra.w .recorded
 .copper_start_busy:
         jsr copper_start_busy_trial
+        bra.w .recorded
+.cia_cpu_irq:
+        jsr cia_cpu_irq_trial
         bra.w .recorded
 .divirq:
         bsr divirq_trial
@@ -3061,6 +3066,7 @@ line_c_bus_data_trial:
 
         include "copper_wait_kernel.i"
         include "copper_start_busy_kernel.i"
+        include "cia_cpu_irq_kernel.i"
 
 ; Kind 43: masked Copper COPER request visibility and straight-line CPU IPL observations.
 irq_focus_trial:

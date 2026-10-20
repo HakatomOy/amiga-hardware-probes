@@ -861,6 +861,7 @@ copper_wait_finish_sweep:
         jmp $ff7e10
         dcb.b $ffc200-*,0
         include "copper_start_busy_observer.i"
-; Keep the direct BBUSY observer below the reserved future-ROM tail. A negative
-; DCB count makes assembly fail if this observer grows past FFC600.
+; Kind51's bounded 0x400-byte fixed-ROM observer is copied verbatim to CHIP
+; RAM by its trial routine when the CHIP-execution target bit is selected.
         dcb.b $ffc600-*,0
+        include "cia_cpu_irq_observer.i"
