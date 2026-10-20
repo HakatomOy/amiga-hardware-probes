@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-sample-v2-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\sample-baseline-v2\\hardware-2",
+  "test_rom_sha256": "d146eb2ae453eacfd42fffb7644df21044b72f509453c0c7b0cb0ba2f909a40c",
+  "source_id": "9617a8396bdc60b3e8cd7355874d55ea4aedf4895e3662e66b7fa79ccddbf573",
+  "results_sha256": "e67869fd978fa3dbab396305b91538bb3f6fe2b4e4f90eb29ceeb95deb0f97f4",
+  "record_count": 1024,
+  "metadata": {
+    "version": 1,
+    "source_id": "9617a8396bdc60b3e8cd7355874d55ea4aedf4895e3662e66b7fa79ccddbf573",
+    "record_count": 1024,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "e67869fd978fa3dbab396305b91538bb3f6fe2b4e4f90eb29ceeb95deb0f97f4"
+  },
+  "restoration": {
+    "backup_sha256": "442932828713a817ee046a6cb988b3381d94be24f7ac22132ab46df3e131b332",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "442932828713a817ee046a6cb988b3381d94be24f7ac22132ab46df3e131b332",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 70,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Single software read, not an electrical edge. Compare launch-only timing and separately exact read-bracket register values.",
+    "variants": "low bits priority/DMA/no-start; bits7:5 zero to seven ROM NOPs after start",
+    "measurement_fields": "launch_beam launch; launch_ref pre-status beam; end_beam DMACONR; end_ref post-status beam; counter INTREQ; icr post-request beam; irq_beam/irq_level final D; saved_pc_offset settled INTREQ:beam"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 512,
+    "independently_repeated_cohorts": 512,
+    "candidate_cases_with_independent_repeats": 1024,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\sample-baseline-v2\\reference-2"
+}

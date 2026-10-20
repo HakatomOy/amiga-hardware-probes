@@ -1,0 +1,136 @@
+{
+  "experiment": "cpu-operand-copper-turnaround-candidate",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cpu-operand-20261019\\copper-candidate-v4",
+  "identity": {
+    "binary_sha256": "05b828803685040596e810a85d4f6022a33014b77f40abf792df7fc5fa944fb7",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "ead12d28a322a0ad9827d8b608a25c0d0e605a30d660ae0dc23cb85f59e25d3c",
+    "source_id": "117b52385d2074747730b245f57bc46c94ce5003d5cb72c9fb8a649650cc27fb"
+  },
+  "hypothesis": "Stock DRAM read turnaround after actual preceding Copper ownership cannot cross line-end refresh; uncontended reads and writes retain phase.",
+  "competitor": "The data instead requires another CPU/bus phase model; the scoped rule will fail controls or neighbors.",
+  "test": "Replay focused960 cases, held-out1920 CPU matrix, baseline-qualified bus and blitter contracts, plus old BZERO/Copper packet controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "chip/slow reads differ, ROM matches": "Inspect arbitration/grant boundaries; use MOVE/CMP to test generalization beyond TST.",
+    "TST differs across all memories while MOVE/CMP match": "Inspect instruction poll/prefetch/exception ordering before changing bus grants.",
+    "controls all differ or alignment does not qualify": "Reject targeted bus fix; narrow launch and request timing first."
+  },
+  "next_question": "Measure other bus boundary ownership/video-standard combinations before extending the constrained PAL refresh rule.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-operand-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-operand-v2\\run2"
+  ],
+  "evidence_fingerprint": "0432275733b89a6cca7d1130e8865e1fbe068dcfa306781a8dc1fbecf7a165a5",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    },
+    {
+      "name": "probe-tests",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "cpu-dma-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-onset",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-completion",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-pressure",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-focus",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-read",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-packets",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-preservation",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "strict-clippy",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "rust-format",
+      "exit": 0,
+      "tier": "broad"
+    }
+  ],
+  "decision": "accept",
+  "decision_reason": "All960 A500 cases match:96 repairs,zero field/qualification regressions. CPU/DMA, bus/handoff and legacy neighbors pass; core tests,strict Clippy and formatting pass. Narrow Copper-to-DRAM read turnaround rule preserves rejected-candidate controls.",
+  "evidence": [
+    "captures/cpu-operand-20261019/copper-candidate-v4/comparison.json",
+    "docs/cpu-operand-investigation-2026-10-19.md"
+  ],
+  "confirmed_facts": [
+    "Two A500 runs agree on960 raw records; all qualify.",
+    "Baseline96 early IRQ observations occur only for chip/slow TST,MOVE,CMP under six planes plus Copper; ROM/STOP/masked controls match.",
+    "Copper-to-DRAM read/fetch refresh rule repairs96/96 with960 matches,zero field or qualification regressions.",
+    "Held-out1920 CPU/DMA,2176 onset,640 completion,768 pressure and896 handoff cases preserve baseline fields/cohorts; legacy BZERO/Copper packets unchanged.",
+    "Core tests,strict Clippy and formatting pass; tests logs remain in accepted run."
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "Global CPU pre-refresh guard",
+      "evidence": "refresh-candidate-v1:18 regressions,54 lost cohorts."
+    },
+    {
+      "hypothesis": "DRAM read/write guard",
+      "evidence": "dram-candidate-v2:12 full regressions,48 lost cohorts; trace recording write."
+    },
+    {
+      "hypothesis": "Unconditional DRAM read guard",
+      "evidence": "read-candidate-v3:48 lost launch cohorts before Copper enable."
+    }
+  ],
+  "source_files": [
+    "../Copperline/src/bus.rs",
+    "../Copperline/src/bus/dma_slots.rs",
+    "build_cpu_operand_rom.py",
+    "tools/trace_cpu_dma.py"
+  ],
+  "history": [
+    "docs/cpu-operand-investigation-2026-10-19.md"
+  ],
+  "accepted_commits": [
+    "346f0585"
+  ]
+}

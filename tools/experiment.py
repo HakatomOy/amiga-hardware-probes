@@ -65,8 +65,10 @@ def validate_spec(spec):
     capture = spec['capture']
     if capture['minimum_seconds'] <= 0 or capture['expected_cases'] <= 0:
         raise ValueError('positive minimum duration and expected case count required')
-    if capture.get('validator') not in (None, 'serial', 'irq', 'handoff'):
+    if capture.get('validator') not in (None, 'serial', 'irq', 'handoff','bus'):
         raise ValueError('unknown capture validator')
+    if capture.get('status_is_measurement') and capture.get('validator')!='bus':
+        raise ValueError('overloaded status data requires the bus domain validator')
     comparison = spec['comparison']
     if comparison.get('alignment') != 'exact' or not comparison.get('measurements'):
         raise ValueError('explicit measurements and exact alignment required')
@@ -112,14 +114,17 @@ def load_capture(path, build, contract, reference=False):
         raise ValueError(f'{path}: wrong case count')
     if [list(key(r)) for r in rows] != build['trials'] or len({key(r) for r in rows}) != len(rows):
         raise ValueError(f'{path}: descriptor mismatch or duplicates')
-    if any(r['status'] not in contract.get('valid_statuses', [0]) for r in rows):
+    if contract.get('status_is_measurement') and any(r['kind']!=55 for r in rows):
+        raise ValueError('status-as-measurement is only defined for kind55')
+    if not contract.get('status_is_measurement') and any(r['status'] not in contract.get('valid_statuses', [0]) for r in rows):
         raise ValueError(f'{path}: invalid capture status')
     if contract.get('validator'):
         import importlib
-        module = importlib.import_module({'serial': 'compare_serial_buffer', 'irq': 'compare_irq_stage',
+        module = importlib.import_module({'serial': 'compare_serial_buffer', 'irq': 'compare_irq_stage','bus':'compare_bus_marker',
                                          'handoff': 'compare_handoff_focus'}[contract['validator']])
-        for row in rows:
-            module.validate(row)
+        if contract['validator']=='bus':module.load(path)
+        else:
+            for row in rows:module.validate(row)
     if reference:
         provenance = read(path / 'manifest.json')
         for f, expected in (('source_id', build['source_id']), ('test_rom_sha256', build['rom_sha256']),
@@ -145,6 +150,21 @@ def check_coverage(rows,contract):
             raise ValueError(f"preflight coverage missing {rule['field']} values {missing}; revise probe before hardware")
         report.append(dict(field=rule['field'],unit=rule['unit'],required_counts={x:distribution[x] for x in required}))
     return report
+
+
+def repeat_cohorts(runs, candidate, policy):
+    """Separate within-run repeats from independently recaptured phase cohorts."""
+    def cohort(r):
+        return key(r)[:-1] + tuple(value(r, f) for f in policy['qualification'])
+    owners = defaultdict(set)
+    for index, rows in enumerate(runs):
+        for row in rows:
+            owners[cohort(row)].add(index)
+    independently_repeated = {k for k, indices in owners.items() if len(indices) > 1}
+    return dict(reference_cohorts=len(owners),
+                independently_repeated_cohorts=len(independently_repeated),
+                candidate_cases_with_independent_repeats=sum(cohort(r) in independently_repeated for r in candidate),
+                note='Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap.')
 
 
 def compare(hardware, candidate, policy):
@@ -196,13 +216,24 @@ def compare(hardware, candidate, policy):
                         sorted(groups.items(), key=lambda item: (-len(item[1]), repr(item[0])))]), cases
 
 
-def delta(before, after):
+def delta(before, after, names=()):
     counts = Counter(repairs=0, regressions=0, unchanged_differences=0,
                      changed_differences=0, unchanged_matches=0, excluded_cases=0,
                      qualification_regressions=0, new_cases=0, missing_results=0)
+    counts.update(field_repairs=0,field_regressions=0,cases_with_field_regressions=0)
+    field_repairs=Counter();field_regressions=Counter()
     examples = defaultdict(list)
     for k in sorted(before.keys() | after.keys()):
         a, b = before.get(k), after.get(k)
+        if (a and b and a['status'] in ('matches','mismatches') and b['status'] in ('matches','mismatches')
+                and a['qualification']==b['qualification'] and a['expected']==b['expected']):
+            regressed=False
+            for i,(expected,old,new) in enumerate(zip(a['expected'],a['actual'],b['actual'])):
+                label=names[i] if i<len(names) else str(i)
+                if old!=expected and new==expected:field_repairs[label]+=1;counts['field_repairs']+=1
+                if old==expected and new!=expected:
+                    field_regressions[label]+=1;counts['field_regressions']+=1;regressed=True
+            counts['cases_with_field_regressions']+=regressed
         if b is None:
             category = 'missing_results'
         elif a is None:
@@ -225,7 +256,8 @@ def delta(before, after):
         counts[category] += 1
         if len(examples[category]) < 3:
             examples[category].append(k)
-    return dict(counts=dict(counts), representatives=dict(examples))
+    return dict(counts=dict(counts), representatives=dict(examples),
+                repaired_fields=dict(field_repairs),regressed_fields=dict(field_regressions))
 
 
 def bounded_failure(stdout, stderr):
@@ -342,8 +374,9 @@ def stalled(record, spec):
             and record.get('smaller_reproducer') == spec.get('smaller_reproducer'))
 
 
-def run(spec_path, out, hardware=False, events=False, through='broad'):
+def run(spec_path, out, hardware=False, events=False, through='broad', overrides=None):
     spec = validate_spec(read(spec_path))
+    spec.update(overrides or {})
     record_path = resolve(spec['investigation'])
     record = read(record_path) if record_path.exists() else {}
     if stalled(record, spec):
@@ -447,17 +480,20 @@ def run(spec_path, out, hardware=False, events=False, through='broad'):
         if not references:
             raise ValueError('provide saved references or explicitly request --hardware')
         hardware_rows = []
+        reference_runs = []
         hashes = []
         for path in references:
             meta, rows = load_capture(path, build, spec['capture'], reference=True)
             hashes.append(meta['sha256'])
             hardware_rows.extend(rows)
+            reference_runs.append(rows)
         report, cases = compare(hardware_rows, candidate, spec['comparison'])
         report['references'] = list(map(str, references))
         report['reference_hashes'] = hashes
         report['repeatability'] = dict(runs=len(references), packets_identical=len(set(hashes)) == 1,
                                        unstable_cases=report['counts']['unstable_reference'],
-                                       conflicting_cohorts=report['counts']['reference_conflicting_cohorts'])
+                                       conflicting_cohorts=report['counts']['reference_conflicting_cohorts'],
+                                       **repeat_cohorts(reference_runs, candidate, spec['comparison']))
         if hardware:
             write(out / 'repeatability.json', report['repeatability'])
             for path in references:
@@ -468,7 +504,7 @@ def run(spec_path, out, hardware=False, events=False, through='broad'):
         if baseline:
             _, before = load_capture(resolve(baseline), build, spec['capture'])
             previous_report, previous_cases = compare(hardware_rows, before, spec['comparison'])
-            report['delta'] = delta(previous_cases, cases)
+            report['delta'] = delta(previous_cases, cases,[f.get('name',f['field']) for f in spec['comparison']['measurements']])
         else:
             previous_report = dict(groups=[])
         prior_patterns = {json.dumps(g['pattern']) for g in previous_report['groups']}
@@ -485,7 +521,7 @@ def run(spec_path, out, hardware=False, events=False, through='broad'):
         summary['patterns'] = report['pattern_delta']
         emit(out, 'comparison', dict(counts=summary['counts'], delta=summary['delta']), events)
         changes = summary['delta'] or {}
-        if any(changes.get(k, 0) for k in ('regressions', 'qualification_regressions', 'missing_results')):
+        if any(changes.get(k, 0) for k in ('regressions', 'field_regressions', 'qualification_regressions', 'missing_results')):
             raise ValueError('focused comparison regressed; broader validation not run')
         if (report['counts']['excluded'] > spec['comparison'].get('max_excluded', 0)
                 or report['counts']['unstable_reference'] > spec['comparison'].get('max_unstable', 0)):
@@ -517,7 +553,7 @@ def run(spec_path, out, hardware=False, events=False, through='broad'):
         summary['error'] = str(error)[:2000]
         failed = next((c for c in reversed(summary['commands']) if c['exit']), {})
         summary['logs'] = {k: failed[k] for k in ('stdout', 'stderr') if k in failed} or dict(directory=str(out))
-        fingerprint = digest(summary['error'].encode())
+        fingerprint = digest(json.dumps({k:summary.get(k) for k in ('error','counts','delta','patterns')},sort_keys=True).encode())
         record.update(run=str(out), hypothesis=spec['hypothesis'], test=spec['test'],
                       smaller_reproducer=spec.get('smaller_reproducer'), next_question=spec['next_question'],
                       no_new_evidence=record.get('no_new_evidence', 0)+1
@@ -553,7 +589,7 @@ def resume(out, through='broad', repeat=()):
     hashes=[load_capture(resolve(p),build,spec['capture'],True)[0]['sha256'] for p in report['references']]
     if hashes!=report['reference_hashes']:raise ValueError('hardware evidence changed; start a new run')
     changes=report.get('delta',{}).get('counts',{})
-    if any(changes.get(k,0) for k in ('regressions','qualification_regressions','missing_results')):
+    if any(changes.get(k,0) for k in ('regressions','field_regressions','qualification_regressions','missing_results')):
         raise ValueError('cannot resume a regressed comparison')
     if (report['counts']['excluded']>spec['comparison'].get('max_excluded',0)
             or report['counts']['unstable_reference']>spec['comparison'].get('max_unstable',0)):
@@ -749,6 +785,8 @@ def main():
     p.add_argument('--out', required=True)
     p.add_argument('--hardware', action='store_true', help='perform new live runs instead of reusing references')
     p.add_argument('--events', action='store_true', help='emit stage completion events, never raw logs')
+    p.add_argument('--binary',help='override the candidate with a frozen parent-run executable')
+    p.add_argument('--config',help='override with the parent-run configuration')
     p.add_argument('--through', choices=('preflight','comparison') + TIERS, default='broad', help='stop at this validation tier; partial runs cannot be accepted')
     for name in ('status', 'detail', 'decide', 'archive'):
         p = sub.add_parser(name)
@@ -784,7 +822,8 @@ def main():
     args = parser.parse_args()
     try:
         if args.command == 'run':
-            result = run(args.manifest, args.out, args.hardware, args.events, args.through)
+            overrides={k:getattr(args,k) for k in ('binary','config') if getattr(args,k)}
+            result = run(args.manifest, args.out, args.hardware, args.events, args.through,overrides)
             if not args.events:
                 print(json.dumps(compact(result)))
             return 1 if result['status'] == 'failed' else 0

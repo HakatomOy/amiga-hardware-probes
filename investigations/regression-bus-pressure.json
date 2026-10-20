@@ -1,0 +1,31 @@
+{
+  "experiment": "regression-bus-pressure",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cpu-operand-20261019\\copper-candidate-v4\\bus-pressure",
+  "identity": {
+    "binary_sha256": "05b828803685040596e810a85d4f6022a33014b77f40abf792df7fc5fa944fb7",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "e1a1a333720a545c82b5723c0a1e05c223fac9128a6f7468ccd8985fb039220a",
+    "source_id": "82d77772a7896fa1c356097d29ee742567f07f0365cacd0fc89459671715e002"
+  },
+  "hypothesis": "The candidate preserves or repairs qualified existing bus measurements without new field regressions.",
+  "competitor": "The new timing rule overfits the focused family or changes existing valid controls.",
+  "test": "Replay immutable bus-pressure; compare exact cohorts and per-field delta against accepted baseline.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "repairs/unchanged only": "Continue validation; retain known differences and exclusions explicitly.",
+    "new field or qualification regression": "Reject or narrow the candidate before acceptance."
+  },
+  "next_question": "Does this candidate generalize to bus-pressure?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\bus-pressure-v2-run1"
+  ],
+  "evidence_fingerprint": "ecab3b6235c59bd85af5da18fb7164e787bbc05c99349ff27af1b78e871ea97f",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

@@ -1,0 +1,71 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index 3d2b9e8e..f71e18bf 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -7235,0 +7236,2 @@ impl Bus {
++                || (matches!(kind, CpuBusAccessKind::Read | CpuBusAccessKind::Fetch)
++                    && self.cpu_cycle_crosses_line_end_refresh())
+diff --git a/src/bus/dma_slots.rs b/src/bus/dma_slots.rs
+index c5616646..901f501a 100644
+--- a/src/bus/dma_slots.rs
++++ b/src/bus/dma_slots.rs
+@@ -810,0 +811,10 @@ impl Bus {
++    pub(super) fn cpu_cycle_crosses_line_end_refresh(&self) -> bool {
++        // Kind65 and its trace controls isolate chip/slow DRAM reads from
++        // writes and custom registers. Only the DRAM read caller applies
++        // this guard; writes, register grants and Copper keep their schedule.
++        !self.cpu_short_bus_cycle
++            && !self.aga_enabled()
++            && Self::line_end_refresh_slot(self.agnus.hpos + 1)
++            && !Self::line_end_refresh_slot(self.agnus.hpos)
++    }
++
+@@ -832 +842,7 @@ impl Bus {
+-            ChipBusOwner::Cpu | ChipBusOwner::Idle => CpuWaitClass::Port,
++            ChipBusOwner::Cpu | ChipBusOwner::Idle => {
++                if self.cpu_cycle_crosses_line_end_refresh() {
++                    CpuWaitClass::Refresh
++                } else {
++                    CpuWaitClass::Port
++                }
++            }
+diff --git a/src/bus/tests.rs b/src/bus/tests.rs
+index 7c5db89b..7d965d92 100644
+--- a/src/bus/tests.rs
++++ b/src/bus/tests.rs
+@@ -11817,0 +11818,35 @@ fn cpu_chip_access_uses_two_color_clocks_slot_plus_bus_free_tail() {
++#[test]
++fn stock_cpu_cycle_waits_before_crossing_line_end_refresh() {
++    let mut bus = empty_bus();
++    bus.set_cpu_bus_arbitration_enabled(true);
++    bus.agnus.hpos = 0x0e0;
++    assert!(bus.cpu_can_use_current_slot());
++    bus.agnus.hpos = 0x0e1;
++    assert!(bus.cpu_cycle_crosses_line_end_refresh());
++    assert!(matches!(
++        bus.cpu_bus_denial_class(true),
++        CpuWaitClass::Refresh
++    ));
++    bus.grant_cpu_bus_access(2, CpuBusAccessKind::Read);
++    let (cck, tick) = bus.take_slice_bus_advance();
++    assert!(cck > 2);
++    assert_eq!(tick.new_lines, 1);
++    bus.agnus.hpos = 0x0e1;
++    bus.set_cpu_short_bus_cycle(true);
++    assert!(
++        bus.cpu_can_use_current_slot(),
++        "020 bus scheduling remains independent"
++    );
++    for kind in [CpuBusAccessKind::Custom, CpuBusAccessKind::Write] {
++        let mut other = empty_bus();
++        other.set_cpu_bus_arbitration_enabled(true);
++        other.agnus.hpos = 0x0e1;
++        other.grant_cpu_bus_access(2, kind);
++        assert_eq!(
++            other.take_slice_bus_advance().0,
++            2,
++            "writes/registers preserve their grant phase"
++        );
++    }
++}
++

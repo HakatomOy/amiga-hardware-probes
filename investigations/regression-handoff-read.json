@@ -1,0 +1,31 @@
+{
+  "experiment": "regression-handoff-read",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cpu-operand-20261019\\copper-candidate-v4\\handoff-read",
+  "identity": {
+    "binary_sha256": "05b828803685040596e810a85d4f6022a33014b77f40abf792df7fc5fa944fb7",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "91e8277c53239b516b925de75f49120d1cf9b962bca218f305312f76a16159c7",
+    "source_id": "1eb2d6a2cc5748ab9e6f057453ef40883b90b191f216570b4eede7bcd99056da"
+  },
+  "hypothesis": "The candidate preserves or repairs qualified existing bus measurements without new field regressions.",
+  "competitor": "The new timing rule overfits the focused family or changes existing valid controls.",
+  "test": "Replay immutable handoff-read; compare exact cohorts and per-field delta against accepted baseline.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "repairs/unchanged only": "Continue validation; retain known differences and exclusions explicitly.",
+    "new field or qualification regression": "Reject or narrow the candidate before acceptance."
+  },
+  "next_question": "Does this candidate generalize to handoff-read?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-read-v1-run1"
+  ],
+  "evidence_fingerprint": "4a6c9270fdb88878d0040f100126b92d8b1d530552d85d5576567bdefd9419fd",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

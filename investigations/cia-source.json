@@ -1,0 +1,87 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cia-source-20261019\\pb6-acceptance-v2",
+  "hypothesis": "E-high output preview generalizes to calibrated pulse/toggle and continuous controls while settled output and IRQ packets are preserved.",
+  "test": "Replay kind66,kind68 and newkind69 exact-cohort captures, then verify unchanged qualified legacy output and all broad checks.",
+  "smaller_reproducer": null,
+  "next_question": "Resolve the remaining early Paula request with sub-E pin-versus-input/readback evidence; no global timer or CPU IRQ delay is justified.",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "b8beb445a73b11a56948a4c49ca5826da05810d71f5d2cca7507b40d5f194037",
+  "decision": "accept",
+  "experiment": "cia-pb6-calibrated-acceptance",
+  "identity": {
+    "binary_sha256": "74aca2d0a931510b98a41a2df2baaed28e716c972bd3b4828f330e2397af55fa",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "045adb8f6329d940cfb9b039ae2374c7f4aa41e249c77ba7f51bbbb2ba0e3112",
+    "source_id": "b0227984cc51d530f0f3ce3e07a9d37fa35a4f74d37a56fb0465a9e990d092c7"
+  },
+  "competitor": "The physical timer/output event itself is early, or the observed PB6 difference is a different transfer phase.",
+  "outcomes": {
+    "counts/output match but request differs": "Inspect event-to-pin forwarding and Paula sampling, without retiming timer count.",
+    "counts/output and request differ together": "Inspect timer pipeline or CIA access phase before changing IRQ forwarding.",
+    "read/phase brackets differ": "Exclude timing inference; narrow calibration or measurement before patching."
+  },
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-source-v3\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-source-v3\\run2"
+  ],
+  "validation": [
+    {
+      "name": "request-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "pb-controls",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "qualified-legacy",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "strict-clippy",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "rust-format",
+      "exit": 0,
+      "tier": "broad"
+    }
+  ],
+  "confirmed_facts": [
+    "640 source cases qualify;580 baseline matches,60 differences,zero conflicting cohorts.",
+    "Two restored runs agree on measured values but have1CCK different phase brackets; five within-run repeats are not cross-run exact-cohort confirmation.",
+    "All direct TA and ICR_TA values match.40 request-early cases are separate from20 PB6-late cases.",
+    "PB6 transfer preview repairs20 cases with no new field/qualification differences; independent640-case request sweep confirms the same20 repairs.",
+    "Accepted PB6 preview:16/16 output repairs across192 qualified pulse/continuous combinations,384 unchanged excluded repetitions; all192 combinations have independent exact-cohort evidence.",
+    "2063 qualified settled output checks match;95 changed unqualified live PB6 snapshots are reported separately and validated by calibrated controls.3136 legacy IRQ records unchanged; serial320/38 stable pass.",
+    "3639 core tests pass,37 ignored,548 window tests excluded; strict Clippy and formatting pass."
+  ],
+  "source_files": [
+    "build_cia_source_rom.py",
+    "build_cia_request_rom.py",
+    "tools/screen_cia_request_delay.py",
+    "../Copperline/src/chipset/cia.rs",
+    "../Copperline/src/bus.rs"
+  ],
+  "history": [
+    "docs/cia-source-investigation-2026-10-19.md"
+  ],
+  "decision_reason": "20 focused PB6 repairs,20 independent request-sweep repairs,and16 repairs across192 qualified independently repeated pulse/continuous control combinations;zero field/qualification regressions. Settled2063 legacy outputs,IRQ packets,serial controls,core tests,Clippy and formatting pass.384 extra control repetitions remain excluded.",
+  "evidence": [
+    "captures/cia-source-20261019/pb6-acceptance-v2/comparison.json",
+    "captures/cia-source-20261019/pb6-acceptance-v2/pb-controls/comparison.json",
+    "captures/cia-source-20261019/pb6-candidate-v1/legacy/cia-output-gate.json"
+  ],
+  "accepted_commits": [
+    "b8a97ac6"
+  ]
+}

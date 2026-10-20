@@ -26,12 +26,13 @@ def row(**kwargs):
     return result
 
 
-def packet(counter=10, complete=1, status=0):
+def packet(counter=10, complete=1, status=0, kind=0):
     header = bytearray(64)
     header[:8] = b'A5RBCP01'
     struct.pack_into('>HHIII', header, 8, 1, 40, 1, 104, 0)
     struct.pack_into('>4H', header, 56, 0xa000, 0xffff, 1, complete)
     words = [0] * 20
+    words[0]=kind
     words[10], words[16] = counter, status
     data = header + struct.pack('>20H', *words)
     struct.pack_into('>I', data, 20, -sum(struct.unpack('>26I', data)) & 0xffffffff)
@@ -39,6 +40,16 @@ def packet(counter=10, complete=1, status=0):
 
 
 class ExperimentTests(unittest.TestCase):
+    def test_independent_repeats_require_overlapping_qualified_cohorts(self):
+        first = row(launch_beam=10)
+        other_phase = row(launch_beam=11)
+        result = e.repeat_cohorts([[first, first], [other_phase, other_phase]], [first], policy())
+        self.assertEqual(result['independently_repeated_cohorts'], 0)
+        self.assertEqual(result['candidate_cases_with_independent_repeats'], 0)
+        result = e.repeat_cohorts([[first, first], [first]], [first, other_phase], policy())
+        self.assertEqual(result['independently_repeated_cohorts'], 1)
+        self.assertEqual(result['candidate_cases_with_independent_repeats'], 1)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -122,6 +133,23 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(report['counts']['unstable_reference'], 1)
         self.assertEqual(report['counts']['reference_conflicting_cohorts'], 1)
 
+    def test_partial_repairs_cannot_hide_new_field_regressions(self):
+        p=policy();p['measurements'].append(field('icr'))
+        _,before=e.compare([row()],[dict(row(),counter=11)],p)
+        _,after=e.compare([row()],[dict(row(),icr=1)],p)
+        result=e.delta(before,after,['counter','icr'])
+        self.assertEqual(result['counts']['regressions'],0)
+        self.assertEqual(result['counts']['field_repairs'],1)
+        self.assertEqual(result['counts']['field_regressions'],1)
+        self.assertEqual(result['regressed_fields'],{'icr':1})
+
+    def test_different_rejected_patterns_are_new_evidence(self):
+        (self.root/'baseline/results.bin').write_bytes(packet())
+        for name,counter in (('bad-first',11),('bad-second',12)):
+            with patch.object(e,'command_run',self.fake_command([],counter=counter)):
+                self.assertEqual(self.execute(name)['status'],'failed')
+        self.assertEqual(e.read(self.root/'record.json')['no_new_evidence'],0)
+
     def test_invalid_capture_and_provenance(self):
         for data in (packet()[:-4], packet(complete=0), packet(status=1)):
             (self.root / 'baseline/results.bin').write_bytes(data)
@@ -135,6 +163,19 @@ class ExperimentTests(unittest.TestCase):
         e.write(self.reference / 'manifest.json', manifest)
         with self.assertRaises(ValueError):
             e.load_capture(self.reference, self.build, self.spec['capture'], reference=True)
+
+    def test_overloaded_status_requires_domain_validation(self):
+        import compare_bus_marker
+        spec=copy.deepcopy(self.spec);spec['capture']['status_is_measurement']=True
+        with self.assertRaises(ValueError):e.validate_spec(spec)
+        contract=dict(self.spec['capture'],validator='bus',status_is_measurement=True)
+        (self.root/'baseline/results.bin').write_bytes(packet(kind=55,status=84))
+        build=dict(self.build,trials=[[55,0,0,0,0,0]])
+        with patch.object(compare_bus_marker,'load') as validator:
+            e.load_capture(self.root/'baseline',build,contract)
+            validator.assert_called_once()
+        with patch.object(compare_bus_marker,'load',side_effect=ValueError('watchdog')):
+            with self.assertRaises(ValueError):e.load_capture(self.root/'baseline',build,contract)
 
     def fake_command(self, calls, counter=10, fail=None):
         def run(spec, out, variables, cache):

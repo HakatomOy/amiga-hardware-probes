@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "id": "cia-pb6-transfer-candidate",
+  "hypothesis": "E-high PB6 readback sees the impending underflow output, while counters and IRQ timing remain unchanged.",
+  "competitor": "The physical timer/output event itself is early, or the observed PB6 difference is a different transfer phase.",
+  "test": "Preview only zero-count Phi2 PB6 output during a CPU transfer; replay all640 counter/output/request controls and independent request sweep.",
+  "outcomes": {
+    "counts/output match but request differs": "Inspect event-to-pin forwarding and Paula sampling, without retiming timer count.",
+    "counts/output and request differ together": "Inspect timer pipeline or CIA access phase before changing IRQ forwarding.",
+    "read/phase brackets differ": "Exclude timing inference; narrow calibration or measurement before patching."
+  },
+  "next_question": "Does PB6 transfer visibility repair20 cases with no new timer/request differences?",
+  "investigation": "investigations/cia-source.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/cia-source-v3",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "045adb8f6329d940cfb9b039ae2374c7f4aa41e249c77ba7f51bbbb2ba0e3112",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 640,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Sample both sides of CIA request transition",
+        "require_values": [
+          0,
+          8,
+          8192
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "mask": 1,
+        "unit": "ICR bit",
+        "meaning": "Observe both timer flag states",
+        "require_values": [
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/cia-source-v3/run1",
+    "references/cia-source-v3/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "cal_pre",
+        "field": "end_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read prebeam"
+      },
+      {
+        "name": "cal_post",
+        "field": "second_counter_or_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read postbeam"
+      },
+      {
+        "name": "launch_pre",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Before STARTLOAD"
+      },
+      {
+        "name": "launch_post",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "After STARTLOAD"
+      },
+      {
+        "name": "sample_pre",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before observation reads"
+      },
+      {
+        "name": "sample_post",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After observation reads"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "TA_before",
+        "field": "counter",
+        "unit": "E-clock ticks",
+        "meaning": "Timer counter before request sample"
+      },
+      {
+        "name": "PB6",
+        "field": "icr",
+        "unit": "pin level bit",
+        "meaning": "Timer output sample",
+        "mask": 64
+      },
+      {
+        "name": "Paula_request",
+        "field": "irq_beam",
+        "unit": "INTREQ bits",
+        "meaning": "PORTS/EXTER request",
+        "mask": 8200
+      },
+      {
+        "name": "TA_after",
+        "field": "saved_pc_offset",
+        "unit": "E-clock ticks",
+        "meaning": "Timer counter after request sample",
+        "shift": 16,
+        "mask": 65535
+      },
+      {
+        "name": "ICR_TA",
+        "field": "saved_pc_offset",
+        "unit": "ICR bit",
+        "meaning": "Timer source flag after observations",
+        "mask": 1
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 180,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [
+    {
+      "name": "request-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/cia-request-regression.json",
+        "--out",
+        "{out}/request-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "legacy-replay",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/replay_accuracy.py",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/legacy",
+        "--suite",
+        "cia-output",
+        "--suite",
+        "cia-irq",
+        "--suite",
+        "irq-stages",
+        "--suite",
+        "serial-buffer",
+        "--suite",
+        "serial-boundary"
+      ]
+    },
+    {
+      "name": "legacy-preservation",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "packets",
+        "--before",
+        "captures/serial-phase-20261019/candidate-v2/neighbors",
+        "--after",
+        "{out}/legacy",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--suite",
+        "cia-output",
+        "--suite",
+        "cia-irq",
+        "--suite",
+        "irq-stages"
+      ]
+    },
+    {
+      "name": "core-tests",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "test",
+        "--locked",
+        "--profile",
+        "ci",
+        "--lib",
+        "--",
+        "--skip",
+        "video::window::"
+      ]
+    },
+    {
+      "name": "strict-clippy",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "clippy",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "name": "rust-format",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "fmt",
+        "--",
+        "--check"
+      ]
+    }
+  ],
+  "baseline": "captures/cia-source-20261019/baseline-v3/candidate"
+}

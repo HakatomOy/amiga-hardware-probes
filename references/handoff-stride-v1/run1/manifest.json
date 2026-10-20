@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-stride-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\baseline-v1\\hardware-1",
+  "test_rom_sha256": "40e17706b08e35a84bbe15190e38dabc3b7b8f04eafedf7d5385b946406cfeed",
+  "source_id": "9a3ad7dec648eab96b7c2ae613f578e8449a7fb4bc620dbe47db511a51912590",
+  "results_sha256": "aa2b1a68fb75eabb3b139de7a6430f0c9fb325725c53df47c2cc9212ec8c691b",
+  "record_count": 1280,
+  "metadata": {
+    "version": 1,
+    "source_id": "9a3ad7dec648eab96b7c2ae613f578e8449a7fb4bc620dbe47db511a51912590",
+    "record_count": 1280,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "aa2b1a68fb75eabb3b139de7a6430f0c9fb325725c53df47c2cc9212ec8c691b"
+  },
+  "restoration": {
+    "backup_sha256": "0f56ade8270a8e0e0c696c517651926a031afcb6661cc921caf9bb8870954140",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "0f56ade8270a8e0e0c696c517651926a031afcb6661cc921caf9bb8870954140",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 67,
+    "aligned": false,
+    "targets": [
+      "AD one word"
+    ],
+    "sources": [
+      "CPU start/inert write"
+    ],
+    "masks": null,
+    "phases": "0/1 launch phase unchanged; cadence encoded in variant bits6:5",
+    "event_offset": "launch pad0..3",
+    "watchdog": "4096 busy polls",
+    "units": "packed beam/data/register words; no alignment",
+    "launch": "pre-write beam; indirect start address; observer selected before alignment",
+    "masked_fields": null,
+    "limitations": "Software observations distinguish poll-phase dependence; no direct final D pin trace",
+    "variants": "low5 bits kind60; bits6:5 insert0..3 ROM NOPs before each BBUSY sample",
+    "measurement_fields": {
+      "launch_ref": "first clear DMACONR",
+      "end_beam": "early data/ROM read",
+      "end_ref": "postwrite DMACONR",
+      "counter": "handoff beam",
+      "icr": "postwrite beam",
+      "irq_beam": "final first D",
+      "irq_level": "final last D",
+      "saved_pc_offset": "INTREQ:final beam",
+      "aux": "remaining busy DBRA"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 640,
+    "independently_repeated_cohorts": 640,
+    "candidate_cases_with_independent_repeats": 1280,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\baseline-v1\\reference-1"
+}

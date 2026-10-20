@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "id": "regression-bus-pressure",
+  "investigation": "investigations/regression-bus-pressure.json",
+  "hypothesis": "The candidate preserves or repairs qualified existing bus measurements without new field regressions.",
+  "competitor": "The new timing rule overfits the focused family or changes existing valid controls.",
+  "test": "Replay immutable bus-pressure; compare exact cohorts and per-field delta against accepted baseline.",
+  "outcomes": {
+    "repairs/unchanged only": "Continue validation; retain known differences and exclusions explicitly.",
+    "new field or qualification regression": "Reject or narrow the candidate before acceptance."
+  },
+  "next_question": "Does this candidate generalize to bus-pressure?",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "romdir": "build/bus-pressure-v2",
+  "rom_sha256": "e1a1a333720a545c82b5723c0a1e05c223fac9128a6f7468ccd8985fb039220a",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 768,
+    "valid_statuses": [
+      0
+    ],
+    "validator": "bus",
+    "status_is_measurement": true
+  },
+  "comparison": {
+    "alignment": "exact",
+    "measurements": [
+      {
+        "name": "marker0",
+        "field": "counter",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 20
+      },
+      {
+        "name": "status0",
+        "field": "icr",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 24576
+      },
+      {
+        "name": "marker1",
+        "field": "irq_beam",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 20
+      },
+      {
+        "name": "status1",
+        "field": "irq_level",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 24576
+      },
+      {
+        "name": "marker2",
+        "field": "saved_pc_offset",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 16,
+        "mask": 20
+      },
+      {
+        "name": "status2",
+        "field": "saved_pc_offset",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 24576
+      },
+      {
+        "name": "marker3",
+        "field": "status",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 20
+      },
+      {
+        "name": "status3",
+        "field": "aux",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 24576
+      },
+      {
+        "name": "settled_marker",
+        "field": "end_ref",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 20
+      },
+      {
+        "name": "first_D",
+        "field": "second_counter_or_beam",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 65535
+      },
+      {
+        "name": "last_D",
+        "field": "second_icr_or_level",
+        "unit": "register/data bits",
+        "meaning": "Marker/status observation; pressure variants may substitute immutable ROM control data",
+        "shift": 0,
+        "mask": 65535
+      }
+    ],
+    "qualification": [
+      {
+        "name": "launch_beam",
+        "field": "launch_beam",
+        "unit": "packed beam word",
+        "meaning": "Exact launch/read bracket"
+      },
+      {
+        "name": "launch_ref",
+        "field": "launch_ref",
+        "unit": "packed beam word",
+        "meaning": "Exact launch/read bracket"
+      }
+    ],
+    "max_excluded": 44,
+    "max_unstable": 0
+  },
+  "baseline": "captures/serial-buffer-20261019/regression/bus-pressure",
+  "references": [
+    "references/bus-pressure-v2-run1"
+  ],
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "build": [],
+  "validation": [],
+  "budget_evidence": {
+    "baseline": "captures/serial-buffer-20261019/regression/bus-pressure",
+    "counts": {
+      "total": 768,
+      "matches": 724,
+      "mismatches": 0,
+      "missing_results": 0,
+      "excluded": 44,
+      "unstable_reference": 0,
+      "invalid_captures": 0,
+      "reference_conflicting_cohorts": 0
+    },
+    "rule": "Freeze baseline exclusions; never derive budget from candidate."
+  }
+}

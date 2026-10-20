@@ -1,0 +1,20 @@
+Case70,3,2,0,0,0 (33rd real blit); observational replay packet byte-identical.
+BLTP 75 66 126 START con0=09f0 con1=0000 size=0041 dmacon=0340
+BLTP 75 66 126 OWNER Idle pending=DLY needs_bus=false
+BLTP 75 66 126 TICK DLY bus=0 owner=Idle
+BLTP 75 66 127 OWNER Bitplane pending=INIT needs_bus=false
+BLTP 75 66 127 TICK INIT bus=0 owner=Bitplane
+BLTP 75 66 128 OWNER Blitter pending=A needs_bus=true
+BLTP 75 66 128 TICK A bus=1
+BLTP 75 66 129 OWNER Bitplane pending=D needs_bus=false
+BLTP 75 66 130 OWNER Cpu pending=D needs_bus=false
+BLTP 75 66 130 TICK D bus=0 owner=Cpu
+BLTP 75 66 131 OWNER Bitplane pending=E needs_bus=false
+BLTP 75 66 131 TICK E bus=0 owner=Bitplane
+CPUBUS kind=custom addr=00dff006 size=2 slot=1/1 rv=042 rh=82 v=042 h=82 wait=0 ev=042 eh=84
+BLTP 75 66 132 OWNER Blitter pending=F needs_bus=true
+BLTP 75 66 132 TICK F bus=1
+BLTP 75 66 132 END source=bus_slot
+CPUBUS kind=custom addr=00dff002 size=2 slot=1/1 rv=042 rh=88 v=042 h=88 wait=0 ev=042 eh=8a
+CPUBUS kind=custom addr=00dff006 size=2 slot=1/1 rv=042 rh=8e v=042 h=8e wait=0 ev=042 eh=90
+CPUBUS kind=custom addr=00dff006 size=2 slot=1/1 rv=042 rh=9a v=042 h=9a wait=0 ev=042 eh=9c

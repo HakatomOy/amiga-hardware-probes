@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "id": "handoff-stride",
+  "hypothesis": "The two-CCK early completion observation depends on CPU BBUSY polling/grant cadence.",
+  "competitor": "Blitter terminal sequencing is early independently of poll cadence.",
+  "test": "Sweep zero to three ROM NOPs before each BBUSY read with fixed launch phase, normal/nasty priority, four-plane, ROM-read and no-start controls.",
+  "outcomes": {
+    "cadence-dependent error": "Inspect custom-read sampling and handback rather than globally delaying blitter completion.",
+    "same early error across cadences": "Narrow terminal sequencing with a direct event observer.",
+    "launch or control differences": "Reject timing inference; narrow the reproducer."
+  },
+  "next_question": "Does the qualified handoff error depend on polling cadence?",
+  "investigation": "investigations/handoff-stride.json",
+  "binary": "captures/serial-phase-20261019/acceptance-v2/emulator.exe",
+  "romdir": "build/handoff-stride-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "40e17706b08e35a84bbe15190e38dabc3b7b8f04eafedf7d5385b946406cfeed",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 1280,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [],
+  "comparison": {
+    "alignment": "exact",
+    "measurements": [
+      {
+        "name": "clear_status",
+        "field": "launch_ref",
+        "unit": "DMACONR bits",
+        "meaning": "First clear status",
+        "mask": 24576,
+        "shift": 0
+      },
+      {
+        "name": "early_D",
+        "field": "end_beam",
+        "unit": "data word",
+        "meaning": "Immediate data read",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "post_status",
+        "field": "end_ref",
+        "unit": "DMACONR bits",
+        "meaning": "Postwrite status",
+        "mask": 24576,
+        "shift": 0
+      },
+      {
+        "name": "handoff",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "Handoff observation",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "post_beam",
+        "field": "icr",
+        "unit": "packed beam",
+        "meaning": "Postwrite observation",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "unit": "data word",
+        "meaning": "Final first destination",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "unit": "data word",
+        "meaning": "Final last destination",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "blit_irq",
+        "field": "saved_pc_offset",
+        "unit": "INTREQ bit",
+        "meaning": "Settled BLIT request",
+        "mask": 64,
+        "shift": 16
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "unit": "packed beam",
+        "meaning": "Settled observation",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "remaining_polls",
+        "field": "aux",
+        "unit": "DBRA count",
+        "meaning": "4095 minus this value is busy-sample count"
+      }
+    ],
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-write beam"
+      }
+    ],
+    "max_excluded": 640,
+    "max_unstable": 0
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 180,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": []
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "reference_id": "cpu-operand-v2-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cpu-operand-20261019\\baseline-v2\\hardware-1",
+  "test_rom_sha256": "ead12d28a322a0ad9827d8b608a25c0d0e605a30d660ae0dc23cb85f59e25d3c",
+  "source_id": "117b52385d2074747730b245f57bc46c94ce5003d5cb72c9fb8a649650cc27fb",
+  "results_sha256": "a2d7d75f878d479f04442ffd3d1233ddeec31aa859ffbe4cfd99db64a62bee71",
+  "record_count": 960,
+  "metadata": {
+    "version": 1,
+    "source_id": "117b52385d2074747730b245f57bc46c94ce5003d5cb72c9fb8a649650cc27fb",
+    "record_count": 960,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "a2d7d75f878d479f04442ffd3d1233ddeec31aa859ffbe4cfd99db64a62bee71"
+  },
+  "restoration": {
+    "backup_sha256": "ca39d2bf76a6dcc3df40281b381411cd0b6db409be36ada9481deda7afe68da5",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "ca39d2bf76a6dcc3df40281b381411cd0b6db409be36ada9481deda7afe68da5",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 65,
+    "aligned": true,
+    "targets": [
+      "TST",
+      "MOVE",
+      "STOP",
+      "CMP",
+      "MASKED"
+    ],
+    "sources": [
+      "CPU COPER write"
+    ],
+    "masks": null,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line68 h60+2*offset CCK",
+    "watchdog": "STOP guard ffcd1a; bounded preflight before hardware",
+    "units": "raw packed beam words, PC, counts and flags; no alignment",
+    "launch": "exact pre-write beam; same finite Copper32 NOOPs as kind61",
+    "masked_fields": null,
+    "limitations": "Handler observation combines operand/prefetch/exception timing; not an electrical grant trace",
+    "variants": "CPU COPER write4 +8*DMA0..3 +32*operand0chip/1ROM/2slow",
+    "fields": {
+      "end_ref": "handler diagnostic or masked settled INTREQR",
+      "counter": "IRQ loop count or masked raw0",
+      "icr": "IRQ pointer or masked raw1",
+      "irq_beam": "handler beam or masked raw2",
+      "irq_level": "IRQ level or first read beam",
+      "saved_pc_offset": "stacked PC or masked read beam pair",
+      "aux": "IRQ count or last read beam",
+      "second_counter_or_beam": "final loop count or settled INTREQR",
+      "second_icr_or_level": "final pointer or expected source mask"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0
+  },
+  "uncontrolled_state": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cpu-operand-20261019\\baseline-v2\\reference-1"
+}

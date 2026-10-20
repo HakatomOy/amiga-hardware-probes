@@ -31,7 +31,11 @@ Every manifest declares:
   argument-array commands execute before the ROM and executable are snapshotted.
 - `capture.minimum_seconds`, `expected_cases`, allowed statuses, optional
   `seconds` and wall `timeout_seconds`. The runner selects the larger duration.
-  `validator` optionally reuses the existing `serial`, `irq` or `handoff` validator.
+  `validator` optionally reuses the existing `serial`, `irq`, `handoff` or `bus` validator.
+  Kind55 stores an INTREQ observation in the layout's `status` word; its contracts
+  declare `status_is_measurement: true` and must use the bus domain validator for
+  watchdog, settled-marker, destination and ROM-substitution integrity instead.
+  Never infer field meanings or error codes solely from their shared layout names.
 - Saved `references` and optional pre-fix `baseline` capture. Each reference must
   match ROM/source/result hashes and contain hardware, method, repeatability and
   verified restoration metadata. Packets must pass checksum, completion, exact
@@ -69,6 +73,12 @@ differences, exclusions, and up to three new mismatch patterns with representati
 IDs and shared conditions. Full `comparison.json` and `cases.json` remain under
 the run directory. Qualification changes cannot be credited as automatic repairs.
 Regressions, missing cases and lost qualification stop the validation ladder.
+Field-level regressions also stop it: repairing one field while breaking a
+previously correct field in an already-mismatching case is not harmless progress.
+Reports list both full-case and per-field repairs/regressions.
+Nested regression contracts can use `run --binary PATH --config PATH` to bind
+their captures to the parent batch's frozen artifacts rather than a mutable
+build-output executable. Effective overrides are saved with the run contract.
 
 ```powershell
 python tools/experiment.py detail captures/serial-review-01 --case 63,0,1,0,31,0 --window 6
@@ -137,6 +147,12 @@ a new binary and a new run. Do not use resume to reuse checks whose other inputs
 changed. Predeclare the full validation ladder even when initially stopping at
 `--through neighbor`; resume can then complete broader checks without new captures.
 
+`tools/make_accuracy_regressions.py` generates bus/handoff contracts from the
+existing immutable archives, domain field meanings and accepted baseline captures.
+It records baseline qualification/exclusion budgets before testing the candidate;
+new lost cohorts or field regressions still fail. Generated contracts refuse
+overwrite. Use the versioned `regression-*.json` plans for repeated validation.
+
 Optional command caching requires `cache: true`, explicit nonempty `inputs`
 glob patterns and generated `outputs` file paths. For example:
 
@@ -195,6 +211,29 @@ and at least two independent `repeats`. The existing OneROM live runner owns
 reset, substitution, restoration and readback verification. No flash operation
 is introduced. Repeats are pooled by exact qualification; repeatability metadata
 reports packet identity and conflicting observations honestly.
+It also counts exact phase cohorts shared by independent hardware runs and the
+candidate cases they cover. Zero conflicts in disjoint phase cohorts is not
+independent confirmation of those cohorts; within-run descriptor repetitions
+remain useful but must be described separately. Do not equate stable measured
+values with byte-identical captures when their qualification brackets differ.
+Report distinct descriptor combinations covered after qualification as well as
+raw row counts. Freeze exclusion budgets from the baseline before candidate
+replay. If fewer repetitions qualify but every planned control combination has
+independent evidence, retain that bounded scope explicitly instead of recapturing
+the whole matrix just to increase the row count. Never count exclusions as fixes.
+For a new event-boundary observer, declare automated preflight coverage for both
+active and inactive states before requesting hardware. A single read that is
+already clear in every preflight case can test grant timing, but cannot locate
+the event edge. State that narrower purpose explicitly; move the observer
+earlier or use a longer operation before claiming source-event timing.
+
+When a strict packet gate flags changed diagnostic snapshots, retrieve their
+field meanings before drawing a timing conclusion. Legacy live snapshots may
+have coarser qualification than settled measurements. Keep the strict gate for
+unrelated fields, retain the established qualified checks, and require a new
+calibrated control experiment for the changed path. Document this scope change
+and its evidence; never silently drop a regressed field or relax a candidate's
+budget to make it pass.
 
 `archive` copies only verified result packets and provenance manifests into a
 new directory. It refuses overwrite and never copies ROM images, live backups,
@@ -222,6 +261,9 @@ The runner counts repeated identical evidence patterns. After two successive
 runs add no evidence, another run requires a revised hypothesis/test or a changed
 `smaller_reproducer` identifier. Repeating an unchanged repaired candidate against
 the same old baseline does not count as new progress. Failure loops are tracked too.
+Rejected comparisons are fingerprinted with their observed deltas/patterns, not
+just the generic failure message; a new counterexample is useful evidence even
+when the validation gate correctly rejects another candidate.
 
 Maintain `confirmed_facts`, `accepted_commits`, `rejected_hypotheses` with evidence,
 `references`, `source_files`, `next_question` and history links in the investigation

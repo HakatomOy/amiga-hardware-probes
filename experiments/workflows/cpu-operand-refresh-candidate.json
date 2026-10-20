@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "id": "cpu-operand-refresh-candidate",
+  "hypothesis": "CPU chip/slow RAM grant timing crossing line-end refresh causes the TST/Copper mismatch.",
+  "competitor": "Instruction operand/prefetch or exception sequencing causes the mismatch independently of operand memory.",
+  "test": "Cross TST/MOVE/CMP chip/ROM/slow operands with no/four/six-plane/six+Copper DMA, retaining STOP and masked read controls.",
+  "outcomes": {
+    "chip/slow reads differ, ROM matches": "Inspect arbitration/grant boundaries; use MOVE/CMP to test generalization beyond TST.",
+    "TST differs across all memories while MOVE/CMP match": "Inspect instruction poll/prefetch/exception ordering before changing bus grants.",
+    "controls all differ or alignment does not qualify": "Reject targeted bus fix; narrow launch and request timing first."
+  },
+  "next_question": "Does the first divergent memory access depend on chip-bus arbitration or instruction semantics?",
+  "investigation": "investigations/cpu-operand.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/cpu-operand-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "ead12d28a322a0ad9827d8b608a25c0d0e605a30d660ae0dc23cb85f59e25d3c",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 960,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/cpu-operand-v2/run1",
+    "references/cpu-operand-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "field": "launch_beam",
+        "unit": "packed beam word",
+        "meaning": "Identical pre-CPU-write launch beam; no conversion or alignment"
+      },
+      {
+        "field": "launch_ref",
+        "unit": "raw control word",
+        "meaning": "Zero reference marker"
+      }
+    ],
+    "measurements": [
+      {
+        "field": "end_ref",
+        "unit": "raw diagnostic word",
+        "meaning": "Handler diagnostic; masked target settled INTREQR"
+      },
+      {
+        "field": "counter",
+        "unit": "raw word",
+        "meaning": "Remaining loop count at IRQ; masked rawINTREQR0"
+      },
+      {
+        "field": "icr",
+        "unit": "raw word",
+        "meaning": "Operand pointer low at IRQ; masked rawINTREQR1"
+      },
+      {
+        "field": "irq_beam",
+        "unit": "packed beam or raw word",
+        "meaning": "Handler beam; masked rawINTREQR2"
+      },
+      {
+        "field": "irq_level",
+        "unit": "raw word",
+        "meaning": "IRQ level; masked first read beam"
+      },
+      {
+        "field": "saved_pc_offset",
+        "unit": "raw32 word",
+        "meaning": "Original stacked PC; masked two read beam words"
+      },
+      {
+        "field": "aux",
+        "unit": "raw word",
+        "meaning": "IRQ count; masked last read beam"
+      },
+      {
+        "field": "second_counter_or_beam",
+        "unit": "raw word",
+        "meaning": "Final loop count; masked settled INTREQR"
+      },
+      {
+        "field": "second_icr_or_level",
+        "unit": "raw word",
+        "meaning": "Final pointer; masked expected source mask"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 180,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/cpu-operand-20261019/baseline-v2/candidate"
+}

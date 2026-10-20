@@ -1,0 +1,41 @@
+{
+  "experiment": "handoff-single-sample-source",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\source-scope-v2",
+  "identity": {
+    "binary_sha256": "05b828803685040596e810a85d4f6022a33014b77f40abf792df7fc5fa944fb7",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "d146eb2ae453eacfd42fffb7644df21044b72f509453c0c7b0cb0ba2f909a40c",
+    "source_id": "9617a8396bdc60b3e8cd7355874d55ea4aedf4895e3662e66b7fa79ccddbf573"
+  },
+  "hypothesis": "BBUSY/data values match at identical single-read brackets; early observations belong to the grant window.",
+  "competitor": "The blitter event is early even when CPU observation times match.",
+  "test": "Reuse the same1024-case packets with exact launch and pre/post status/request read brackets; retain all96 timing differences in the separate launch-only report.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "status differs at identical read brackets": "Constrain terminal/output timing independently of polling.",
+    "status matches but brackets differ": "Constrain CPU grant/read path before retiming blitter.",
+    "all match": "Original loop/control interaction remains; narrow its first divergent access."
+  },
+  "next_question": "Earlier active/clear event observer; see handoff-sample record.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-sample-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-sample-v2\\run2"
+  ],
+  "evidence_fingerprint": "381f04870eb9c78754054e760caf33df77336247114b4eb7e26fe901eb262518",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "preserve",
+  "decision_reason": "928 exact read-bracket register/data cases match;96 timing cohorts remain explicitly excluded and unresolved in the launch-only report. This is a constraint, not a blitter fix.",
+  "evidence": [
+    "captures/handoff-stride-20261019/sample-baseline-v2/comparison.json",
+    "captures/handoff-stride-20261019/source-scope-v2/comparison.json"
+  ],
+  "confirmed_facts": [
+    "Same packets reused without emulator or hardware execution.",
+    "928 exact read-time register/data cases match;96 timing cohorts excluded and preserved in launch-only comparison.",
+    "No source-transition accuracy claim is possible from all-clear first status samples."
+  ],
+  "history": [
+    "docs/handoff-stride-investigation-2026-10-19.md"
+  ]
+}

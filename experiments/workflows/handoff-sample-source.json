@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "id": "handoff-single-sample-source",
+  "hypothesis": "BBUSY/data values match at identical single-read brackets; early observations belong to the grant window.",
+  "competitor": "The blitter event is early even when CPU observation times match.",
+  "test": "Reuse the same1024-case packets with exact launch and pre/post status/request read brackets; retain all96 timing differences in the separate launch-only report.",
+  "outcomes": {
+    "status differs at identical read brackets": "Constrain terminal/output timing independently of polling.",
+    "status matches but brackets differ": "Constrain CPU grant/read path before retiming blitter.",
+    "all match": "Original loop/control interaction remains; narrow its first divergent access."
+  },
+  "next_question": "Is any register/data difference present among identical read-time cohorts?",
+  "investigation": "investigations/handoff-sample-source.json",
+  "binary": "captures/cpu-operand-20261019/copper-candidate-v4/emulator.exe",
+  "romdir": "build/handoff-sample-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "d146eb2ae453eacfd42fffb7644df21044b72f509453c0c7b0cb0ba2f909a40c",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 1024,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/handoff-sample-v2/run1",
+    "references/handoff-sample-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 96,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      },
+      {
+        "name": "read_pre",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "read_post",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "BBUSY_BZERO",
+        "field": "end_beam",
+        "mask": 24576,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 180,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [],
+  "budget_evidence": {
+    "source": "captures/handoff-stride-20261019/sample-baseline-v2/comparison.json",
+    "rule": "Launch-only comparison retains96 read-time differences. Source-only scope excludes those96; they are not repaired or matches."
+  }
+}

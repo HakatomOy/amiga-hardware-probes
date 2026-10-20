@@ -1,0 +1,77 @@
+diff --git a/src/bus/dma_slots.rs b/src/bus/dma_slots.rs
+index c5616646..c282d54d 100644
+--- a/src/bus/dma_slots.rs
++++ b/src/bus/dma_slots.rs
+@@ -802,10 +802,18 @@ impl Bus {
+     }
+ 
+     pub(super) fn cpu_can_use_current_slot(&self) -> bool {
+-        matches!(
+-            self.scheduled_dma_owner(true),
+-            ChipBusOwner::Cpu | ChipBusOwner::Idle
+-        )
++        !self.cpu_cycle_crosses_line_end_refresh()
++            && matches!(
++                self.scheduled_dma_owner(true),
++                ChipBusOwner::Cpu | ChipBusOwner::Idle
++            )
++    }
++
++    fn cpu_cycle_crosses_line_end_refresh(&self) -> bool {
++        !self.cpu_short_bus_cycle
++            && !self.aga_enabled()
++            && Self::line_end_refresh_slot(self.agnus.hpos + 1)
++            && !Self::line_end_refresh_slot(self.agnus.hpos)
+     }
+ 
+     /// Who is denying the CPU the current colour clock, for the frame
+@@ -829,7 +837,13 @@ impl Bus {
+                 CpuWaitClass::BlitterNasty
+             }
+             ChipBusOwner::Blitter => CpuWaitClass::BlitterNice,
+-            ChipBusOwner::Cpu | ChipBusOwner::Idle => CpuWaitClass::Port,
++            ChipBusOwner::Cpu | ChipBusOwner::Idle => {
++                if self.cpu_cycle_crosses_line_end_refresh() {
++                    CpuWaitClass::Refresh
++                } else {
++                    CpuWaitClass::Port
++                }
++            }
+         }
+     }
+ 
+diff --git a/src/bus/tests.rs b/src/bus/tests.rs
+index 7c5db89b..b918d1c9 100644
+--- a/src/bus/tests.rs
++++ b/src/bus/tests.rs
+@@ -11815,6 +11815,30 @@ fn cpu_chip_access_uses_two_color_clocks_slot_plus_bus_free_tail() {
+     assert_eq!(bus.last_chip_bus_owner(), ChipBusOwner::Idle);
+ }
+ 
++#[test]
++fn stock_cpu_cycle_waits_before_crossing_line_end_refresh() {
++    let mut bus = empty_bus();
++    bus.set_cpu_bus_arbitration_enabled(true);
++    bus.agnus.hpos = 0x0e0;
++    assert!(bus.cpu_can_use_current_slot());
++    bus.agnus.hpos = 0x0e1;
++    assert!(!bus.cpu_can_use_current_slot());
++    assert!(matches!(
++        bus.cpu_bus_denial_class(true),
++        CpuWaitClass::Refresh
++    ));
++    bus.grant_cpu_bus_access(2, CpuBusAccessKind::Read);
++    let (cck, tick) = bus.take_slice_bus_advance();
++    assert!(cck > 2);
++    assert_eq!(tick.new_lines, 1);
++    bus.agnus.hpos = 0x0e1;
++    bus.set_cpu_short_bus_cycle(true);
++    assert!(
++        bus.cpu_can_use_current_slot(),
++        "020 bus scheduling remains independent"
++    );
++}
++
+ #[test]
+ fn aga_68020_chip_reads_wait_for_data_but_writes_are_posted() {
+     let mut bus = empty_bus();

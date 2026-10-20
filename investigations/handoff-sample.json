@@ -1,0 +1,53 @@
+{
+  "experiment": "handoff-single-sample",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\sample-baseline-v2",
+  "identity": {
+    "binary_sha256": "05b828803685040596e810a85d4f6022a33014b77f40abf792df7fc5fa944fb7",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "d146eb2ae453eacfd42fffb7644df21044b72f509453c0c7b0cb0ba2f909a40c",
+    "source_id": "9617a8396bdc60b3e8cd7355874d55ea4aedf4895e3662e66b7fa79ccddbf573"
+  },
+  "hypothesis": "The early poll-loop result originates in CPU grant/read timing rather than a universally early BBUSY event.",
+  "competitor": "The terminal BBUSY transition is early; later polling merely hides the error.",
+  "test": "One fixed-delay DMACONR read with before/after beams and no outcome-dependent loop; compare launch-only timing,then separately register values at exact read brackets.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "status differs at identical read brackets": "Constrain terminal/output timing independently of polling.",
+    "status matches but brackets differ": "Constrain CPU grant/read path before retiming blitter.",
+    "all match": "Original loop/control interaction remains; narrow its first divergent access."
+  },
+  "next_question": "Measure an earlier active/clear observer to distinguish terminal port release from CPU grant/sample phase.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\sample-baseline-v2\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\sample-baseline-v2\\reference-2"
+  ],
+  "evidence_fingerprint": "0559998ed95e5080fe6361357d779b4b5c0ee3c0dea78d87ec23e295d7526914",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "narrow",
+  "decision_reason": "96 launch-qualified beam observations are2CCK early before first status read; no-start/long-delay controls match. Status samples are already clear, so an earlier active/clear observer is required before choosing terminal versus CPU phase retiming.",
+  "evidence": [
+    "captures/handoff-stride-20261019/sample-baseline-v2/comparison.json",
+    "docs/handoff-stride-investigation-2026-10-19.md"
+  ],
+  "confirmed_facts": [
+    "1024 qualified single-read cases:928 match,96 read-pre/read-post/request-post beams2CCK early.",
+    "Only real four-plane blits with0..2 post-start NOPs differ. No-start and longer delays match.",
+    "All emulator first-status samples clear: no direct electrical event boundary can be inferred.",
+    "At exact read brackets928 register/data cases match;96 timing cohorts remain excluded and unresolved."
+  ],
+  "history": [
+    "docs/handoff-stride-investigation-2026-10-19.md"
+  ],
+  "source_files": [
+    "build_handoff_stride_rom.py",
+    "build_handoff_sample_rom.py",
+    "../Copperline/src/bus/dma_slots.rs",
+    "../Copperline/src/chipset/blitter.rs"
+  ]
+}

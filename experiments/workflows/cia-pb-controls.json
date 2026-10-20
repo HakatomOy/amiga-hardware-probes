@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "id": "cia-pb-controls",
+  "hypothesis": "PB6 E-high underflow visibility generalizes across pulse/toggle and one-shot/continuous output modes.",
+  "competitor": "Previewing output early overfits one-shot toggle or changes a real continuous/pulse phase.",
+  "test": "Calibrated576-case TA/PB6/request/TA/ICR sweep with PBON-off,continuous and pulse controls,then replay immutable PB6 candidate.",
+  "outcomes": {
+    "candidate repairs only": "Require existing settled output and IRQ controls plus broad tests.",
+    "new qualified pulse/continuous difference": "Reject or narrow the output model with a physical explanation."
+  },
+  "next_question": "Does early-transfer PB6 visibility generalize without counter/request regressions?",
+  "investigation": "investigations/cia-pb-controls.json",
+  "binary": "captures/cpu-operand-20261019/copper-candidate-v4/emulator.exe",
+  "romdir": "build/cia-pb-control-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "eeab46d1ab2530423d72d57c044ea00927fb1a15fe38f440fcc925e183bc5d72",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 576,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Sample both sides of CIA request transition",
+        "require_values": [
+          0,
+          8,
+          8192
+        ]
+      },
+      {
+        "field": "icr",
+        "mask": 64,
+        "unit": "PB6 bit",
+        "meaning": "Observe both timer output levels near first underflow",
+        "require_values": [
+          0,
+          64
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "cal_pre",
+        "field": "end_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read prebeam"
+      },
+      {
+        "name": "cal_post",
+        "field": "second_counter_or_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read postbeam"
+      },
+      {
+        "name": "launch_pre",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Before STARTLOAD"
+      },
+      {
+        "name": "launch_post",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "After STARTLOAD"
+      },
+      {
+        "name": "sample_pre",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before observation reads"
+      },
+      {
+        "name": "sample_post",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After observation reads"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "TA_before",
+        "field": "counter",
+        "unit": "E-clock ticks",
+        "meaning": "Timer counter before request sample"
+      },
+      {
+        "name": "PB6",
+        "field": "icr",
+        "unit": "pin level bit",
+        "meaning": "Timer output sample",
+        "mask": 64
+      },
+      {
+        "name": "Paula_request",
+        "field": "irq_beam",
+        "unit": "INTREQ bits",
+        "meaning": "PORTS/EXTER request",
+        "mask": 8200
+      },
+      {
+        "name": "TA_after",
+        "field": "saved_pc_offset",
+        "unit": "E-clock ticks",
+        "meaning": "Timer counter after request sample",
+        "shift": 16,
+        "mask": 65535
+      },
+      {
+        "name": "ICR_TA",
+        "field": "saved_pc_offset",
+        "unit": "ICR bit",
+        "meaning": "Timer source flag after observations",
+        "mask": 1
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 180,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": []
+}

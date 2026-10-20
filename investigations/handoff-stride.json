@@ -1,0 +1,51 @@
+{
+  "experiment": "handoff-stride",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\baseline-v1",
+  "identity": {
+    "binary_sha256": "6a6f6b3265fe5f7745366f31aad9274727f30b9396657a6530dfe2f72d33a225",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "40e17706b08e35a84bbe15190e38dabc3b7b8f04eafedf7d5385b946406cfeed",
+    "source_id": "9a3ad7dec648eab96b7c2ae613f578e8449a7fb4bc620dbe47db511a51912590"
+  },
+  "hypothesis": "The two-CCK early completion observation depends on CPU BBUSY polling/grant cadence.",
+  "competitor": "Blitter terminal sequencing is early independently of poll cadence.",
+  "test": "Sweep zero to three ROM NOPs before each BBUSY read with fixed launch phase, normal/nasty priority, four-plane, ROM-read and no-start controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "cadence-dependent error": "Inspect custom-read sampling and handback rather than globally delaying blitter completion.",
+    "same early error across cadences": "Narrow terminal sequencing with a direct event observer.",
+    "launch or control differences": "Reject timing inference; narrow the reproducer."
+  },
+  "next_question": "Single-read experiment now constrains the grant window; see handoff-sample record.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\baseline-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-stride-20261019\\baseline-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "b133725d2bdab26f3164f88d8b265426f4c4fd113294d183803330aef3f0168d",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "narrow",
+  "decision_reason": "Four-plane zero-NOP blits64/64 are2CCK early;192 slower-cadence blits and all256 four-plane no-start controls match. Narrow to one bracketed read; do not revive global E/BusFree.",
+  "evidence": [
+    "captures/handoff-stride-20261019/baseline-v1/cadence-summary.json"
+  ],
+  "confirmed_facts": [
+    "1280 A500 records independently repeat byte-for-byte;all640 phase cohorts overlap;all1280 candidate cases qualify.",
+    "Four-plane64 zero-NOP blits are2CCK early;192 slower-cadence blits match.256 four-plane no-start and256 no-DMA controls match.",
+    "Six-plane/Copper differences remain separate; no global E/BusFree patch is accepted."
+  ],
+  "history": [
+    "docs/handoff-stride-investigation-2026-10-19.md"
+  ],
+  "source_files": [
+    "build_handoff_stride_rom.py",
+    "build_handoff_sample_rom.py",
+    "../Copperline/src/bus/dma_slots.rs",
+    "../Copperline/src/chipset/blitter.rs"
+  ]
+}
