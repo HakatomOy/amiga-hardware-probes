@@ -1,0 +1,123 @@
+{
+  "model": "Counterfactual source delay; exact qualification, actual grant clocks; not fix acceptance",
+  "total_fields": 5120,
+  "common_fields": 0,
+  "pairwise": [
+    {
+      "delays_CCK": [
+        4,
+        5
+      ],
+      "common_fields": 2680,
+      "differences": [
+        20,
+        0
+      ]
+    },
+    {
+      "delays_CCK": [
+        4,
+        6
+      ],
+      "common_fields": 1628,
+      "differences": [
+        20,
+        0
+      ]
+    },
+    {
+      "delays_CCK": [
+        5,
+        6
+      ],
+      "common_fields": 2826,
+      "differences": [
+        20,
+        0
+      ]
+    },
+    {
+      "delays_CCK": [
+        6,
+        7
+      ],
+      "common_fields": 1554,
+      "differences": [
+        0,
+        0
+      ]
+    }
+  ],
+  "results": [
+    {
+      "delay_CCK": 0,
+      "compared_fields": 5120,
+      "different_fields": 346,
+      "unavailable_or_ambiguous": 0,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 1,
+      "compared_fields": 2900,
+      "different_fields": 234,
+      "unavailable_or_ambiguous": 2220,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 2,
+      "compared_fields": 3288,
+      "different_fields": 180,
+      "unavailable_or_ambiguous": 1832,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 3,
+      "compared_fields": 3582,
+      "different_fields": 112,
+      "unavailable_or_ambiguous": 1538,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 4,
+      "compared_fields": 2760,
+      "different_fields": 20,
+      "unavailable_or_ambiguous": 2360,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 5,
+      "compared_fields": 4806,
+      "different_fields": 26,
+      "unavailable_or_ambiguous": 314,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 6,
+      "compared_fields": 2974,
+      "different_fields": 0,
+      "unavailable_or_ambiguous": 2146,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 7,
+      "compared_fields": 3060,
+      "different_fields": 54,
+      "unavailable_or_ambiguous": 2060,
+      "common_differences": 0
+    },
+    {
+      "delay_CCK": 8,
+      "compared_fields": 3810,
+      "different_fields": 128,
+      "unavailable_or_ambiguous": 1310,
+      "common_differences": 0
+    }
+  ],
+  "packet_sha256": "64ffb9b172e6dded214cf4f0134dbd471e86c13cdb645524a8d48ea99837e0fc",
+  "trace_sha256": "06463b2ee42043064c28cf07d4d03b4402a672b86f19c6fedae8db04675fb0bf",
+  "interval_counts": {
+    "8": 1872,
+    "9": 48
+  },
+  "detail": "Full local artifact: captures/accuracy-round-20261020/cia-actual-clock-screen.json; regenerate with tools/cia_request_clock_screen.py and the byte-identical trace."
+}

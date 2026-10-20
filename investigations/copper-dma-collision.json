@@ -3,8 +3,25 @@
   "hypothesis": "Copper-driven Agnus write effects have a different late-fetch boundary from hardware, independently of CPU write timing.",
   "test": "Scan CPU/Copper BPLEN and BPL2PTL writes around a late fetch,using CLXDAT as a digital pixel witness,with planes-off,zero-data and always-on controls.",
   "smaller_reproducer": null,
-  "next_question": "Does the documented render/live timing distinction produce a measurable late-fetch collision difference?",
+  "next_question": "When should the first matching-pixel collision become visible after a late accepted pointer retarget?",
   "no_new_evidence": 0,
   "evidence_fingerprint": "a902c6178be237dc7359fb1bcbb3d7dedda5342a3a2469354927e7ef48c39198",
-  "decision": "validation failed"
+  "decision": "validation failed",
+  "confirmed_facts": [
+    "Kind72 has800 rows:416 baseline matches,22 differences,362 exact-cohort exclusions. Both A500 restores and constant controls pass.",
+    "Only pointer retargeting differs in qualified cases; no qualified BPLEN mismatch justifies a blanket Copper render-delay change.",
+    "Kind73 settled controls establish a same-plane pointer update hazard. Grant-anchored candidate repairs6 kind72 cases/11 fields without a regression;16 early-read differences remain."
+  ],
+  "references": [
+    "references/copper-dma-collision-v3/run1",
+    "references/copper-dma-collision-v3/run2"
+  ],
+  "source_files": [
+    "build_copper_dma_collision_rom.py",
+    "../Copperline/src/bus/frame_capture.rs",
+    "../Copperline/src/bus/ddf_line.rs"
+  ],
+  "history": [
+    "docs/accuracy-round-2026-10-20.md"
+  ]
 }

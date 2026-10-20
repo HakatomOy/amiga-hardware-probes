@@ -1,0 +1,33 @@
+{
+  "experiment": "copper-pointer-regression",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\pointer-candidate-v2\\copper-pointer-neighbor",
+  "identity": {
+    "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "adc7db8a28fda1034d820e576c5f3c6ef4201ca237b8de66af0a2c5128e8394f",
+    "source_id": "834af823af2b3b253542af941006a52509b466095661e3d906788ebea38d5e7c"
+  },
+  "hypothesis": "Copper-driven Agnus write effects have a different late-fetch boundary from hardware, independently of CPU write timing.",
+  "competitor": "Recorded-render offsets are compensated elsewhere; live DMA/pixel outcomes already agree.",
+  "test": "Scan CPU/Copper BPLEN and BPL2PTL writes around a late fetch,using CLXDAT as a digital pixel witness,with planes-off,zero-data and always-on controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "qualified collision transitions differ": "Check actual source landing before choosing DMA or render correction.",
+    "all collision controls and transitions match": "Do not change the render offset merely to remove an architectural TODO.",
+    "positive/negative controls fail": "Reject observer before hardware."
+  },
+  "next_question": "Does the documented render/live timing distinction produce a measurable late-fetch collision difference?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run2"
+  ],
+  "evidence_fingerprint": "d070b5cbc044b2fc56e76e73c81c69305257a29e77aa17065b5fb73f75f7a9fc",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

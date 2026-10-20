@@ -1,8 +1,8 @@
 {
   "experiment": "regression-bus-onset",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cpu-operand-20261019\\copper-candidate-v4\\bus-onset",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\pointer-candidate-v2\\bus-onset",
   "identity": {
-    "binary_sha256": "05b828803685040596e810a85d4f6022a33014b77f40abf792df7fc5fa944fb7",
+    "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "0f30b0a82b8e1e98f643c267f102416f43c8512ec23954fa5596727ea306ec34",
     "source_id": "c63a6d43f2b54ffc1cb49304be712a2d4beccef551a71b18f3fcd9cc3e3d045b"
@@ -20,7 +20,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\bus-onset-v1-run1"
   ],
   "evidence_fingerprint": "10ebde0d21a5e2f4a1831bdfd7480580745496e8d633486e1d1dc1a6a2308608",
-  "no_new_evidence": 0,
+  "no_new_evidence": 3,
   "validation": [
     {
       "name": "preflight",

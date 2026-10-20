@@ -117,3 +117,73 @@ measurement fields and workflow contracts define kind71/72/73 meanings. The
 original source snapshots remain under their build directories. Full-source
 hashes include the pre-existing kind51 work; later clean-source builds must
 not be relabeled as these historical ROMs.
+
+
+The first pointer candidate was rejected:20 cases repaired but7 CPU/BPL1 cases
+regressed (21 fields), with no qualification change. A byte-identical trace
+`captures/accuracy-round-20261020/pointer-write-trace/trace-verification.json`
+confirms CPU custom writes are applied two CCK after their recorded grant;
+Copper writes execute at the slot. For example, a CPU BPL1 write grants at CC
+but reaches the register code at CE. Looking at CE+1 falsely classifies that
+write as colliding with CF DMA. The revised candidate uses the remembered
+CPU grant, matching the existing render-event anchor. No alignment or capture
+budget changes are involved. Retain this rejected attempt as a phase-model test.
+
+
+Grant-anchored pointer candidate v2 repairs24 cases/71 fields with no new field
+or qualification regression:268 matches,13 early-only differences,199 unchanged
+exclusions. The repeated-capture controls and writer/plane/half neighbors remain
+part of acceptance. Validation batch:
+`captures/accuracy-round-20261020/pointer-candidate-v2`; accepted as Copperline4f625516 after neighboring and broad checks finish.
+
+
+Next CIA experiment (not yet executed): leading hypothesis is delayed enabled
+underflow forwarding, while the competitor is a different Paula input/read
+sampling phase. Use eight request reads and two observer stubs whose EXG/NOP
+padding differs by one CCK after timer start; retain actual read grant clocks,
+TA/PB6 checks, and prelatched/mask-enable controls on both CIAs. The denser
+window must cover fields currently unavailable to the six/seven-CCK comparison.
+If timer-underflow and prelatched paths need the same offset, investigate the
+common input/read path. If only underflows shift, investigate source forwarding.
+If the one-CCK observer change does not land differently, reject the observer
+before hardware. Neither outcome justifies changing CPU recognition globally.
+
+
+Strict repeatability scope: four of the24 repaired kind73 rows have an exact
+independently repeated qualification cohort; the full matrix has111 such rows.
+The persistent Copper hole pattern itself recurs across both physical runs and
+descriptor repetitions, while their later read brackets differ. Do not describe
+all24 repairs as independently repeated exact-cohort results or relax the
+199-exclusion contract to increase that count. Detail:
+`pointer-candidate-v2/repair-repeatability.json` under the capture round.
+
+
+Broad validation found two pre-existing carry fixtures whose
+setup writes were exactly at3E, one CCK before the3F BPL1 fetch. The measured
+hazard now correctly loses those writes. Each fixture moves to3D and advances
+11 rather than10CCK, preserving the same two DMA fetches, final beam and carry
+assertions. The new CPU/Copper, both-half/both-plane neighboring-clock unit test
+passed in that run. No production change or capture repeat is needed for this
+fixture correction; broad checks are rerun using the frozen candidate.
+
+The parent failure excerpt initially hid the second failed fixture name, causing
+an avoidable extra broad build. Failure summaries now prioritize a distinct
+failed-test list (total/listed counts, fixed800-character name budget) before
+the first diagnostic window. Tests cover later failures and duplicate names.
+Both affected fixtures are corrected together; emulator/capture inputs are
+unchanged.
+
+## Round acceptance and restart
+
+Accepted Copperline commits: `10a0d677` (native BLIT readback) and `4f625516`
+(Agnus pointer update hazard). Final pointer validation passes3640 core tests,
+37 ignored,548 window tests excluded; strict all-target/all-feature Clippy and
+formatting pass. All264 Python tests pass. Neighbor matrices and strict legacy
+packet preservation pass; no capture or timing qualification was relaxed.
+
+Next work stays bounded: isolate the remaining200 handoff/arbitration timing
+cases, investigate early CLXDAT visibility (13 kind73/16 kind72 differences),
+and execute the planned CIA source/input discrimination. CPU operand timing
+remains960/960; the old IRQ matrix retains only16 serial diagnostic differences.
+Use `investigations/handoff-edge.json`, `pointer-collision.json`,
+`cpu-dma-regression.json` and `cia-request.json` as restart records.

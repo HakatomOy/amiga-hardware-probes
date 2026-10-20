@@ -70,6 +70,10 @@ def validate_spec(spec):
             raise ValueError(f'missing experiment uncertainty: {name}')
     if len(spec.get('outcomes', {})) < 2 or not all(spec['outcomes'].values()):
         raise ValueError('declare at least two possible outcomes and their implications')
+    if spec.get('purpose', 'investigation') not in ('investigation', 'regression'):
+        raise ValueError('unknown experiment purpose')
+    if spec.get('purpose') == 'regression' and not (spec.get('baseline') and spec.get('references')):
+        raise ValueError('regression replay requires a frozen baseline and saved references')
     capture = spec['capture']
     if capture['minimum_seconds'] <= 0 or capture['expected_cases'] <= 0:
         raise ValueError('positive minimum duration and expected case count required')
@@ -164,11 +168,11 @@ def check_coverage(rows,contract):
         distribution=Counter(value(r,rule) for r in selected)
         unexpected = set(distribution) - set(rule.get('allowed_values', distribution))
         if unexpected:
-            raise ValueError(f"preflight control {rule['field']} has unexpected values {sorted(unexpected)}")
+            raise ValueError(f"capture coverage control {rule['field']} has unexpected values {sorted(unexpected)}")
         required=rule['require_values']
         missing=[x for x in required if x not in distribution]
         if missing:
-            raise ValueError(f"preflight coverage missing {rule['field']} values {missing}; revise probe before hardware")
+            raise ValueError(f"capture coverage missing {rule['field']} values {missing}; revise the observer or coverage contract")
         report.append(dict(field=rule['field'],unit=rule['unit'],selected_cases=len(selected),
                            where=rule.get('where',{}),required_counts={x:distribution[x] for x in required}))
     return report
@@ -285,12 +289,18 @@ def delta(before, after, names=()):
 def bounded_failure(stdout, stderr):
     """Find the first diagnostic, not an arbitrary tail; never read logs into output."""
     lines = []
+    failed_tests = []
     for path in (stderr, stdout):
         with Path(path).open(encoding='utf-8', errors='replace') as stream:
             prefix = []
             selected = None
             for line in stream:
                 line = line.rstrip()[:300]
+                failed = re.match(r'^(?:FAILED (\S+)|test (.+) \.\.\. FAILED)$', line)
+                if failed:
+                    name = next(group for group in failed.groups() if group)
+                    if name not in failed_tests:
+                        failed_tests.append(name)
                 if len(prefix) < 5:
                     prefix.append(line)
                 if selected is None and re.search(r'error|failed|exception|panic|assert', line, re.I):
@@ -298,7 +308,16 @@ def bounded_failure(stdout, stderr):
                 elif selected is not None and len(selected) < 6:
                     selected.append(line)
             lines.extend(selected or prefix)
-    return '\n'.join(dict.fromkeys(lines))[:1800]
+    names = []
+    used = 0
+    for name in failed_tests:
+        if used + len(name) + 1 > 800:
+            break
+        names.append(name)
+        used += len(name) + 1
+    header = (f'Failed tests ({len(failed_tests)}; listed {len(names)}):\n'
+              + '\n'.join(names) + '\n') if failed_tests else ''
+    return (header + '\n'.join(dict.fromkeys(lines)))[:1800]
 
 
 def fingerprints(patterns, variables):
@@ -390,7 +409,8 @@ def emit(out, stage, details, live=False):
 
 
 def stalled(record, spec):
-    return (record.get('no_new_evidence', 0) >= 2
+    return (spec.get('purpose') != 'regression'
+            and record.get('no_new_evidence', 0) >= 2
             and record.get('hypothesis') == spec['hypothesis']
             and record.get('test') == spec['test']
             and record.get('smaller_reproducer') == spec.get('smaller_reproducer'))
@@ -399,6 +419,8 @@ def stalled(record, spec):
 def run(spec_path, out, hardware=False, events=False, through='broad', overrides=None):
     spec = validate_spec(read(spec_path))
     spec.update(overrides or {})
+    if hardware and spec.get('purpose') == 'regression':
+        raise ValueError('regression replay cannot request new hardware; use an investigation')
     record_path = resolve(spec['investigation'])
     record = read(record_path) if record_path.exists() else {}
     if stalled(record, spec):

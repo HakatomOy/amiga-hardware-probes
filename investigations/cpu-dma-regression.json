@@ -1,8 +1,8 @@
 {
   "experiment": "cpu-dma-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cpu-operand-20261019\\copper-candidate-v4\\cpu-dma",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\pointer-candidate-v2\\cpu-dma",
   "identity": {
-    "binary_sha256": "05b828803685040596e810a85d4f6022a33014b77f40abf792df7fc5fa944fb7",
+    "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "cdb43469328394efaa9dac4efc6d6754db3c6f85f900609fde437582a1d7c7f1",
     "source_id": "26d663f7a794a338b14cb2689c386b1a904ef08347b219ca7251676f57f4dcea"
@@ -21,12 +21,24 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-dma-v2-run2"
   ],
   "evidence_fingerprint": "a4d536c77b49a05a00b235f9bcff77bf9d3a26d8ce20cfb9cc1d13410b935c27",
-  "no_new_evidence": 0,
+  "no_new_evidence": 3,
   "validation": [
     {
       "name": "preflight",
       "exit": 0
     }
   ],
-  "decision": "review evidence"
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "Accepted pointer candidate preserves1904/1920 matches; all16 differences remain end_ref (handler CIA ICR SP bit3), not handler beams, stacked PC or loop counts.",
+    "The960-case operand matrix remains fully matched across memory types and DMA pressure."
+  ],
+  "source_files": [
+    "experiments/workflows/cpu-dma-regression.json",
+    "experiments/workflows/cpu-operand-regression.json",
+    "../Copperline/src/bus.rs"
+  ],
+  "history": [
+    "docs/accuracy-round-2026-10-20.md"
+  ]
 }

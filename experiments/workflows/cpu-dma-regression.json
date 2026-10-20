@@ -100,5 +100,6 @@
   },
   "build": [],
   "validation": [],
-  "baseline": "captures/cpu-dma-20261019/baseline-v2"
+  "baseline": "captures/cpu-dma-20261019/baseline-v2",
+  "purpose": "regression"
 }

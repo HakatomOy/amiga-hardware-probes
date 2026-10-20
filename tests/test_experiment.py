@@ -317,6 +317,44 @@ class ExperimentTests(unittest.TestCase):
         self.assertLess(len(result['excerpt']), 1801)
         self.assertGreater(Path(result['stdout']).stat().st_size, 20000)
 
+    def test_failure_excerpt_lists_later_test_failures_before_details(self):
+        stdout=self.root/'stdout.log';stderr=self.root/'stderr.log'
+        stdout.write_text('FAILED first_test\nassertion original failure\n'
+                          + 'diagnostic detail\n'*20
+                          + 'FAILED later_test\nFAILED first_test\n')
+        stderr.write_text('')
+        result=e.bounded_failure(stdout,stderr)
+        self.assertTrue(result.startswith('Failed tests (2; listed 2):'))
+        self.assertIn('first_test\nlater_test',result)
+        self.assertIn('original failure',result)
+        self.assertLessEqual(len(result),1800)
+
+    def test_hardware_controls_are_checked_after_emulator_preflight_passes(self):
+        self.spec['capture']['coverage']=[dict(field='counter',unit='bit',
+            meaning='constant control',require_values=[10],allowed_values=[10])]
+        (self.reference/'results.bin').write_bytes(packet(11))
+        manifest=e.read(self.reference/'manifest.json')
+        manifest['results_sha256']=e.digest(packet(11))
+        e.write(self.reference/'manifest.json',manifest)
+        with patch.object(e,'command_run',self.fake_command([])):
+            result=self.execute(through='comparison')
+        self.assertEqual(result['status'],'failed')
+        self.assertIn('coverage',result['error'])
+
+    def test_regression_replay_is_distinct_from_a_stalled_investigation(self):
+        spec=copy.deepcopy(self.spec)
+        record=dict(no_new_evidence=2,hypothesis=spec['hypothesis'],test=spec['test'])
+        self.assertTrue(e.stalled(record,spec))
+        spec['purpose']='regression'
+        e.validate_spec(spec)
+        self.assertFalse(e.stalled(record,spec))
+        e.write(self.root/'regression.json',spec)
+        with self.assertRaisesRegex(ValueError,'cannot request new hardware'):
+            e.run(self.root/'regression.json','new-hardware',hardware=True)
+        del spec['baseline']
+        with self.assertRaisesRegex(ValueError,'frozen baseline'):
+            e.validate_spec(spec)
+
     def test_legacy_cache_migration_requires_the_original_fingerprint(self):
         from tools import migrate_replay_cache as migration
         self.spec['reuse_preflight'] = True

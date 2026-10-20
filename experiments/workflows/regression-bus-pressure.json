@@ -153,5 +153,6 @@
       "reference_conflicting_cohorts": 0
     },
     "rule": "Freeze baseline exclusions; never derive budget from candidate."
-  }
+  },
+  "purpose": "regression"
 }

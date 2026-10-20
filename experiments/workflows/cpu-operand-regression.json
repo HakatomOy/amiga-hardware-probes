@@ -100,5 +100,6 @@
   },
   "build": [],
   "validation": [],
-  "baseline": "captures/cpu-operand-20261019/copper-candidate-v4/candidate"
+  "baseline": "captures/cpu-operand-20261019/copper-candidate-v4/candidate",
+  "purpose": "regression"
 }

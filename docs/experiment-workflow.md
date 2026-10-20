@@ -308,3 +308,15 @@ worked. Declare scratch memory ranges outside probe code, result buffers and
 stack; exercise the complete ROM in preflight before any live substitution.
 A buffer overlapping the growing RAM code image can otherwise mimic an emulator
 hang and waste a hardware cycle.
+
+Saved-reference neighbor suites declare `"purpose": "regression"`, with a
+frozen baseline. Their intended success is unchanged evidence, so the repeated
+no-new-evidence investigation guard does not block them. They retain every
+comparison/regression check and cannot request live hardware. Investigations
+still require a revised hypothesis or smaller reproducer after stalled attempts.
+
+Failure excerpts list distinct failed test names before the first diagnostic
+window, with total/listed counts and a fixed output bound. Always inspect that
+list before editing: the first assertion alone may hide another fixture with
+the same invalid assumption and cause an unnecessary rebuild. Retrieve further
+assertion details selectively from the compact Cargo wrapper log.

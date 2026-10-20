@@ -27,7 +27,7 @@ def read_clocks(trace, rows):
         launch = row['launch_ref']
         anchor = (launch >> 8)*227+(launch & 255)
         times = tuple((t-anchor) % (312*227) for t in clocks[i*5:i*5+4])
-        if not all(0 <= b-a <= 16 for a,b in zip(times,times[1:])):
+        if not all(0 < b-a <= 16 for a,b in zip(times,times[1:])):
             raise ValueError('unexpected request ordering/spacing')
         result.append(times)
     return result
@@ -35,6 +35,8 @@ def read_clocks(trace, rows):
 
 def screen(hardware, candidate, policy, clocks, delays=range(9)):
     fields = [next(f for f in policy['measurements'] if f['name']==name) for name in NAMES]
+    if any(r['kind'] != 68 for r in [*candidate, *hardware]):
+        raise ValueError('requires the kind68 one-shot latch sweep')
     if len(clocks)!=len(candidate):
         raise ValueError('clock/descriptor count differs')
     def cohort(r, latch):
