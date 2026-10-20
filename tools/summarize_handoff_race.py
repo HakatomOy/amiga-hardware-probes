@@ -1,4 +1,4 @@
-"""Summarize kind77 fetch/write ordering, separately from status and beam timing."""
+"""Summarize source races separately from status and beam timing (kinds77/78)."""
 import argparse
 from collections import Counter, defaultdict
 import json
@@ -15,22 +15,26 @@ def summarize(cases, fields):
     destination = names.index('first_D')
     beam_indices = [i for i, f in enumerate(fields) if f['unit'] == 'packed beam']
     totals = Counter(cases=0, destination_differences=0, beam_differences=0,
-                     control_destination_differences=0, race_cases=0)
+                     control_destination_differences=0, race_cases=0,
+                     no_start_beam_differences=0, copper_beam_differences=0)
     groups = defaultdict(lambda: dict(cases=0, hardware=Counter(), model=Counter(),
                                      differences=0, representatives=[]))
     for case_id, case in cases.items():
         if case['status'] not in ('matches', 'mismatches'):
             raise ValueError('ordering summary requires qualified stable complete cases')
         kind, target, variant, phase, pad, repeat = case['case']
-        if kind != 77 or target not in (0, 3, 6):
-            raise ValueError('expected kind77 descriptors')
+        if kind not in (77, 78) or target not in (0, 3, 6):
+            raise ValueError('expected kind77/78 descriptors')
         hw, model = case['expected'], case['actual']
         if len(hw) != len(fields) or len(model) != len(fields):
             raise ValueError('measurement vector length differs from contract')
         different = hw[destination] != model[destination]
         totals['cases'] += 1
         totals['destination_differences'] += different
-        totals['beam_differences'] += any(hw[i] != model[i] for i in beam_indices)
+        beam_difference = any(hw[i] != model[i] for i in beam_indices)
+        totals['beam_differences'] += beam_difference
+        totals['no_start_beam_differences'] += bool(variant & 8) and beam_difference
+        totals['copper_beam_differences'] += ((variant >> 1) & 3) == 3 and beam_difference
         race = target == 3 and not variant & 8
         if not race:
             totals['control_destination_differences'] += different
@@ -48,7 +52,7 @@ def summarize(cases, fields):
             g['representatives'].append(case_id)
     result = []
     for (dma, nasty, neighbor, nops), g in sorted(groups.items()):
-        result.append(dict(dma_planes=(0, 4, 6)[dma], nasty=bool(nasty),
+        result.append(dict(dma_planes=(0, 4, 6, 6)[dma], copper=dma == 3, nasty=bool(nasty),
                            neighbor_write=neighbor, post_nops=nops, **g))
     return dict(counts=dict(totals), groups=result,
                 units='Destination words: aaaa=old,5555=new. Beam differences are exact raw witnesses,not aligned event timestamps.')

@@ -1,0 +1,47 @@
+{
+  "experiment": "handoff-copper-race",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\hardware-v2",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "ae45d9861d1490bb963f7e22eec04633fbf3ee322e44f4ca0a955c639c1f8d0b",
+    "source_id": "8971ac29578d14c9d1c8c630f840db0188b94a159e4a4595cd0d53fbab1a17ba"
+  },
+  "hypothesis": "Finite Copper pressure changes first A-fetch ownership relative to the CPU overwrite.",
+  "competitor": "First-fetch order is correct; only later completion or software observation differs.",
+  "test": "Six-plane versus six-plane plus explicitly enabled32-NOOP Copper stream; settled COPER activity witness; old/new source race with D-only,preseed,no-start and unused-neighbor controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "old/new destination boundary differs": "First A-fetch/CPU ordering is wrong; inspect request/grant sequencing before completion.",
+    "destination ordering matches but status or beams differ": "Keep completion/status or CPU observation in scope; do not move source fetch.",
+    "control destination or stored word wrong": "Reject capture before inference."
+  },
+  "next_question": "Which CPU access-space grant/readback differs under Copper in no-start controls?",
+  "references": [
+    "references/handoff-copper-race-v2/run1",
+    "references/handoff-copper-race-v2/run2"
+  ],
+  "evidence_fingerprint": "07621392811e5e1b57ed3db7d7e0b11bd88b80a6ad42e0626979577ff83c8f5c",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "narrow",
+  "decision_reason": "Identical paired captures show all Copper cases differ in beams, including no-start;16 source-order cases differ. Isolate CPU access-space arbitration before changing startup.",
+  "evidence": [
+    "captures/copper-race-20261020/hardware-v2/ordering.json",
+    "captures/copper-race-20261020/trace-v2/trace-verification.json"
+  ],
+  "confirmed_facts": [
+    "Two independent A500 packets byte-identical; both restores verified;1536 qualified,zero exclusions/instability.",
+    "All768 six-plane/no-Copper rows match;all768 Copper rows differ in beam observations,including384 no-start controls.",
+    "16 source-order differences: normal/NOP1 hardwareold vs modelnew;nasty/NOP0 hardwarenew vs modelold;controls match.",
+    "Byte-identical emulator trace confirms Copper transfers overlap384/384 enabled real blits."
+  ],
+  "source_files": [
+    "build_handoff_copper_race_rom.py",
+    "tools/summarize_handoff_race.py",
+    "../Copperline/src/bus/dma_slots.rs"
+  ],
+  "history": [
+    "docs/copper-pressure-investigation-2026-10-20.md"
+  ]
+}

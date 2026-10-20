@@ -3,6 +3,14 @@ from tools.summarize_handoff_race import summarize
 
 
 class RaceSummaryTests(unittest.TestCase):
+    def test_copper_mode_remains_a_separate_ordering_group(self):
+        fields = [dict(name='first_D', field='irq_beam', unit='word')]
+        case = dict(case=[78,3,6,0,0,0], status='matches',
+                    expected=[0xaaaa], actual=[0xaaaa])
+        result = summarize({'case': case}, fields)
+        self.assertEqual(result['groups'][0]['dma_planes'], 6)
+        self.assertTrue(result['groups'][0]['copper'])
+
     def test_old_new_order_is_independent_of_status_or_beam_difference(self):
         fields = [dict(name='first_D', field='irq_beam', unit='word'),
                   dict(name='beam', field='launch_ref', unit='packed beam')]

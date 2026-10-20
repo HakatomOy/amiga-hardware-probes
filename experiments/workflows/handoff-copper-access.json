@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "id": "handoff-copper-access",
+  "hypothesis": "Copper pressure changes CPU transfer/readback arbitration independently of a running blitter.",
+  "competitor": "Only blitter completion changes,not access-space scheduling.",
+  "test": "Identical MOVE.W(A1),D0 against custom/chip/slow/ROM;start/no-start;six planes with/without witnessed finite Copper;NOP0..3;normal/nasty.",
+  "outcomes": {
+    "old/new destination boundary differs": "First A-fetch/CPU ordering is wrong; inspect request/grant sequencing before completion.",
+    "destination ordering matches but status or beams differ": "Keep completion/status or CPU observation in scope; do not move source fetch.",
+    "control destination or stored word wrong": "Reject capture before inference."
+  },
+  "next_question": "Does the timing error depend on the first CPU read space in no-start controls?",
+  "investigation": "investigations/handoff-copper-access.json",
+  "binary": "captures/handoff-race-20261020/copper-start-acceptance/emulator.exe",
+  "romdir": "build/handoff-copper-access-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "68fab965ad2f72937d6381564237f98d27d0ac028ac2204024bc0620cd146450",
+  "capture": {
+    "minimum_seconds": 220,
+    "expected_cases": 1024,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "Settled AD or no-start destination",
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "unit": "word",
+        "meaning": "Settled AD or no-start destination",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "where": {
+          "target": 9
+        },
+        "unit": "word",
+        "meaning": "Slow RAM positive read control",
+        "require_values": [
+          42330
+        ],
+        "allowed_values": [
+          42330
+        ]
+      },
+      {
+        "field": "end_beam",
+        "where": {
+          "target": 12
+        },
+        "unit": "word",
+        "meaning": "ROM positive read control",
+        "require_values": [
+          4372
+        ],
+        "allowed_values": [
+          4372
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "DMACONR/chip/slow/ROM first read; source fixed by target"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "status1",
+        "field": "aux",
+        "mask": 24576,
+        "unit": "DMACONR bits",
+        "meaning": "Second fixed status sample"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite Copper activity witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 360,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": []
+}
