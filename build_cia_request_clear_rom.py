@@ -78,6 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
     base.build(args.vasm, args.wsl, args.out, aligned=True, rows=trials(), transform=transform,
-               profile=dict(kind=85, phases='bit0=Nop/EXG aperture; bit3=PB control/ICR clear',
+               profile=dict(kind=85, event_offset='CIA Timer-A latch24+offset E clocks',
+                            phases='bit0=Nop/EXG aperture; bit3=PB control/ICR clear',
                             fields='TA, raw PB or destructive ICR, four INTREQ reads after Paula ack',
                             limitation='Software observations constrain cancellation, not physical pin location.'))

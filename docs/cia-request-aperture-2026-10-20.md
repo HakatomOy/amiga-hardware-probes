@@ -65,3 +65,10 @@ preserve software-written/shared PORTS/EXTER sources, avoid adding another CPU
 recognition delay, preserve STOP deadline prediction and save-state behavior,
 and pass the saved CIA/IRQ/bus suites before acceptance. No CIA latency patch
 is accepted by this investigation.
+
+
+Provenance note: the kind85 v2 builder source is preserved in commit `cdb25b1`.
+Its inherited `irq_stage.event_offset` manifest text incorrectly says latch32;
+the snapshotted assembly and experiment contract use latch24. The original
+capture manifests/hashes remain immutable. The current builder overrides that
+metadata for future builds; do not relabel an old ROM with a new source hash.
