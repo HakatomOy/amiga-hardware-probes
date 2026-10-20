@@ -16,7 +16,7 @@
     "counts/output and request differ together": "Inspect timer pipeline or CIA access phase before changing IRQ forwarding.",
     "read/phase brackets differ": "Exclude timing inference; narrow calibration or measurement before patching."
   },
-  "next_question": "Across timer periods and sample offsets, which request transitions are early without changing timer state?",
+  "next_question": "Which sub-E boundary distinguishes6/7CCK source forwarding from input sampling, with prelatched and mask-enable controls?",
   "references": [
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-request-v2\\run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-request-v2\\run2"
@@ -34,9 +34,16 @@
     "Kind68 four-request sweep:640 qualified,447 baseline matches,193 differences; no invalid captures or conflicting cohorts.",
     "Both A500 restorations verified; exact independent phase repeatability must be inspected separately from conflict count.",
     "Diagnostic replay byte-identical; whole-E screening is not aligned trace comparison or actual fix validation.",
-    "A one-E delay leaves26/1200 available request-vector differences; do not claim it resolves source propagation."
+    "A one-E delay leaves26/1200 available request-vector differences; do not claim it resolves source propagation.",
+    "Verified kind68 trace has1872 request intervals of8CCK and48 of9CCK; nominal spacing cannot establish a sub-E delay.",
+    "Actual-clock screen:6CCK has0/2974 available field differences,2146 unavailable. On2826 common fields5CCK has20 differences versus0 for6CCK;6/7CCK remain indistinguishable on1554 common fields."
   ],
   "history": [
-    "docs/cia-source-investigation-2026-10-19.md"
+    "docs/cia-source-investigation-2026-10-19.md",
+    "docs/accuracy-round-2026-10-20.md"
+  ],
+  "source_files": [
+    "tools/cia_request_clock_screen.py",
+    "../Copperline/src/bus.rs"
   ]
 }

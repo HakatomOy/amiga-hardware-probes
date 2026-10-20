@@ -276,3 +276,35 @@ packet and repository instructions, then retrieve only evidence needed next.
 Start subsequent sessions from that restart packet; reread only the relevant
 workflow sections when changing a contract. Do not repeatedly load this whole
 guide, historical records, or successful suite logs into the investigation context.
+
+## Replay reuse and failed-batch recovery
+
+Replay cache keys bind the frozen binary/config/ROM/source identity, duration,
+capture adapter version, capture/decoder code and declared replay inputs.
+Comparison or reporting edits do not invalidate an unchanged capture. Cache
+entries retain build metadata as well as packet hashes, so domain validation
+runs identically on fresh and cached packets. Coverage is checked again on
+reuse; a previously rejected preflight is evidence, not permission for hardware.
+
+Old cache entries can be imported with `tools/migrate_replay_cache.py
+--runner-sha256 OLD_SHA` only when their original runner fingerprint and all
+frozen artifacts still verify. Never guess missing provenance. Migration keeps
+original entries and records the verified old fingerprint.
+
+`resume` preserves failed child output directories and assigns retried `--out`
+commands a new directory under `validation-retries/`. Later consumers follow
+recorded redirects. Successful unchanged checks are reused; failed evidence
+remains available. Output paths outside the parent experiment require explicit
+handling rather than automatic replacement.
+
+For swept variants, coverage selectors can use
+`"variant": {"mask": 3, "equals": 2}` to test control bits independently of
+sweep bits. `allowed_values` enforces constant controls; merely requiring one
+correct value would allow a mixture of correct and broken controls to pass.
+
+Coverage controls are checked on every reference packet as well as emulator
+preflight. Passing emulator controls cannot establish that the physical witness
+worked. Declare scratch memory ranges outside probe code, result buffers and
+stack; exercise the complete ROM in preflight before any live substitution.
+A buffer overlapping the growing RAM code image can otherwise mimic an emulator
+hang and waste a hardware cycle.

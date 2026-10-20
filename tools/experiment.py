@@ -40,6 +40,14 @@ def digest(value):
     return hashlib.sha256(value).hexdigest()
 
 
+def replay_fingerprint(identity, seconds, inputs):
+    """Capture behavior only: report/qualification edits do not invalidate replay."""
+    return dict(identity=identity, seconds=seconds, capture_adapter_version=1,
+                decoder_sha256=digest(Path(rom_results.__file__).read_bytes()),
+                capture_tool_sha256=digest((ROOT/'run_rom.py').read_bytes())
+                if (ROOT/'run_rom.py').exists() else None, inputs=inputs)
+
+
 def resolve(value):
     p = Path(value)
     return (p if p.is_absolute() else ROOT / p).resolve()
@@ -83,6 +91,14 @@ def validate_spec(spec):
     for rule in capture.get('coverage',[]):
         if not rule.get('require_values') or any(k not in DESCRIPTOR for k in rule.get('where',{})):
             raise ValueError('coverage requires values and optional descriptor-only conditions')
+        for condition in rule.get('where', {}).values():
+            if isinstance(condition, dict):
+                if (set(condition) != {'mask', 'equals'}
+                        or not all(isinstance(v, int) and 0 <= v <= 65535 for v in condition.values())
+                        or condition['equals'] & ~condition['mask']):
+                    raise ValueError('masked coverage condition requires mask and equals within descriptor bits')
+            elif not isinstance(condition, int):
+                raise ValueError('coverage conditions must be integers or mask/equals objects')
     if spec.get('traces') and not spec['traces'].get('unit'):
         raise ValueError('trace time unit must be explicit')
     names = [f.get('name', f['field']) for f in comparison['measurements']]
@@ -142,13 +158,19 @@ def load_capture(path, build, contract, reference=False):
 def check_coverage(rows,contract):
     report=[]
     for rule in contract.get('coverage',[]):
-        selected=[r for r in rows if all(r[k]==v for k,v in rule.get('where',{}).items())]
+        selected=[r for r in rows if all(
+            (r[k] & v['mask'] == v['equals']) if isinstance(v, dict) else r[k] == v
+            for k,v in rule.get('where',{}).items())]
         distribution=Counter(value(r,rule) for r in selected)
+        unexpected = set(distribution) - set(rule.get('allowed_values', distribution))
+        if unexpected:
+            raise ValueError(f"preflight control {rule['field']} has unexpected values {sorted(unexpected)}")
         required=rule['require_values']
         missing=[x for x in required if x not in distribution]
         if missing:
             raise ValueError(f"preflight coverage missing {rule['field']} values {missing}; revise probe before hardware")
-        report.append(dict(field=rule['field'],unit=rule['unit'],required_counts={x:distribution[x] for x in required}))
+        report.append(dict(field=rule['field'],unit=rule['unit'],selected_cases=len(selected),
+                           where=rule.get('where',{}),required_counts={x:distribution[x] for x in required}))
     return report
 
 
@@ -425,19 +447,23 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
         capture_cmd = dict(name='preflight', argv=['{python}', '{root}/run_rom.py', '--binary', '{binary}',
                            '--config', '{config}', '--romdir', '{romdir}', '--out', '{out}/candidate',
                            '--seconds', str(seconds)], timeout_seconds=spec['capture'].get('timeout_seconds', 900))
-        replay_key = digest(json.dumps(dict(identity=summary['identity'], seconds=seconds,
-                          runner_sha256=digest(Path(__file__).read_bytes()),
-                          decoder_sha256=digest(Path(rom_results.__file__).read_bytes()),
-                          capture_tool_sha256=digest((ROOT/'run_rom.py').read_bytes()) if (ROOT/'run_rom.py').exists() else None,
-                          inputs=fingerprints(spec.get('replay_inputs', []), variables)), sort_keys=True).encode())
+        replay_contract = replay_fingerprint(summary['identity'], seconds,
+                          fingerprints(spec.get('replay_inputs', []), variables))
+        replay_key = digest(json.dumps(replay_contract, sort_keys=True).encode())
         replay_cache = cache / ('replay-' + replay_key)
         reused_capture = spec.get('reuse_preflight', False) and (replay_cache/'results.bin').exists()
         if reused_capture:
+            origin = read(replay_cache/'origin.json')
+            if origin.get('capture_contract') != replay_contract:
+                raise ValueError('cached capture contract differs')
+            if read(replay_cache/'build-manifest.json') != build:
+                raise ValueError('cached build metadata differs')
             load_capture(replay_cache, build, spec['capture'])
             if read(replay_cache/'origin.json')['results_sha256'] != digest((replay_cache/'results.bin').read_bytes()):
                 raise ValueError('cached preflight packet hash mismatch')
             (out / 'candidate').mkdir()
             shutil.copyfile(replay_cache / 'results.bin', out / 'candidate/results.bin')
+            write(out / 'candidate/build-manifest.json', build)
             write(out / 'candidate/reuse.json', dict(original=read(replay_cache/'origin.json'),
                                                     identity=summary['identity']))
         else:
@@ -446,12 +472,14 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
             if result['exit']:
                 raise ValueError(f"preflight failed: {result.get('excerpt', '')}")
         _, candidate = load_capture(out / 'candidate', build, spec['capture'])
-        coverage=check_coverage(candidate,spec['capture'])
         if spec.get('reuse_preflight', False) and not reused_capture:
             replay_cache.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(out / 'candidate/results.bin', replay_cache / 'results.bin')
+            write(replay_cache / 'build-manifest.json', build)
             write(replay_cache / 'origin.json', dict(run=str(out), identity=summary['identity'],
+                                                    capture_contract=replay_contract,
                                                     results_sha256=digest((out/'candidate/results.bin').read_bytes())))
+        coverage=check_coverage(candidate,spec['capture'])
         emit(out, 'preflight', dict(cases=len(candidate), seconds=seconds, reused=reused_capture,coverage=coverage), events)
         if through=='preflight':
             summary.update(status='preflight',counts=dict(cases=len(candidate),complete=True),
@@ -481,14 +509,17 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
             raise ValueError('provide saved references or explicitly request --hardware')
         hardware_rows = []
         reference_runs = []
+        reference_coverage = []
         hashes = []
         for path in references:
             meta, rows = load_capture(path, build, spec['capture'], reference=True)
+            reference_coverage.append(dict(reference=str(path), coverage=check_coverage(rows, spec['capture'])))
             hashes.append(meta['sha256'])
             hardware_rows.extend(rows)
             reference_runs.append(rows)
         report, cases = compare(hardware_rows, candidate, spec['comparison'])
         report['references'] = list(map(str, references))
+        report['reference_coverage'] = reference_coverage
         report['reference_hashes'] = hashes
         report['repeatability'] = dict(runs=len(references), packets_identical=len(set(hashes)) == 1,
                                        unstable_cases=report['counts']['unstable_reference'],
@@ -569,6 +600,30 @@ def compact(summary):
     return {k: summary[k] for k in ('status', 'output', 'counts', 'delta', 'patterns', 'validation_through', 'error', 'logs', 'investigation', 'next_step') if k in summary}
 
 
+def retry_output_command(command, variables, logs, redirects):
+    """Keep failed child runs intact and redirect later consumers consistently."""
+    argv = [arg.format(**variables) for arg in command['argv']]
+    original = None
+    if '--out' in argv:
+        original = Path(argv[argv.index('--out')+1])
+        resolved = Path(redirects.get(str(original), str(original)))
+        if resolved.exists():
+            root = Path(variables['out'])
+            if not original.is_absolute() or not original.is_relative_to(root):
+                raise ValueError('retry output outside run requires an explicit revised plan')
+            target = logs/'outputs'/original.relative_to(root)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            redirects[str(original)] = str(target)
+    for index, arg in enumerate(argv):
+        for old, new in sorted(redirects.items(), key=lambda item: -len(item[0])):
+            path = Path(arg)
+            if path.is_absolute() and path.is_relative_to(Path(old)):
+                argv[index] = str(Path(new)/path.relative_to(Path(old)))
+                break
+    # command_run formats once; preserve literal braces in already-expanded code.
+    return command | dict(argv=[arg.replace('{', '{{').replace('}', '}}') for arg in argv])
+
+
 def resume(out, through='broad', repeat=()):
     """Retry validation only, retaining frozen captures and all previous logs."""
     out=resolve(out);spec=validate_spec(read(out/'experiment.json'));summary=read(out/'summary.json')
@@ -606,12 +661,14 @@ def resume(out, through='broad', repeat=()):
              and (c['name'] not in successful or c['name'] in repeat)]
     if not pending:raise ValueError('no validation remains at this tier; do not repeat unchanged checks')
     summary.setdefault('validation_attempts',[])
+    redirects=summary.setdefault('validation_output_redirects',{})
     summary.pop('error',None);summary.pop('logs',None)
     try:
         for command in spec.get('validation',[]):
             if TIERS.index(command['tier'])>TIERS.index(through):break
             if command['name'] in successful and command['name'] not in repeat:continue
-            result=dict(tier=command['tier'],**command_run(command,logs,variables,cache))
+            retried=retry_output_command(command,variables,logs,redirects)
+            result=dict(tier=command['tier'],**command_run(retried,logs,variables,cache))
             old=[c for c in summary['commands'] if c['name']==command['name']]
             summary['validation_attempts']+=old
             summary['commands']=[c for c in summary['commands'] if c['name']!=command['name']]+[result]

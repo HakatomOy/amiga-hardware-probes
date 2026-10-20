@@ -1,0 +1,48 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\pointer-qualified-baseline-v2",
+  "hypothesis": "Agnus discards same-plane pointer half-writes one CCK before its DMA data slot.",
+  "test": "Replay exact write/read cohorts for both halves and both selected planes; only the same-plane prefetch window may change. Retain early-only collision differences.",
+  "smaller_reproducer": null,
+  "next_question": "Does a generic same-plane DMA counter hazard repair settled holes without changing controls or unrelated DMA timing?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "106c635cb5cc2e8d5583505563ec8d94b13c229cd92a1bfadbd453bf6116790e",
+  "decision": "review evidence",
+  "experiment": "pointer-collision",
+  "identity": {
+    "binary_sha256": "74aca2d0a931510b98a41a2df2baaed28e716c972bd3b4828f330e2397af55fa",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "89e928cb35641a5e0d5519d6103ebcfc97a2d7ec206fab8feb9ac8a64c013aaf",
+    "source_id": "6386f8702df804478280c5f0639af82f9a4301d4817512fcfe02d6f1fde28aaf"
+  },
+  "competitor": "The settled loss is caused by a broader write delay or plane-independent collision pipeline.",
+  "outcomes": {
+    "periodic settled-zero holes tied to selected plane fetch": "Supports a pointer read-modify-write hazard,then test a generic same-plane latch window.",
+    "settled collisions always set": "Reject lost-write inference; investigate early collision/rendering instead.",
+    "controls fail": "Reject the observer."
+  },
+  "references": [
+    "references/pointer-collision-v2/run1",
+    "references/pointer-collision-v2/run2"
+  ],
+  "validation": [],
+  "confirmed_facts": [
+    "Both A500 runs verify restoration/reset release; all early and settled negative/positive controls pass.",
+    "480 rows:244 matches,37 differences,199 excluded by exact setup/write/read beams; zero unstable/conflicting cohorts.",
+    "24 qualified differences include persistent settled loss;13 affect only the early collision read.",
+    "Copper low/high BPL2 halves lose at phases0,4,8,12,16; BPL1PTL losses shift to2,6,10,14. Pattern tracks selected DMA plane rather than register half."
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "All apparent pointer losses are delayed early collision visibility",
+      "evidence": "Persistent settled zeros after the following complete scanline, with positive controls set and negative controls clear."
+    }
+  ],
+  "source_files": [
+    "build_pointer_collision_rom.py",
+    "../Copperline/src/bus/custom_regs.rs",
+    "../Copperline/src/bus/ddf_line.rs"
+  ],
+  "history": [
+    "docs/accuracy-round-2026-10-20.md"
+  ]
+}

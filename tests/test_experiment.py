@@ -40,6 +40,34 @@ def packet(counter=10, complete=1, status=0, kind=0):
 
 
 class ExperimentTests(unittest.TestCase):
+    def test_retry_keeps_failed_child_and_redirects_its_consumers(self):
+        child=self.root/'run/child';child.mkdir(parents=True)
+        (child/'evidence.txt').write_text('keep')
+        variables=dict(out=str(self.root/'run'))
+        redirects={};logs=self.root/'run/retry2'
+        result=e.retry_output_command(dict(argv=['python','--out','{out}/child']),variables,logs,redirects)
+        self.assertEqual(result['argv'][-1],str(logs/'outputs/child'))
+        consumer=e.retry_output_command(dict(argv=['python','--after','{out}/child/evidence.txt']),variables,logs,redirects)
+        self.assertEqual(consumer['argv'][-1],str(logs/'outputs/child/evidence.txt'))
+        self.assertEqual((child/'evidence.txt').read_text(),'keep')
+
+    def test_constant_controls_reject_a_mixture_even_when_expected_value_exists(self):
+        contract = dict(coverage=[dict(field='counter', unit='bit', meaning='positive control',
+                                      require_values=[1], allowed_values=[1])])
+        self.assertEqual(e.check_coverage([(row() | {'counter': 1})], contract)[0]['selected_cases'], 1)
+        with self.assertRaises(ValueError):
+            e.check_coverage([(row() | {'counter': 1}), (row() | {'counter': 0})], contract)
+
+    def test_coverage_selects_control_bits_independently_of_sweep_bits(self):
+        rows = [row(variant=2, irq_beam=16384), row(variant=34, irq_beam=0),
+                row(variant=10, irq_beam=0)]
+        contract = dict(coverage=[dict(field='irq_beam', mask=16384, unit='BBUSY',
+            meaning='First status', where=dict(variant=dict(mask=31, equals=2)),
+            require_values=[0, 16384])])
+        self.assertEqual(e.check_coverage(rows, contract)[0]['selected_cases'], 2)
+        with self.assertRaises(ValueError):
+            e.check_coverage(rows[:1] + rows[2:], contract)
+
     def test_independent_repeats_require_overlapping_qualified_cohorts(self):
         first = row(launch_beam=10)
         other_phase = row(launch_beam=11)
@@ -288,6 +316,32 @@ class ExperimentTests(unittest.TestCase):
         self.assertIn('original failure', result['excerpt'])
         self.assertLess(len(result['excerpt']), 1801)
         self.assertGreater(Path(result['stdout']).stat().st_size, 20000)
+
+    def test_legacy_cache_migration_requires_the_original_fingerprint(self):
+        from tools import migrate_replay_cache as migration
+        self.spec['reuse_preflight'] = True
+        with patch.object(e, 'command_run', self.fake_command([])):
+            self.execute('captures/original', through='comparison')
+        cache = self.root/'captures/.experiment-cache'
+        original = next(cache.glob('replay-*'))
+        origin = e.read(original/'origin.json')
+        contract = origin.pop('capture_contract')
+        old = {k:v for k,v in contract.items() if k != 'capture_adapter_version'}
+        old['runner_sha256'] = 'a'*64
+        legacy = cache/('replay-'+e.digest(json.dumps(old,sort_keys=True).encode()))
+        original.rename(legacy)
+        e.write(legacy/'origin.json',origin)
+        (legacy/'build-manifest.json').unlink()
+        with patch.object(migration,'ROOT',self.root):
+            self.assertEqual(migration.migrate('b'*64)['imported'],0)
+            self.assertEqual(migration.migrate('a'*64)['imported'],1)
+        self.assertTrue((legacy/'results.bin').exists())
+        self.assertEqual(e.read(original/'build-manifest.json'),self.build)
+        self.assertEqual(e.read(original/'origin.json')['capture_contract'],contract)
+        # Domain metadata is mandatory on reuse, not merely in the origin.
+        e.write(original/'build-manifest.json',dict(self.build,trial_count=2))
+        with patch.object(e,'command_run',self.fake_command([])):
+            self.assertEqual(self.execute('corrupt-metadata',through='comparison')['status'],'failed')
 
     def test_preflight_reuse_and_binary_change(self):
         self.spec['reuse_preflight'] = True

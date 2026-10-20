@@ -1,0 +1,105 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\blit-request-acceptance-v2",
+  "hypothesis": "Native BLIT request readback has one redundant clock after E; reducing readback delay and recognition pre-age equally preserves CPU timing.",
+  "test": "Replay all1536 status-first hardware cases; require eight native-request repairs without timing,status,data or qualification regressions,then replay old source/bus/handoff controls.",
+  "smaller_reproducer": null,
+  "next_question": "Which remaining CPU grant/handoff rule explains200 changed observation-time cases without delaying native BLIT or terminal status globally?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "82ab38b433c38eb4cae1c9b3bc578314d9688ee243a070a1c69776e39518d500",
+  "decision": "accept",
+  "experiment": "handoff-status-first",
+  "identity": {
+    "binary_sha256": "74aca2d0a931510b98a41a2df2baaed28e716c972bd3b4828f330e2397af55fa",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "50a54642b7a32579e55895460fd8cc0e557022848a1304e1f76a9cc73e2ab22f",
+    "source_id": "3f8596f74d419cb1185867d62154bf020c7d39b7071c25fccd3080bcb17b3fef"
+  },
+  "competitor": "BBUSY or its custom-register sampling becomes visible early independently of CPU grants.",
+  "outcomes": {
+    "status differences with equal beams": "Constrain status/read sampling separately from CPU grant.",
+    "beam differences without status differences": "Constrain scheduling; do not add a global flag delay.",
+    "width-dependent pattern": "Use neighboring widths to distinguish body-cycle versus terminal release rules."
+  },
+  "references": [
+    "references/handoff-edge-v2/run1",
+    "references/handoff-edge-v2/run2"
+  ],
+  "validation": [
+    {
+      "name": "operand-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "cpu-dma-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-onset",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-completion",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-pressure",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-focus",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-read",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "qualified-native-neighbors",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "strict-clippy",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "rust-format",
+      "exit": 0,
+      "tier": "broad"
+    }
+  ],
+  "decision_reason": "Eight fresh native BLIT request repairs at identical beams; no field/cohort regressions; neighboring matrices and broad Rust/Clippy/fmt checks pass. Remaining200 bus grant differences retained.",
+  "evidence": [
+    "captures/accuracy-round-20261020/blit-request-acceptance-v2/comparison.json"
+  ],
+  "confirmed_facts": [
+    "1536 qualified status-first cases:1328 matches,208 differences;no invalid captures or unstable cohorts.",
+    "200 cases differ in all three beam observations;48 busy-status differences belong to those timing cohorts.",
+    "At equal observation times eight16-word normal-priority/no-display-DMA cases expose native BLIT request late in the emulator.",
+    "All no-start controls match. Global terminal delay is contradicted by late native-request controls."
+  ],
+  "history": [
+    "docs/accuracy-round-2026-10-20.md"
+  ],
+  "accepted_commits": [
+    "Copperline 10a0d677"
+  ]
+}

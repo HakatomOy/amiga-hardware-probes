@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\copper-collision-baseline-v3",
+  "hypothesis": "Copper-driven Agnus write effects have a different late-fetch boundary from hardware, independently of CPU write timing.",
+  "test": "Scan CPU/Copper BPLEN and BPL2PTL writes around a late fetch,using CLXDAT as a digital pixel witness,with planes-off,zero-data and always-on controls.",
+  "smaller_reproducer": null,
+  "next_question": "Does the documented render/live timing distinction produce a measurable late-fetch collision difference?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "a902c6178be237dc7359fb1bcbb3d7dedda5342a3a2469354927e7ef48c39198",
+  "decision": "validation failed"
+}

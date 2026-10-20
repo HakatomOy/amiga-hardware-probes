@@ -1,0 +1,28 @@
+{
+  "experiment": "cpu-operand-regression",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\blit-request-acceptance-v2\\operand-neighbor",
+  "identity": {
+    "binary_sha256": "5486b2da19da665f1452910560f630fbedde500371ffc2dc8ad65c5873391f9c",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "ead12d28a322a0ad9827d8b608a25c0d0e605a30d660ae0dc23cb85f59e25d3c",
+    "source_id": "117b52385d2074747730b245f57bc46c94ce5003d5cb72c9fb8a649650cc27fb"
+  },
+  "hypothesis": "CPU chip/slow RAM grant timing crossing line-end refresh causes the TST/Copper mismatch.",
+  "competitor": "Instruction operand/prefetch or exception sequencing causes the mismatch independently of operand memory.",
+  "test": "Cross TST/MOVE/CMP chip/ROM/slow operands with no/four/six-plane/six+Copper DMA, retaining STOP and masked read controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "chip/slow reads differ, ROM matches": "Inspect arbitration/grant boundaries; use MOVE/CMP to test generalization beyond TST.",
+    "TST differs across all memories while MOVE/CMP match": "Inspect instruction poll/prefetch/exception ordering before changing bus grants.",
+    "controls all differ or alignment does not qualify": "Reject targeted bus fix; narrow launch and request timing first."
+  },
+  "next_question": "Does the first divergent memory access depend on chip-bus arbitration or instruction semantics?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-operand-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-operand-v2\\run2"
+  ],
+  "evidence_fingerprint": "2a0b743b572c468f7ccb2ca0866da6be2f817d4c54127e95ca96ea4fd14e6ee5",
+  "no_new_evidence": 1,
+  "validation": [],
+  "decision": "review evidence"
+}

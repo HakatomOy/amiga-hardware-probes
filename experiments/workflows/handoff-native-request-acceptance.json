@@ -1,0 +1,360 @@
+{
+  "version": 1,
+  "id": "handoff-native-request-acceptance",
+  "hypothesis": "Native BLIT request readback has one redundant clock after E; reducing readback delay and recognition pre-age equally preserves CPU timing.",
+  "competitor": "The eight late native requests arise from different arbitration/source timing and do not justify a shared request-phase change.",
+  "test": "Replay all1536 status-first hardware cases; require eight native-request repairs without timing,status,data or qualification regressions,then replay old source/bus/handoff controls.",
+  "outcomes": {
+    "status differences with equal beams": "Constrain status/read sampling separately from CPU grant.",
+    "beam differences without status differences": "Constrain scheduling; do not add a global flag delay.",
+    "width-dependent pattern": "Use neighboring widths to distinguish body-cycle versus terminal release rules."
+  },
+  "next_question": "Can INTREQ.BLIT readback be corrected without changing bus grants or CPU recognition?",
+  "investigation": "investigations/handoff-edge.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/handoff-edge-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "50a54642b7a32579e55895460fd8cc0e557022848a1304e1f76a9cc73e2ab22f",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 1536,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 16384,
+        "where": {
+          "target": 4,
+          "variant": {
+            "mask": 31,
+            "equals": 2
+          }
+        },
+        "unit": "BBUSY bit",
+        "meaning": "Observe active and clear two-word four-plane controls before hardware",
+        "require_values": [
+          0,
+          16384
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/handoff-edge-v2/run1",
+    "references/handoff-edge-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "BBUSY_BZERO",
+        "field": "end_beam",
+        "mask": 24576,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "status1",
+        "field": "aux",
+        "mask": 24576,
+        "unit": "DMACONR bits",
+        "meaning": "Second fixed status sample"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [
+    {
+      "name": "operand-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/cpu-operand-regression.json",
+        "--out",
+        "{out}/operand-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cpu-dma-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/cpu-dma-regression.json",
+        "--out",
+        "{out}/cpu-dma",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-onset",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-onset.json",
+        "--out",
+        "{out}/bus-onset",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-completion",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-completion.json",
+        "--out",
+        "{out}/bus-completion",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-pressure",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-pressure.json",
+        "--out",
+        "{out}/bus-pressure",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-focus",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-focus.json",
+        "--out",
+        "{out}/handoff-focus",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-read",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-read.json",
+        "--out",
+        "{out}/handoff-read",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-neighbor.json",
+        "--out",
+        "{out}/handoff-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "qualified-native-neighbors",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/check_native_blit_neighbors.py",
+        "--before",
+        "captures/serial-buffer-20261019/regression",
+        "--after",
+        "captures/accuracy-round-20261020/blit-request-candidate-v1/legacy",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}"
+      ]
+    },
+    {
+      "name": "core-tests",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "test",
+        "--locked",
+        "--profile",
+        "ci",
+        "--lib",
+        "--",
+        "--skip",
+        "video::window::"
+      ]
+    },
+    {
+      "name": "strict-clippy",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "clippy",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "name": "rust-format",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo",
+        "--",
+        "fmt",
+        "--",
+        "--check"
+      ]
+    }
+  ],
+  "baseline": "captures/accuracy-round-20261020/handoff-baseline-v2/candidate"
+}
