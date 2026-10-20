@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "id": "cpu-blit-start-phase",
+  "hypothesis": "CPU BLTSIZE data has completed the busy latch but still needs two CCK before the blitter engine/zero-reset pipeline starts.",
+  "competitor": "The CPU start is already correct and the idle pipeline/CPU bus handoff causes the sign-changing read offsets.",
+  "test": "Screen a two-CCK CPU engine-only start delay against all1536 status-first saved hardware cases,then onset,completion and neighboring bus/IRQ controls. Keep busy immediately asserted and do not move CPU read sampling.",
+  "outcomes": {
+    "repairs without changed no-DMA or source-status controls": "Supports remaining CPU start-pipeline stage; require independent observer validation.",
+    "new no-DMA/onset/BZERO or data regressions": "Reject global CPU start delay; isolate arbitration instead."
+  },
+  "next_question": "Does the remaining CPU start-pipeline stage explain both the early and late fixed-delay observations?",
+  "investigation": "investigations/cpu-blit-start-phase.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/handoff-edge-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "50a54642b7a32579e55895460fd8cc0e557022848a1304e1f76a9cc73e2ab22f",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 1536,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 16384,
+        "where": {
+          "target": 4,
+          "variant": {
+            "mask": 31,
+            "equals": 2
+          }
+        },
+        "unit": "BBUSY bit",
+        "meaning": "Observe active and clear two-word four-plane controls before hardware",
+        "require_values": [
+          0,
+          16384
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/handoff-edge-v2/run1",
+    "references/handoff-edge-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "BBUSY_BZERO",
+        "field": "end_beam",
+        "mask": 24576,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "status1",
+        "field": "aux",
+        "mask": 24576,
+        "unit": "DMACONR bits",
+        "meaning": "Second fixed status sample"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/accuracy-round-20261020/blit-request-acceptance-v2/candidate"
+}

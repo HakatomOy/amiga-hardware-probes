@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "id": "handoff-access",
+  "hypothesis": "Shared-memory grant timing,not the status register value itself,causes the sign-changing handoff offsets.",
+  "competitor": "A CPU start pipeline or custom-register-only read phase explains the mismatch independently of shared-memory reads.",
+  "test": "Use identical MOVE.W (A1),D0 first observations from DMACONR,chip D,slow RAM and immutable ROM,with one-word AD blits,no-start,normal/hog,no-DMA/four-plane,NOP and launch-phase controls.",
+  "outcomes": {
+    "chip and slow differ while ROM/no-start controls match": "Supports shared-memory arbitration;inspect first denied/granted slot without retiming the timer or global read tap.",
+    "all access classes differ only after real start": "Supports launch/sequencer phase;use data/status boundaries and onset neighbors.",
+    "custom alone differs": "Inspect custom-register access timing separately from memory-port release."
+  },
+  "next_question": "Which access classes expose the first divergent grant and does a CPU start-stage model preserve independent source controls?",
+  "investigation": "investigations/handoff-access.json",
+  "binary": "captures/accuracy-round-20261020/pointer-candidate-v2/emulator.exe",
+  "romdir": "build/handoff-access-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "f5d1ba31139af195bb63457999ac8ed0b665f195f28b24a378f0a83fbba8e11d",
+  "capture": {
+    "minimum_seconds": 180,
+    "expected_cases": 1536,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "where": {
+          "target": 9
+        },
+        "unit": "word",
+        "meaning": "Slow RAM sentinel is stable",
+        "require_values": [
+          42330
+        ],
+        "allowed_values": [
+          42330
+        ]
+      },
+      {
+        "field": "end_beam",
+        "where": {
+          "target": 12
+        },
+        "unit": "word",
+        "meaning": "Immutable ROM read is stable",
+        "require_values": [
+          4372
+        ],
+        "allowed_values": [
+          4372
+        ]
+      },
+      {
+        "field": "end_beam",
+        "where": {
+          "target": 6,
+          "variant": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "unit": "word",
+        "meaning": "No-start destination stays zero",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "DMACONR/chip/slow/ROM first read; source fixed by target"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "status1",
+        "field": "aux",
+        "mask": 24576,
+        "unit": "DMACONR bits",
+        "meaning": "Second fixed status sample"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow;silicon revisions unconfirmed. Software transfer/data witnesses,not electrical edges. Exact launch qualification,no alignment."
+  },
+  "build": [],
+  "validation": []
+}

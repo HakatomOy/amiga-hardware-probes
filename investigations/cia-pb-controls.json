@@ -1,15 +1,15 @@
 {
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cia-source-20261019\\pb6-acceptance-v2\\pb-controls",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-cia-pb-controls-regression",
   "hypothesis": "PB6 E-high underflow visibility generalizes across pulse/toggle and one-shot/continuous output modes.",
   "test": "Calibrated576-case TA/PB6/request/TA/ICR sweep with PBON-off,continuous and pulse controls,then replay immutable PB6 candidate.",
   "smaller_reproducer": null,
-  "next_question": "Extend short-period/pulse merging and Timer-B boundaries only when new evidence requires them.",
-  "no_new_evidence": 0,
+  "next_question": "Does early-transfer PB6 visibility generalize without counter/request regressions?",
+  "no_new_evidence": 1,
   "evidence_fingerprint": "4bb8ccae6f805cf504a42a7c9d48baddbe93601b63a1ebf697e330f735dba8bd",
   "decision": "review evidence",
   "experiment": "cia-pb-controls-regression",
   "identity": {
-    "binary_sha256": "74aca2d0a931510b98a41a2df2baaed28e716c972bd3b4828f330e2397af55fa",
+    "binary_sha256": "11b65868ac7f86dcde000b12d878fc2260c94e9c843dcdc74bf25982a900ab6e",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "eeab46d1ab2530423d72d57c044ea00927fb1a15fe38f440fcc925e183bc5d72",
     "source_id": "d062e325dc64b105052d743af0313d7ce9896c3c71878790115a296168147294"

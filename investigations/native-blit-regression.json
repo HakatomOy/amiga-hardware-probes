@@ -1,6 +1,6 @@
 {
   "experiment": "native-blit-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\pointer-candidate-v2\\native-blit-neighbor",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\bbusy-native",
   "identity": {
     "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
@@ -21,7 +21,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run2"
   ],
-  "evidence_fingerprint": "ea32ba69ecd9958b1588d8331fd4c00a7b3bf51ea5cd2d8dbabede94e0523cd6",
+  "evidence_fingerprint": "86f3342c62ccaa37124198bb66a23d1423f1428c6e9bc97db91b20000aee659b",
   "no_new_evidence": 0,
   "validation": [
     {
@@ -29,5 +29,5 @@
       "exit": 0
     }
   ],
-  "decision": "review evidence"
+  "decision": "validation failed"
 }

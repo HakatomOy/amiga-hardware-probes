@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-startup-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\startup-baseline-v1\\hardware-1",
+  "test_rom_sha256": "d77a6d9fcf2571c3915f850af0bd4310260d2fe7de5be5ea82e947d6e224adc9",
+  "source_id": "9955050dc0ee327d30856e93d8429bbf841d9cc43a485064566f1da428cbe27f",
+  "results_sha256": "1b3cfc39143de827d6c868f902ce4e93089dbf4a89746eef61a6d339240b7482",
+  "record_count": 1152,
+  "metadata": {
+    "version": 1,
+    "source_id": "9955050dc0ee327d30856e93d8429bbf841d9cc43a485064566f1da428cbe27f",
+    "record_count": 1152,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "1b3cfc39143de827d6c868f902ce4e93089dbf4a89746eef61a6d339240b7482"
+  },
+  "restoration": {
+    "backup_sha256": "b7f6144832351f9600117c9ce9ace15fa0ff1b83c49095b204544c4275b2a44c",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "b7f6144832351f9600117c9ce9ace15fa0ff1b83c49095b204544c4275b2a44c",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 75,
+    "aligned": false,
+    "targets": [
+      "0 D-only one word",
+      "3 AD one word",
+      "6 ABCD one word"
+    ],
+    "sources": [
+      "CPU BLTSIZE or inert write"
+    ],
+    "masks": null,
+    "phases": "launch0/1,pad0/2; post-start NOP0..3 in variant bits7:5",
+    "event_offset": "Original measured launch retained",
+    "watchdog": "No outcome-dependent polling",
+    "units": "packed beam,data and register flags;no alignment",
+    "launch": "status-first observer after CPU size/inert write",
+    "masked_fields": null,
+    "limitations": "Source masks and fixed DMA discriminate startup eligibility; software snapshots do not directly locate electrical bus ownership.",
+    "variants": "lowbit priority;bits2:1 zero/four/six-plane DMA;bit3 no-start",
+    "measurement_fields": "kind71 fields unchanged: three post-read beams,status0/status1,request and settled destination words"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 576,
+    "independently_repeated_cohorts": 576,
+    "candidate_cases_with_independent_repeats": 1152,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow;silicon revisions unconfirmed. Status/data and post-read beam witnesses,not electrical edges;no alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\startup-baseline-v1\\reference-1"
+}

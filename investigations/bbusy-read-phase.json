@@ -1,0 +1,31 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\bbusy-phase-screen",
+  "hypothesis": "BBUSY is captured on the granted CPU register transfer, before the remaining bus-cycle tail.",
+  "test": "Restore internal startup; snapshot only BBUSY at the existing granted-read callback, leaving BZERO and engine scheduling unchanged. Compare kind75 then kind71/kind74 and strict legacy edges.",
+  "smaller_reproducer": null,
+  "next_question": "Reduce to one-word A-only versus AD/D-only, matching no-start, four/six-plane and launch/NOP neighbors to distinguish terminal request handoff from startup.",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "f83340d53963e2583f0bd9724751a6e0753e139c0df1014aeb3833f86b5f51e2",
+  "decision": "narrow",
+  "decision_reason": "Reject global granted-read BBUSY sample:96 repairs but16 previously matching case regressions and80 field regressions; original engine and read phase restored. Require smaller CPU request/BLTDONE reproducer before another timing patch.",
+  "evidence": [
+    "captures/handoff-cpu-20261020/bbusy-phase-screen/comparison.json",
+    "captures/handoff-cpu-20261020/bbusy-native/comparison.json"
+  ],
+  "confirmed_facts": [
+    "Granted-read BBUSY repairs96 kind75 cases but regresses16 previously matching cases and80 fields; kind71 adds16 field regressions. Legacy Copper-busy also regresses11 cases. Reverted prototype; accepted emulator remains4f625516."
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "One global granted-transfer BBUSY sample fixes the handoff",
+      "evidence": "captures/handoff-cpu-20261020/bbusy-phase-screen/comparison.json"
+    }
+  ],
+  "source_files": [
+    "../Copperline/src/bus.rs",
+    "../Copperline/src/bus/dma_slots.rs"
+  ],
+  "history": [
+    "docs/handoff-startup-investigation-2026-10-20.md"
+  ]
+}

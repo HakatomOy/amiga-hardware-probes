@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-access-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\access-baseline-v1\\hardware-1",
+  "test_rom_sha256": "f5d1ba31139af195bb63457999ac8ed0b665f195f28b24a378f0a83fbba8e11d",
+  "source_id": "f2e319c108e5e95e526ab2fe3b5708201192e2aa383e37b2b3058f9058edf801",
+  "results_sha256": "05934cfebd465c38857e89062dd3c4aab0fb72115d1bd719f2dc70ec283c3487",
+  "record_count": 1536,
+  "metadata": {
+    "version": 1,
+    "source_id": "f2e319c108e5e95e526ab2fe3b5708201192e2aa383e37b2b3058f9058edf801",
+    "record_count": 1536,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "05934cfebd465c38857e89062dd3c4aab0fb72115d1bd719f2dc70ec283c3487"
+  },
+  "restoration": {
+    "backup_sha256": "4763f895e8f41d9a24bb1420b730394989cb83502634b681e2e81ce55e5efd8b",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "4763f895e8f41d9a24bb1420b730394989cb83502634b681e2e81ce55e5efd8b",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 74,
+    "aligned": false,
+    "targets": [
+      "3 DMACONR",
+      "6 chip destination",
+      "9 slow C70000",
+      "12 ROM F80000"
+    ],
+    "sources": [
+      "CPU AD one-word start / inert-write control"
+    ],
+    "masks": null,
+    "phases": "phase0/1 and launch padding0/2; post-start ROM NOPs0..5 in variant bits7:5",
+    "event_offset": "None: original measured beams retained",
+    "watchdog": "No outcome-dependent polling",
+    "units": "packed beam,word and register bits; no alignment",
+    "launch": "pre-start beam; identical MOVE.W (A1),D0 opcode for all first-read sources",
+    "masked_fields": null,
+    "limitations": "Bus/visibility witness,not electrical pin timing. Slow RAM must be present; C70000 is outside copied kernels. No hardware-derived event time is inferred from emulator START.",
+    "measurement_fields": "kind71 except end_beam is first-read word; launch_ref/end_ref/icr are post-first-read/post-status/post-request beams; aux is second DMACONR"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 768,
+    "independently_repeated_cohorts": 768,
+    "candidate_cases_with_independent_repeats": 1536,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow;silicon revisions unconfirmed. Software transfer/data witnesses,not electrical edges. Exact launch qualification,no alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\access-baseline-v1\\reference-1"
+}

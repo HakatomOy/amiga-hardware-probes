@@ -1,0 +1,14 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\start2-screen",
+  "hypothesis": "CPU BLTSIZE data has completed the busy latch but still needs two CCK before the blitter engine/zero-reset pipeline starts.",
+  "test": "Screen a two-CCK CPU engine-only start delay against all1536 status-first saved hardware cases,then onset,completion and neighboring bus/IRQ controls. Keep busy immediately asserted and do not move CPU read sampling.",
+  "smaller_reproducer": null,
+  "next_question": "Does the remaining CPU start-pipeline stage explain both the early and late fixed-delay observations?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "5e3b9feafe2e96d6f197b78eb1b56d27e81ad30a64873c9070f57f53d77d8d3e",
+  "decision": "narrow",
+  "decision_reason": "Reject unconditional CPU engine delay:all200 old timing cases repair,but168 previously matching no-DMA cases regress. Test startup slot eligibility under fixed DMA instead of adding elapsed delay.",
+  "evidence": [
+    "captures/handoff-cpu-20261020/start2-screen/comparison.json"
+  ]
+}

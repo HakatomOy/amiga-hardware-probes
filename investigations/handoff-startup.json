@@ -1,0 +1,42 @@
+{
+  "experiment": "handoff-startup",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\startup-baseline-v1",
+  "identity": {
+    "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "d77a6d9fcf2571c3915f850af0bd4310260d2fe7de5be5ea82e947d6e224adc9",
+    "source_id": "9955050dc0ee327d30856e93d8429bbf841d9cc43a485064566f1da428cbe27f"
+  },
+  "hypothesis": "Normal-blit startup INIT needs an eligible cycle,including when no source channel is enabled.",
+  "competitor": "The four-plane AD result is specific to a source mask or CPU grant interaction rather than generic startup.",
+  "test": "Cross D-only,AD,ABCD one-word starts with no/four/six-plane DMA,normal/hog,no-start and neighboring fixed-delay observations.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "consistent fixed-DMA-only pattern across masks": "Supports generic eligible startup rather than an AD-specific delay.",
+    "different D-only or ABCD direction": "Reject or revise generic startup before acceptance.",
+    "no-start or timing cohorts disagree": "Keep independent arbitration/qualification differences visible."
+  },
+  "next_question": "Separate the granted CPU data sample from blitter completion timing using fixed six-plane witnesses.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\startup-baseline-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\startup-baseline-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "4c688c97522bfc9e52ed6976aa49430672e97f7ca2a19d375dafcb6108e1bac0",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "Two byte-identical A500 captures. Baseline352/1152 differ; global INIT eligibility leaves192 six-plane differences and worsens456 previously matching fields."
+  ],
+  "history": [
+    "docs/handoff-startup-investigation-2026-10-20.md"
+  ],
+  "reference_capture_ids": [
+    "references/handoff-startup-v1"
+  ],
+  "source_files": [
+    "../Copperline/src/bus/dma_slots.rs",
+    "../Copperline/src/bus.rs",
+    "../Copperline/src/chipset/blitter.rs"
+  ]
+}

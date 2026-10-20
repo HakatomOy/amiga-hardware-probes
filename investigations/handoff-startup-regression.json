@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-startup",
+  "hypothesis": "Normal-blit startup INIT needs an eligible cycle,including when no source channel is enabled.",
+  "test": "Cross D-only,AD,ABCD one-word starts with no/four/six-plane DMA,normal/hog,no-start and neighboring fixed-delay observations.",
+  "smaller_reproducer": null,
+  "next_question": "Does the startup rule hold across source masks and a different fixed-DMA slot pattern?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "98433acea45c054995b4d9454629de5f578b4d2e3447c7b6f8d50631280fa162",
+  "decision": "validation failed"
+}

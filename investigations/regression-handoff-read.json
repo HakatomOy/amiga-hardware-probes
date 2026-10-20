@@ -1,8 +1,8 @@
 {
   "experiment": "regression-handoff-read",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\accuracy-round-20261020\\pointer-candidate-v2\\handoff-read",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-regression-handoff-read",
   "identity": {
-    "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
+    "binary_sha256": "11b65868ac7f86dcde000b12d878fc2260c94e9c843dcdc74bf25982a900ab6e",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "91e8277c53239b516b925de75f49120d1cf9b962bca218f305312f76a16159c7",
     "source_id": "1eb2d6a2cc5748ab9e6f057453ef40883b90b191f216570b4eede7bcd99056da"
@@ -19,8 +19,8 @@
   "references": [
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-read-v1-run1"
   ],
-  "evidence_fingerprint": "4a6c9270fdb88878d0040f100126b92d8b1d530552d85d5576567bdefd9419fd",
-  "no_new_evidence": 3,
+  "evidence_fingerprint": "dd26b3e270b3c8d6485a0d554eedd5b96386097d7faff865056ee2b746be6712",
+  "no_new_evidence": 0,
   "validation": [
     {
       "name": "preflight",

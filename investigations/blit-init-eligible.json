@@ -1,0 +1,52 @@
+{
+  "experiment": "blit-init-eligible",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-eligible-screen",
+  "identity": {
+    "binary_sha256": "11b65868ac7f86dcde000b12d878fc2260c94e9c843dcdc74bf25982a900ab6e",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "50a54642b7a32579e55895460fd8cc0e557022848a1304e1f76a9cc73e2ab22f",
+    "source_id": "3f8596f74d419cb1185867d62154bf020c7d39b7071c25fccd3080bcb17b3fef"
+  },
+  "hypothesis": "The normal-blit INIT setup cycle consumes an eligible bus slot; advancing it under fixed bitplane DMA starts channel accesses early.",
+  "competitor": "INIT is fully internal; the CPU request/grant phase rather than startup eligibility causes the handoff offsets.",
+  "test": "Make only normal-blit INIT bus-free/eligible-consuming,keep strobe,read sampling,E and D rules unchanged;replay all1536 cases and separately require preserved onset/completion/Copper/no-DMA controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "repairs without changed no-DMA or source-status controls": "Supports remaining CPU start-pipeline stage; require independent observer validation.",
+    "new no-DMA/onset/BZERO or data regressions": "Reject global CPU start delay; isolate arbitration instead."
+  },
+  "next_question": "Separate the granted CPU data sample from blitter completion timing using fixed six-plane witnesses.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run2"
+  ],
+  "evidence_fingerprint": "a7cfa8b21a8e286e9797177096920a0f8c54cc1c0403a57ae7cf0cb157dbca84",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "narrow",
+  "decision_reason": "Reject global INIT eligibility: four-plane repairs do not generalize to six-plane DMA; no plane-count workaround. Preserve candidate only as counterfactual evidence.",
+  "evidence": [
+    "captures/handoff-cpu-20261020/init-startup/comparison.json",
+    "captures/handoff-cpu-20261020/init-regression-handoff-neighbor/comparison.json"
+  ],
+  "confirmed_facts": [
+    "Global INIT eligibility rejected:456 field regressions/160 kind75 cases;72/44 older neighbors. No plane-count special case."
+  ],
+  "history": [
+    "docs/handoff-startup-investigation-2026-10-20.md"
+  ],
+  "reference_capture_ids": [
+    "references/handoff-startup-v1",
+    "references/handoff-access-v1"
+  ],
+  "source_files": [
+    "../Copperline/src/bus/dma_slots.rs",
+    "../Copperline/src/bus.rs",
+    "../Copperline/src/chipset/blitter.rs"
+  ]
+}

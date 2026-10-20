@@ -320,3 +320,20 @@ window, with total/listed counts and a fixed output bound. Always inspect that
 list before editing: the first assertion alone may hide another fixture with
 the same invalid assumption and cause an unnecessary rebuild. Retrieve further
 assertion details selectively from the compact Cargo wrapper log.
+
+For CPU/blitter traces, filter custom addresses to the actual witnesses, e.g.
+`--addresses 0xdff002,0xdff058`. Tracing every beam synchronization poll can
+dominate the file and capture time. Preserve failed traces, but use a trace for
+inference only after its result packet is byte-identical to the qualified
+untraced replay. Bind START events to descriptors and retain the preceding
+BLTSIZE grant separately; never assign the next case's launch to the previous
+case. `tools/summarize_handoff_trace.py` writes this index and returns bounded
+case detail with explicit PAL beam units and no event alignment.
+
+Gate a startup/arbitration candidate first on independent source masks and
+fixed-DMA patterns, including six-plane neighbors. A candidate can repair every
+four-plane handoff case and preserve legacy/core tests while worsening fields
+in already-mismatching six-plane cases. Require zero new field regressions,
+not merely a lower mismatch total. Finish these inexpensive held-out comparisons
+before starting a broad test rebuild; preserve rejected binaries and summaries
+for reuse rather than recompiling them to rediscover the same counterexamples.

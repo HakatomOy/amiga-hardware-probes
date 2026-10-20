@@ -1,8 +1,8 @@
 {
   "experiment": "cia-request-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cia-source-20261019\\pb6-acceptance-v2\\request-neighbor",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-cia-request-regression",
   "identity": {
-    "binary_sha256": "74aca2d0a931510b98a41a2df2baaed28e716c972bd3b4828f330e2397af55fa",
+    "binary_sha256": "11b65868ac7f86dcde000b12d878fc2260c94e9c843dcdc74bf25982a900ab6e",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "72db9cd7b2786195a73ac9156ba1b6cf3b8e5ac8fa9c7e20c328442d873cec73",
     "source_id": "bec7f9affdf634227ac62a264fe841e48f19136b24a1ac912d8d5e1f930591aa"
@@ -16,14 +16,19 @@
     "counts/output and request differ together": "Inspect timer pipeline or CIA access phase before changing IRQ forwarding.",
     "read/phase brackets differ": "Exclude timing inference; narrow calibration or measurement before patching."
   },
-  "next_question": "Which sub-E boundary distinguishes6/7CCK source forwarding from input sampling, with prelatched and mask-enable controls?",
+  "next_question": "Across timer periods and sample offsets, which request transitions are early without changing timer state?",
   "references": [
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-request-v2\\run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-request-v2\\run2"
   ],
   "evidence_fingerprint": "74938f9a18fa96a47f20c1ae6a47d7488d92a05974944b4a6b94161dfad33f31",
-  "no_new_evidence": 1,
-  "validation": [],
+  "no_new_evidence": 2,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
   "decision": "review evidence",
   "decision_reason": "Whole-E delay screening leaves26/1200 counterexamples; timer counters match. Preserve separate pin/input-sampling explanations and require sub-E recognition evidence before an IRQ patch.",
   "evidence": [
