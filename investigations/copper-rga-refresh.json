@@ -1,0 +1,37 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\rga-refresh-acceptance",
+  "hypothesis": "A CPU chip/RGA cycle must wait when its tail overlaps an upcoming Copper fetch on line-end refresh,including custom-register cycles.",
+  "test": "Repair Copper_order in direct kind81;then kinds78/79/80/77 plus frozen accepted neighbors;zero new fields/qualification errors.",
+  "smaller_reproducer": null,
+  "next_question": "Do IR1 opcode-overwrite races show the same data-phase discrepancy as IR2?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "e44907c95e72162689e7b86c0edea5a1ba80563514d562da4ea1b802ebd20671",
+  "decision": "narrow",
+  "decision_reason": "Upcoming Copper/RGA guard repairs all direct beam fields but introduces16 ordering-field regressions;not acceptable. Separate CPU write visibility and Copper data latch phase;opcode/IR2 paired hardware controls next.",
+  "evidence": [
+    "captures/copper-race-20261020/rga-refresh-acceptance/comparison.json",
+    "captures/copper-race-20261020/rga-order-trace/write-phase-screen.json"
+  ],
+  "confirmed_facts": [
+    "Direct kind81:all512 beam fields match with upcoming-Copper refresh guard;496 cases match,16 data-order regressions;no missing/excluded/unstable cases.",
+    "Original16 old/new order errors repair,but16 previously matching cases flip to old when HW sees new;cannot accept aggregate repair.",
+    "Kind78 counterfactual:464 case repairs,16 new fields in8cases;no-start beam differences384->0;active beam differences288 andsource-order differences16 remain.",
+    "Verified diagnostic trace is byte-identical. For16 direct data mismatches,Copper read is1CCK after CPUgrant in8 and1CCK before in8 (model clocks only).",
+    "Fixed-grant write-phase screen:earlier CPU visibilityrepairs8/16,leaves8;onaccepted2b baselineitintroduces8new errors,soCPU-tail-only change is insufficient.",
+    "Raw first INTREQ fields withall read brackets matching:2cases showearly SOFT despitecorrect final data;supportsretainingCopper source data phase explanation."
+  ],
+  "source_files": [
+    "../Copperline/src/bus.rs",
+    "../Copperline/src/bus/dma_slots.rs",
+    "tools/summarize_copper_cpu_order.py"
+  ],
+  "references": [
+    "references/copper-cpu-order-v1/run1",
+    "references/copper-cpu-order-v1/run2",
+    "references/handoff-copper-race-v2/run1",
+    "references/handoff-copper-race-v2/run2"
+  ],
+  "history": [
+    "docs/copper-pressure-investigation-2026-10-20.md"
+  ]
+}

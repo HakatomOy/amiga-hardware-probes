@@ -1,0 +1,45 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cia-aperture-20261020\\hardware-v2",
+  "hypothesis": "Five repeats per condition cover E-clock calibration cohorts that the two-repeat v1 missed; only matched timer/read brackets can constrain request propagation.",
+  "test": "Five-repeat NOP/EXG post-PB aperture sweep, retaining every independent calibration, launch and read bracket exactly; hardware twice, no trace shifts.",
+  "smaller_reproducer": null,
+  "next_question": "Can an enabled CIA request survive ICR clear and Paula ack? Preserve STOP/running timing before accepting any source-stage correction.",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "1d36821a74d3dbb5ad4ad8b6965d3021c2f8eedf85371162f80598f4a74dc4a8",
+  "decision": "measure",
+  "experiment": "cia-request-aperture",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "8bd9950a8db196bf191725f96d68465bc8b17dc7b7575b9a901f84fef165c01c",
+    "source_id": "81db15ae5fc0f71f83e694ea1567dfac9ad46ecad58e6a601c818c93eb7056a3"
+  },
+  "competitor": "Timer state/CPU access phase,or read sampling,accounts for the apparent propagation delay.",
+  "outcomes": {
+    "request boundary changes withotherwise matched timer/calibration controls": "Use actual emulator grant clocks to constrain source/read sampling;do not retime counter or global IRQ constant.",
+    "timer orphase controls differ": "Reject propagation inference andnarrow calibration.",
+    "6/7remain indistinguishable": "Record remaining identifiability constraint;do not fitanotherdelay."
+  },
+  "references": [
+    "references/cia-request-aperture-v2/run1",
+    "references/cia-request-aperture-v2/run2"
+  ],
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "confirmed_facts": [
+    "Five repeats per condition yield1280 qualified cases,880matches400request differences; timer/PB6 match; zero excluded/unstable/invalid/missing; two physical restores verified.",
+    "Byte-identical actual-clock screen:6CCK0/6080 differences,5vs6common5760 gives160vs0,6vs7common3360 gives0vs160; repeated-reference field counts, not unique cases.",
+    "Two-repeat v1 had zero exact candidate/hardware cohorts and cannot support a propagation inference."
+  ],
+  "history": [
+    "docs/cia-request-aperture-2026-10-20.md"
+  ],
+  "decision_reason": "Six-CCK effective request delay is distinguished from five/seven on common support; physical stage still ambiguous. Use asserted ICR clear/ack controls, retaining CPU recognition suites.",
+  "evidence": [
+    "captures/cia-aperture-20261020/clock-screen-v2.json"
+  ]
+}

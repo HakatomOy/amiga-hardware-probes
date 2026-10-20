@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "id": "cia-request-clear",
+  "hypothesis": "A CIA request has a six-CCK effective forwarding stage; clearing the source before Paula acknowledgment can distinguish in-flight propagation from persistent assertion.",
+  "competitor": "Early INTREQ reflects a separate sampling or CPU phase; clearing ICR and acknowledging Paula cancels every stale request.",
+  "test": "Compare nondestructive PB and destructive ICR reads followed by identical Paula PORTS/EXTER ack, NOP/EXG aperture and four request reads; five repeats, all calibration brackets exact. Latches24..39 must cover enabled pending ICR and clear ICR in preflight before hardware.",
+  "outcomes": {
+    "ICR clear still permits delayed reassertion": "Constrain transport/in-flight stage and retain clear ordering for a causal forwarding model.",
+    "ICR clear cancels while PB control reasserts": "Constrain level/cancellation semantics; do not implement an uncancellable delay queue.",
+    "timer/calibration controls fail": "Reject interpretation; preserve source timing."
+  },
+  "next_question": "Can an already enabled CIA request survive source clear and Paula ack?",
+  "investigation": "investigations/cia-request-clear.json",
+  "binary": "captures/handoff-race-20261020/copper-start-acceptance/emulator.exe",
+  "romdir": "build/cia-request-clear-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 400,
+    "expected_cases": 640,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Sample both sides of CIA request transition",
+        "require_values": [
+          0,
+          8,
+          8192
+        ]
+      },
+      {
+        "field": "icr",
+        "mask": 129,
+        "where": {
+          "phase": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "unit": "ICR enabled pending flag",
+        "meaning": "Destructive read must encounter both enabled assertion and no flag; without it cancellation is untested",
+        "require_values": [
+          0,
+          129
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "cal_pre",
+        "field": "end_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read prebeam"
+      },
+      {
+        "name": "cal_post",
+        "field": "second_counter_or_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read postbeam"
+      },
+      {
+        "name": "launch_pre",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Before STARTLOAD"
+      },
+      {
+        "name": "launch_post",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "After STARTLOAD"
+      },
+      {
+        "name": "sample_pre",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before observation reads"
+      },
+      {
+        "name": "sample_post",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After observation reads"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "TA_before",
+        "field": "counter",
+        "unit": "E-clock ticks",
+        "meaning": "Timer counter before request sample"
+      },
+      {
+        "name": "CIA_snapshot",
+        "field": "icr",
+        "unit": "CIA register byte",
+        "meaning": "PB nondestructive control or ICR clear/read selected by phase bit3",
+        "mask": 255
+      },
+      {
+        "name": "Paula_request",
+        "field": "irq_beam",
+        "unit": "INTREQ bits",
+        "meaning": "PORTS/EXTER request",
+        "mask": 8200
+      },
+      {
+        "name": "request1",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Successive request sample; nominal +8/+16/+24 CCK from first read"
+      },
+      {
+        "name": "request2",
+        "field": "saved_pc_offset",
+        "shift": 0,
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Successive request sample; nominal +8/+16/+24 CCK from first read"
+      },
+      {
+        "name": "request3",
+        "field": "second_icr_or_level",
+        "shift": 0,
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Successive request sample; nominal +8/+16/+24 CCK from first read"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 300,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": []
+}

@@ -1,0 +1,36 @@
+{
+  "experiment": "copper-cpu-order",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\order-hardware-v1",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "5bee2901d3bcee79e34d8e51f3f2b99d6542d6d49c961bc0c015f1f5c1f3822b",
+    "source_id": "c6ae2bae618a402f7877ecf379a77d9d1b753aeef3f020d3de3e01253e555955"
+  },
+  "hypothesis": "CPU/Copper transfer ordering itself differs,independently of blitter startup.",
+  "competitor": "Blitter startup explains data races;the no-start beam error does not change CPU/Copper instruction-fetch order.",
+  "test": "CPU overwrites selected Copper INTREQ data8002->8004;selected MOVE0/4/8/12,NOP0..7;six-plane with/without Copper;BLTSIZE always inert;settled COPER completion and CPU stored-word controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "old/new flags differ": "Investigate CPU/Copper grant or prefetch timing,not blitter-only delay.",
+    "flags match while beam differs": "Keep CPU timestamp/readback phase distinct from relative transfer order.",
+    "both flags set or activity/write control fails": "Reject capture."
+  },
+  "next_question": "Does applying Copper-to-refresh turnaround to CPU DRAM writes repair the direct ordering and no-start beam errors?",
+  "references": [
+    "references/copper-cpu-order-v1/run1",
+    "references/copper-cpu-order-v1/run2"
+  ],
+  "evidence_fingerprint": "d447eb8c7dfca76e7bc3aaf364aaa3745f1a7ca29208b77d6f7ef46a2a0be25b",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "Two physical packets byte-identical;512 qualified;zero missing/excluded/unstable/invalid;restores verified.",
+    "All256 no-Copper rows match;all256 Copper rows differ in beam observations.",
+    "16 direct CPU/Copper data-order errors without blitter:MOVE8,NOP3..6;HWold DSKBLK versus modelnew SOFT. Other selected instruction positions match."
+  ],
+  "history": [
+    "docs/copper-pressure-investigation-2026-10-20.md"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "experiment": "native-blit-regression-turnaround",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\write-turnaround-acceptance\\native-blit-regression",
+  "identity": {
+    "binary_sha256": "e8fc5c438907314ace757f735221a4d7209023397b8b07354886b7ec3a8a52fc",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "50a54642b7a32579e55895460fd8cc0e557022848a1304e1f76a9cc73e2ab22f",
+    "source_id": "3f8596f74d419cb1185867d62154bf020c7d39b7071c25fccd3080bcb17b3fef"
+  },
+  "hypothesis": "The early handoff window is caused by terminal memory-port grant timing rather than a universally early BBUSY event.",
+  "competitor": "BBUSY or its custom-register sampling becomes visible early independently of CPU grants.",
+  "test": "Status-first fixed-delay observations with post-read beams,one/two/sixteen-word blits,normal/nasty,no-DMA/four-plane and no-start controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "status differences with equal beams": "Constrain status/read sampling separately from CPU grant.",
+    "beam differences without status differences": "Constrain scheduling; do not add a global flag delay.",
+    "width-dependent pattern": "Use neighboring widths to distinguish body-cycle versus terminal release rules."
+  },
+  "next_question": "What is the first qualified status or grant divergence before the original beam observer?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run2"
+  ],
+  "evidence_fingerprint": "0dd2e644bf9b2539ee35873748d0c42dcbee1d297a680104463195c3db19e31c",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

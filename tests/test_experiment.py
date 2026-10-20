@@ -40,6 +40,38 @@ def packet(counter=10, complete=1, status=0, kind=0):
 
 
 class ExperimentTests(unittest.TestCase):
+    def test_counterfactual_must_repair_its_declared_field_before_validation(self):
+        self.spec['comparison']['required_field_repairs'] = {'counter': 1}
+        calls = []
+        with patch.object(e, 'command_run', self.fake_command(calls, counter=11)):
+            result = self.execute('no-effect')
+        self.assertEqual(result['status'], 'failed')
+        self.assertIn('repair target not met', result['error'])
+        self.assertEqual([c['name'] for c in calls], ['preflight'])
+        with self.assertRaisesRegex(ValueError, 'repair target not met'):
+            e.resume('no-effect')
+        with patch.object(e, 'command_run', self.fake_command([])):
+            result = self.execute('repaired')
+        self.assertEqual(result['status'], 'review')
+        for required in ({'unknown':1}, {'counter':0}, {'counter':True}):
+            self.spec['comparison']['required_field_repairs'] = required
+            with self.assertRaisesRegex(ValueError, 'required_field_repairs'):
+                e.validate_spec(self.spec)
+
+    def test_paired_aggregate_reports_hardware_candidate_pairs_without_alignment(self):
+        out = self.root/'paired'
+        e.write(out/'experiment.json', {'comparison': policy()})
+        e.write(out/'cases.json', {'case': dict(candidate=row() | {'counter':12},
+            status='mismatches', expected=[10], actual=[12])})
+        result = e.aggregate(out,'mismatches',['target'],['counter'],paired=True)
+        observed = result['groups'][0]['fields']['counter']
+        self.assertEqual(observed['expected_actual_pairs'], [((10,12),1)])
+        self.assertEqual(observed['different_cases'], 1)
+        with self.assertRaises(ValueError):
+            e.aggregate(out,'excluded',['target'],['counter'],paired=True)
+        with self.assertRaises(ValueError):
+            e.aggregate(out,'mismatches',['target'],['launch_beam'],paired=True)
+
     def test_retry_keeps_failed_child_and_redirects_its_consumers(self):
         child=self.root/'run/child';child.mkdir(parents=True)
         (child/'evidence.txt').write_text('keep')

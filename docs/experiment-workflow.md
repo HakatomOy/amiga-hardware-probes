@@ -38,6 +38,10 @@ decision. Retrieve a representative trace only to answer a specific uncertainty;
 expand the budget only when the current examples cannot distinguish explanations.
 Keep the existing focused → neighbor → broad gates and stop at the first failure.
 Never replace field-level regression checks with a better aggregate match count.
+For a counterfactual that must change a specific observation, declare e.g.
+`"required_field_repairs": {"Copper_order": 1}` under `comparison` with a frozen
+baseline. A no-effect result then stops before validation; `resume` cannot bypass
+the requirement. Use this for a stated repair hypothesis, not preservation suites.
 
 File caches, retention and existing result locations are documented in
 [result storage](result-storage.md). A report cache hit saves analysis work; it
@@ -145,6 +149,9 @@ mask/shift and unit. The report returns counts, bounded value distributions and
 representative IDs. It does not infer cycle differences from packed beam words.
 This avoids writing a new one-off parser or printing repeated full records when
 testing whether differences share an operand, phase or source condition.
+Add `--paired` for stable measured fields to return bounded hardware/candidate
+value pairs and differing-case counts per group. This does not subtract packed
+beam values or align events; excluded and unstable observations cannot be paired.
 
 For unchanged neighboring suites, use a strict packet gate after replay:
 
@@ -402,3 +409,31 @@ unchanged hardware experiments after each candidate.
 When turning a ROM witness into a Rust test, copy its explicit register
 preconditions, including both A word masks, rather than relying on constructor
 defaults. Check the fixture setup against the ROM before a slow core-test build.
+
+For Copper-pressure probes, preparing a list does not establish activity: enable
+COPEN explicitly, require a finite-stream completion witness in every hardware
+row, and verify emulator overlap in a byte-identical diagnostic replay. Compare
+no-start controls before changing blitter delays. A memory-to-memory beam witness
+also writes RAM after sampling the clock; its recorded beam does not qualify that
+later transfer. Use a paired register-held witness when this common prefix may
+explain the mismatch. Opposite old/new race errors under different priorities
+are not evidence for one uniform completion delay.
+
+
+## Calibration coverage before interpreting a delay
+
+Use five independent phase repeats when a CIA sweep must cover the five-CCK
+E-clock cycle. Two repeatable physical packets can still have no calibration
+cohorts in common with the emulator. Keep exact qualification; never shift beams
+to repair coverage. `python tools/qualification_audit.py captures/RUN --out
+captures/RUN/qualification-audit.json` reports bounded per-descriptor raw field
+pairs and phase-support counts; full pairs stay in the file. These support counts
+do not establish overlapping cohorts or qualify an excluded measurement.
+
+Preflight must cover the state that makes the hypothesis discriminating. For a
+clear/cancellation experiment, require both asserted and clear ICR states in the
+destructive-read bank; request transitions elsewhere are insufficient. A sweep
+that only clears an already-clear flag cannot distinguish cancellation models.
+Source-delay screens must reject zero qualified support, report pairwise common
+support, and remain separate from full fix validation. Their counts include each
+physical reference packet and are not automatically unique-case counts.

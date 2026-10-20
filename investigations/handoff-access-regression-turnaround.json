@@ -1,0 +1,33 @@
+{
+  "experiment": "handoff-access-regression-turnaround",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\write-turnaround-acceptance\\handoff-access-regression",
+  "identity": {
+    "binary_sha256": "e8fc5c438907314ace757f735221a4d7209023397b8b07354886b7ec3a8a52fc",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "f5d1ba31139af195bb63457999ac8ed0b665f195f28b24a378f0a83fbba8e11d",
+    "source_id": "f2e319c108e5e95e526ab2fe3b5708201192e2aa383e37b2b3058f9058edf801"
+  },
+  "hypothesis": "Shared-memory grant timing,not the status register value itself,causes the sign-changing handoff offsets.",
+  "competitor": "A CPU start pipeline or custom-register-only read phase explains the mismatch independently of shared-memory reads.",
+  "test": "Use identical MOVE.W (A1),D0 first observations from DMACONR,chip D,slow RAM and immutable ROM,with one-word AD blits,no-start,normal/hog,no-DMA/four-plane,NOP and launch-phase controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "chip and slow differ while ROM/no-start controls match": "Supports shared-memory arbitration;inspect first denied/granted slot without retiming the timer or global read tap.",
+    "all access classes differ only after real start": "Supports launch/sequencer phase;use data/status boundaries and onset neighbors.",
+    "custom alone differs": "Inspect custom-register access timing separately from memory-port release."
+  },
+  "next_question": "Which access classes expose the first divergent grant and does a CPU start-stage model preserve independent source controls?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-access-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-access-v1\\run2"
+  ],
+  "evidence_fingerprint": "53b0446abf124edec0ce0c3a450af5a36a280f9c9e271c70af398aa57838ae37",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

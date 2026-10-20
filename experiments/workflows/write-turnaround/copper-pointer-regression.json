@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "id": "copper-pointer-regression-turnaround",
+  "hypothesis": "Copper-driven Agnus write effects have a different late-fetch boundary from hardware, independently of CPU write timing.",
+  "competitor": "Recorded-render offsets are compensated elsewhere; live DMA/pixel outcomes already agree.",
+  "test": "Scan CPU/Copper BPLEN and BPL2PTL writes around a late fetch,using CLXDAT as a digital pixel witness,with planes-off,zero-data and always-on controls.",
+  "outcomes": {
+    "qualified collision transitions differ": "Check actual source landing before choosing DMA or render correction.",
+    "all collision controls and transitions match": "Do not change the render offset merely to remove an architectural TODO.",
+    "positive/negative controls fail": "Reject observer before hardware."
+  },
+  "next_question": "Does the documented render/live timing distinction produce a measurable late-fetch collision difference?",
+  "investigation": "investigations/copper-pointer-regression-turnaround.json",
+  "binary": "captures/cia-source-20261019/pb6-acceptance-v2/emulator.exe",
+  "romdir": "build/copper-dma-collision-v3",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "adc7db8a28fda1034d820e576c5f3c6ef4201ca237b8de66af0a2c5128e8394f",
+  "capture": {
+    "minimum_seconds": 300,
+    "expected_cases": 800,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Both matching and nonmatching pixel witnesses must occur",
+        "require_values": [
+          0,
+          1
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 1
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 2
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 3
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-dma-collision-v3/run1",
+    "references/copper-dma-collision-v3/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 362,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Identical setup launch beam"
+      },
+      {
+        "name": "read_before",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before CLXDAT read"
+      },
+      {
+        "name": "read_after",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After CLXDAT read"
+      },
+      {
+        "name": "write_before",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket;zero for Copper observer"
+      },
+      {
+        "name": "write_after",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket;zero for Copper observer"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "collision",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "PF1/PF2 match"
+      },
+      {
+        "name": "second_collision",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Immediate read-to-clear control"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures\\handoff-race-20261020\\copper-start-acceptance\\copper-pointer-regression\\candidate",
+  "purpose": "regression"
+}

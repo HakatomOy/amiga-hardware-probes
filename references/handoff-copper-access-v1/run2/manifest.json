@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-copper-access-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\access-hardware-v1\\hardware-2",
+  "test_rom_sha256": "68fab965ad2f72937d6381564237f98d27d0ac028ac2204024bc0620cd146450",
+  "source_id": "505b70bd9baafaca7b3e74aa14faeb9b27c585a3896c37a35ff4f507af586d54",
+  "results_sha256": "9802d519d52121d095de3c3fd4f08526911823340891032dc9bc327139e991a7",
+  "record_count": 1024,
+  "metadata": {
+    "version": 1,
+    "source_id": "505b70bd9baafaca7b3e74aa14faeb9b27c585a3896c37a35ff4f507af586d54",
+    "record_count": 1024,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "9802d519d52121d095de3c3fd4f08526911823340891032dc9bc327139e991a7"
+  },
+  "restoration": {
+    "backup_sha256": "31a2fb216d0d239a79864b8da3edd4795509c53f5feb0d1413336707a9638487",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "31a2fb216d0d239a79864b8da3edd4795509c53f5feb0d1413336707a9638487",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 79,
+    "aligned": false,
+    "targets": [
+      "3 custom",
+      "6 chip",
+      "9 slow",
+      "12 ROM"
+    ],
+    "sources": [
+      "CPU AD BLTSIZE or inert write"
+    ],
+    "masks": null,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": null,
+    "limitations": "Exact launch cohorts; software observation clocks, not pin timestamps; no alignment.",
+    "variants": "six planes vs six planes plus32-NOOP finite Copper; bit0 nasty; bit3 no-start; bits6:5 post-start NOP0..3",
+    "measurement_fields": "kind74; settled INTREQ COPER witnesses finite Copper completion"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 512,
+    "independently_repeated_cohorts": 512,
+    "candidate_cases_with_independent_repeats": 1024,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\access-hardware-v1\\reference-2"
+}

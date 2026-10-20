@@ -1,0 +1,33 @@
+{
+  "experiment": "handoff-request-regression-turnaround",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\write-turnaround-acceptance\\handoff-request-regression",
+  "identity": {
+    "binary_sha256": "e8fc5c438907314ace757f735221a4d7209023397b8b07354886b7ec3a8a52fc",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "862672cd471922140a969f3f16554accae26b5983b04e84efe89aaf10819ff1e",
+    "source_id": "9cc4c4674e33009a3c77aba7f2d29176f716a7cd1286f45c2528ce4249eccc56"
+  },
+  "hypothesis": "The CPU/blitter request handoff has a pipeline phase; removing USED removes a terminal-request contribution to the CPU read-slot mismatch.",
+  "competitor": "The source/startup engine sequence or fixed-DMA CPU grant model is misplaced independent of the terminal D request.",
+  "test": "One-word D-only,AD,A-only; identical first-read opcode for custom/chip; no/four/six-plane,normal/nasty,no-start,launch phase0/1,pad0/1,NOP0..3. Compare exact launches without alignment.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "only USED changes CPU read slot": "Investigate terminal D request/grant handoff.",
+    "A-only also changes CPU read slot": "Investigate source/start request phase rather than only terminal D.",
+    "no-start controls differ": "Isolate fixed-DMA CPU grants before blitter changes."
+  },
+  "next_question": "Does the CPU timing mismatch require the destination channel?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-request-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-request-v1\\run2"
+  ],
+  "evidence_fingerprint": "3ffaf5c6507b2a059fdddc47929a10c69d04a63cae2e2b2c222cb377b03e0a99",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

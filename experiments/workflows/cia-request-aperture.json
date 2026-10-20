@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "id": "cia-request-aperture",
+  "hypothesis": "Five repeats per condition cover E-clock calibration cohorts that the two-repeat v1 missed; only matched timer/read brackets can constrain request propagation.",
+  "competitor": "Timer state/CPU access phase,or read sampling,accounts for the apparent propagation delay.",
+  "test": "Five-repeat NOP/EXG post-PB aperture sweep, retaining every independent calibration, launch and read bracket exactly; hardware twice, no trace shifts.",
+  "outcomes": {
+    "request boundary changes withotherwise matched timer/calibration controls": "Use actual emulator grant clocks to constrain source/read sampling;do not retime counter or global IRQ constant.",
+    "timer orphase controls differ": "Reject propagation inference andnarrow calibration.",
+    "6/7remain indistinguishable": "Record remaining identifiability constraint;do not fitanotherdelay."
+  },
+  "next_question": "Does the odd aperture distinguish effective request visibility without changing timer state?",
+  "investigation": "investigations/cia-request-aperture.json",
+  "binary": "captures/handoff-race-20261020/copper-start-acceptance/emulator.exe",
+  "romdir": "build/cia-request-aperture-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 750,
+    "expected_cases": 1280,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Sample both sides of CIA request transition",
+        "require_values": [
+          0,
+          8,
+          8192
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "cal_pre",
+        "field": "end_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read prebeam"
+      },
+      {
+        "name": "cal_post",
+        "field": "second_counter_or_beam",
+        "unit": "packed beam",
+        "meaning": "Independent PRA read postbeam"
+      },
+      {
+        "name": "launch_pre",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Before STARTLOAD"
+      },
+      {
+        "name": "launch_post",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "After STARTLOAD"
+      },
+      {
+        "name": "sample_pre",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before observation reads"
+      },
+      {
+        "name": "sample_post",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After observation reads"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "TA_before",
+        "field": "counter",
+        "unit": "E-clock ticks",
+        "meaning": "Timer counter before request sample"
+      },
+      {
+        "name": "PB6",
+        "field": "icr",
+        "unit": "pin level bit",
+        "meaning": "Timer output sample",
+        "mask": 64
+      },
+      {
+        "name": "Paula_request",
+        "field": "irq_beam",
+        "unit": "INTREQ bits",
+        "meaning": "PORTS/EXTER request",
+        "mask": 8200
+      },
+      {
+        "name": "request1",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Successive request sample; nominal +8/+16/+24 CCK from first read"
+      },
+      {
+        "name": "request2",
+        "field": "saved_pc_offset",
+        "shift": 0,
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Successive request sample; nominal +8/+16/+24 CCK from first read"
+      },
+      {
+        "name": "request3",
+        "field": "second_icr_or_level",
+        "shift": 0,
+        "mask": 8200,
+        "unit": "INTREQ bits",
+        "meaning": "Successive request sample; nominal +8/+16/+24 CCK from first read"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 300,
+    "limitations": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed."
+  },
+  "build": [],
+  "validation": []
+}

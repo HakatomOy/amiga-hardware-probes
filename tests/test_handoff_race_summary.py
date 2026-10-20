@@ -10,6 +10,10 @@ class RaceSummaryTests(unittest.TestCase):
         result = summarize({'case': case}, fields)
         self.assertEqual(result['groups'][0]['dma_planes'], 6)
         self.assertTrue(result['groups'][0]['copper'])
+        case['case'] = [80,3,134,0,0,0]
+        result = summarize({'case': case}, fields)
+        self.assertTrue(result['groups'][0]['register_witness'])
+        self.assertEqual(result['groups'][0]['post_nops'], 0)
 
     def test_old_new_order_is_independent_of_status_or_beam_difference(self):
         fields = [dict(name='first_D', field='irq_beam', unit='word'),

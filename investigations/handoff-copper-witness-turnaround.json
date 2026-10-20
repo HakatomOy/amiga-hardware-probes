@@ -1,0 +1,33 @@
+{
+  "experiment": "handoff-copper-witness-turnaround",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\write-turnaround-acceptance\\handoff-copper-witness",
+  "identity": {
+    "binary_sha256": "e8fc5c438907314ace757f735221a4d7209023397b8b07354886b7ec3a8a52fc",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "033084852bbf7d0b72474d427cbc521941804797b399b2709c85e50a5d0156e9",
+    "source_id": "2cfae25c74e28d49de4a4e6571f576502dc80d6e35a625d8a24c4e736698c6e0"
+  },
+  "hypothesis": "The RAM-writeback half of the memory-to-memory launch witness changes CPU phase incorrectly under Copper.",
+  "competitor": "Copper/CPU grant behavior differs independently of the launch witness RAM writeback.",
+  "test": "Paired memory versus register-held launch witness;same NOP0..3/source race;D-only,preseed,no-start,neighbor controls;phase0/pad0 smaller reproducer.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "memory witness differs but register witness matches": "Narrow CPU memory-to-memory access/prefetch phase before tuning DMA.",
+    "both witness modes differ": "Retain general Copper/CPU grant or request setup explanation.",
+    "controls fail": "Reject capture."
+  },
+  "next_question": "Do no-start first-post-beam and source-order errors persist without RAM writeback between launch sample and BLTSIZE?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-copper-witness-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-copper-witness-v1\\run2"
+  ],
+  "evidence_fingerprint": "6e4f28f091ac4638b9be5c9249d08ef8b68f0df1176b696c8430c1795aff649b",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

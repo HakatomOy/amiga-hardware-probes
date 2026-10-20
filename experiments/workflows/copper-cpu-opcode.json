@@ -1,0 +1,253 @@
+{
+  "version": 1,
+  "id": "copper-cpu-opcode",
+  "hypothesis": "Copper has a shared request/data-latch phase for both instruction words,not just IR2.",
+  "competitor": "Only IR2 decode/data visibility or CPU write completion explains the ordering difference.",
+  "test": "Same CPU/Copper overwrite protocol,but replace IR1 NOP01fe with INTREQ009c while IR2 stays8004;selected instruction indices and NOP sweep;all no-blitter/activity controls.",
+  "outcomes": {
+    "both IR1 and IR2 require later DMA data sampling": "Supports shared Copper memory data phase;validate a causal pipeline model,not time alignment.",
+    "only IR2 differs": "Retain instruction decode/data-specific or CPU visibility explanations.",
+    "activity/control failure": "Reject capture."
+  },
+  "next_question": "Does the IR1 race show the same request/data visibility discrepancy as IR2?",
+  "investigation": "investigations/copper-cpu-opcode.json",
+  "binary": "captures/copper-race-20261020/rga-refresh-acceptance/emulator.exe",
+  "romdir": "build/copper-cpu-opcode-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "501ffbb39f9be5cc3c92dd4282eff8155e496c00cd60b101d8c8cc8bc9578d64",
+  "capture": {
+    "minimum_seconds": 140,
+    "expected_cases": 512,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "unit": "word",
+        "meaning": "CPU overwrote first instruction word009c",
+        "require_values": [
+          156
+        ],
+        "allowed_values": [
+          156
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "CPU overwrote first instruction word009c",
+        "require_values": [
+          156
+        ],
+        "allowed_values": [
+          156
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "unit": "word",
+        "meaning": "No active blitter in any case",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "INTREQ bits",
+        "meaning": "NOP or INTREQ opcode fetched;both outcomes covered",
+        "require_values": [
+          0,
+          4
+        ],
+        "allowed_values": [
+          0,
+          4
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "INTREQ bits",
+        "meaning": "Exactly old DSKBLK or new SOFT when Copper enabled;neither otherwise",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-cpu-opcode-v1/run1",
+    "references/copper-cpu-opcode-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Fixed5555 CPU overwrite value, not a register read"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "written_word",
+        "field": "aux",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Selected CPU-written source/neighbor word after settling"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite Copper activity witness"
+      },
+      {
+        "name": "Copper_order",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 4,
+        "unit": "INTREQ bits",
+        "meaning": "0=oldNOP;4=newINTREQ opcode fetched"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 360,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": []
+}

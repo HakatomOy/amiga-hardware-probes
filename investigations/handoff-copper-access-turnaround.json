@@ -1,0 +1,33 @@
+{
+  "experiment": "handoff-copper-access-turnaround",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\write-turnaround-acceptance\\handoff-copper-access",
+  "identity": {
+    "binary_sha256": "e8fc5c438907314ace757f735221a4d7209023397b8b07354886b7ec3a8a52fc",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "68fab965ad2f72937d6381564237f98d27d0ac028ac2204024bc0620cd146450",
+    "source_id": "505b70bd9baafaca7b3e74aa14faeb9b27c585a3896c37a35ff4f507af586d54"
+  },
+  "hypothesis": "Copper pressure changes CPU transfer/readback arbitration independently of a running blitter.",
+  "competitor": "Only blitter completion changes,not access-space scheduling.",
+  "test": "Identical MOVE.W(A1),D0 against custom/chip/slow/ROM;start/no-start;six planes with/without witnessed finite Copper;NOP0..3;normal/nasty.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "old/new destination boundary differs": "First A-fetch/CPU ordering is wrong; inspect request/grant sequencing before completion.",
+    "destination ordering matches but status or beams differ": "Keep completion/status or CPU observation in scope; do not move source fetch.",
+    "control destination or stored word wrong": "Reject capture before inference."
+  },
+  "next_question": "Does the timing error depend on the first CPU read space in no-start controls?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-copper-access-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-copper-access-v1\\run2"
+  ],
+  "evidence_fingerprint": "2aa617cec882d4f9d98a5f1fb22a08d87398ea9635a2b9d81149aed30a1e1dc6",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

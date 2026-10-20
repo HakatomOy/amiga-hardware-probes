@@ -35,3 +35,14 @@ class RequestClockTests(unittest.TestCase):
         self.assertEqual(result['results'][1]['different_fields'],0)
         self.assertGreater(result['common_fields'],0)
         self.assertGreater(result['results'][1]['unavailable_or_ambiguous'],0)
+
+    def test_aperture_kind_and_qualification_failure(self):
+        fields = [dict(name=n, field=n) for n in screen.NAMES]
+        policy = dict(measurements=fields, qualification=[dict(field='cal')])
+        row = dict(kind=84, target=4, variant=0, phase=0, delay=0, cal=1,
+                   **{n:0 for n in screen.NAMES})
+        self.assertEqual(screen.screen([row], [row], policy, [(2,10,19,27)], (0,))['common_fields'], 4)
+        with self.assertRaisesRegex(ValueError, 'no exact qualified'):
+            screen.screen([dict(row, cal=3)], [row], policy, [(2,10,19,27)], (0,))
+        with self.assertRaisesRegex(ValueError, 'uniform'):
+            screen.screen([dict(row, kind=68)], [row], policy, [(2,10,19,27)], (0,))

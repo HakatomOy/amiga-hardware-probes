@@ -1,0 +1,41 @@
+{
+  "experiment": "handoff-copper-witness",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\witness-hardware-v1",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "033084852bbf7d0b72474d427cbc521941804797b399b2709c85e50a5d0156e9",
+    "source_id": "2cfae25c74e28d49de4a4e6571f576502dc80d6e35a625d8a24c4e736698c6e0"
+  },
+  "hypothesis": "The RAM-writeback half of the memory-to-memory launch witness changes CPU phase incorrectly under Copper.",
+  "competitor": "Copper/CPU grant behavior differs independently of the launch witness RAM writeback.",
+  "test": "Paired memory versus register-held launch witness;same NOP0..3/source race;D-only,preseed,no-start,neighbor controls;phase0/pad0 smaller reproducer.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "memory witness differs but register witness matches": "Narrow CPU memory-to-memory access/prefetch phase before tuning DMA.",
+    "both witness modes differ": "Retain general Copper/CPU grant or request setup explanation.",
+    "controls fail": "Reject capture."
+  },
+  "next_question": "Does CPU-only startup stalling through Copper repair ordering without new field regressions?",
+  "references": [
+    "references/handoff-copper-witness-v1/run1",
+    "references/handoff-copper-witness-v1/run2"
+  ],
+  "evidence_fingerprint": "3d64588ab73a5d7b581970b387f54dd5144551ea17845f9ef9d31be961d59cc4",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "All768 cases qualified with independent repeats;decoded rows stable;zero exclusions/instability;restores verified.",
+    "492 match,276 differ;all384 no-Copper controls match.",
+    "Memory-witness Copper192/192 beam differences;register-witness Copper76/192 beam differences;20 source-order differences across both observers.",
+    "No-start register-witness Copper72/96 first-post-beams match;24 are6CCK late on hardware. Witness writeback changes but does not wholly explain the mismatch."
+  ],
+  "source_files": [
+    "build_handoff_copper_witness_rom.py",
+    "../Copperline/src/bus/dma_slots.rs"
+  ],
+  "history": [
+    "docs/copper-pressure-investigation-2026-10-20.md"
+  ]
+}

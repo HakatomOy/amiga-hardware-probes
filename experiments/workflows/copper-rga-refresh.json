@@ -1,0 +1,705 @@
+{
+  "version": 1,
+  "id": "copper-rga-refresh",
+  "hypothesis": "A CPU chip/RGA cycle must wait when its tail overlaps an upcoming Copper fetch on line-end refresh,including custom-register cycles.",
+  "competitor": "Other CPU/Copper phase effects explain the no-blitter data order;the pre-refresh cycle is valid.",
+  "test": "Repair Copper_order in direct kind81;then kinds78/79/80/77 plus frozen accepted neighbors;zero new fields/qualification errors.",
+  "outcomes": {
+    "repairs without field or qualification regressions": "Run focused,neighbor,broad gates before accepting.",
+    "any new field regression": "Reject or narrow."
+  },
+  "next_question": "Does upcoming Copper/refresh RGA contention explain the common bus-order family?",
+  "investigation": "investigations/copper-rga-refresh.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/copper-cpu-order-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "5bee2901d3bcee79e34d8e51f3f2b99d6542d6d49c961bc0c015f1f5c1f3822b",
+  "capture": {
+    "minimum_seconds": 140,
+    "expected_cases": 512,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "unit": "word",
+        "meaning": "CPU wrote8004 at selected Copper data word",
+        "require_values": [
+          32772
+        ],
+        "allowed_values": [
+          32772
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "CPU wrote8004 at selected Copper data word",
+        "require_values": [
+          32772
+        ],
+        "allowed_values": [
+          32772
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "unit": "word",
+        "meaning": "No active blitter in any case",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "INTREQ bits",
+        "meaning": "Exactly old DSKBLK or new SOFT when Copper enabled;neither otherwise",
+        "require_values": [
+          2,
+          4
+        ],
+        "allowed_values": [
+          2,
+          4
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "INTREQ bits",
+        "meaning": "Exactly old DSKBLK or new SOFT when Copper enabled;neither otherwise",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-cpu-order-v1/run1",
+    "references/copper-cpu-order-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Fixed5555 CPU overwrite value, not a register read"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "written_word",
+        "field": "aux",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Selected CPU-written source/neighbor word after settling"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite Copper activity witness"
+      },
+      {
+        "name": "Copper_order",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "unit": "INTREQ bits",
+        "meaning": "2=old Copper fetch;4=new Copper fetch;0=disabled"
+      }
+    ],
+    "required_field_repairs": {
+      "Copper_order": 1
+    }
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 360,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": [
+    {
+      "name": "handoff-copper-race",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\handoff-copper-race.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/handoff-copper-race",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-copper-access",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\handoff-copper-access.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/handoff-copper-access",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-copper-witness",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\handoff-copper-witness.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/handoff-copper-witness",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-race-regression",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\handoff-race-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/handoff-race-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-startup-regression",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\handoff-startup-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/handoff-startup-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-request-regression",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\handoff-request-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/handoff-request-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "native-blit-regression",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\native-blit-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/native-blit-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-access-regression",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\handoff-access-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/handoff-access-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "regression-bus-onset",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\regression-bus-onset.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/regression-bus-onset",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "regression-bus-completion",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\regression-bus-completion.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/regression-bus-completion",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "regression-bus-pressure",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\regression-bus-pressure.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/regression-bus-pressure",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "regression-handoff-focus",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\regression-handoff-focus.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/regression-handoff-focus",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "regression-handoff-read",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\regression-handoff-read.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/regression-handoff-read",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "regression-handoff-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\regression-handoff-neighbor.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/regression-handoff-neighbor",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cpu-operand-regression",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\cpu-operand-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/cpu-operand-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cpu-dma-regression",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\cpu-dma-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/cpu-dma-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "copper-pointer-regression",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\copper-pointer-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/copper-pointer-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cia-request-regression",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\cia-request-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/cia-request-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cia-pb-controls-regression",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments\\workflows\\write-turnaround\\cia-pb-controls-regression.json",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/cia-pb-controls-regression",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "legacy-replay",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/replay_accuracy.py",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/legacy",
+        "--suite",
+        "bzero-edges",
+        "--suite",
+        "copper-busy"
+      ]
+    },
+    {
+      "name": "legacy-packets",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "packets",
+        "--before",
+        "captures\\handoff-race-20261020\\copper-start-acceptance\\legacy",
+        "--after",
+        "{out}/legacy",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--suite",
+        "bzero-edges",
+        "--suite",
+        "copper-busy"
+      ]
+    },
+    {
+      "name": "core-tests",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-core-tests",
+        "--",
+        "test",
+        "--locked",
+        "--profile",
+        "ci",
+        "--lib",
+        "--",
+        "--skip",
+        "video::window::"
+      ]
+    },
+    {
+      "name": "strict-clippy",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-strict-clippy",
+        "--",
+        "clippy",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "name": "rust-format",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-rust-format",
+        "--",
+        "fmt",
+        "--",
+        "--check"
+      ]
+    },
+    {
+      "name": "probe-tests",
+      "tier": "broad",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ]
+    }
+  ],
+  "baseline": "captures/copper-race-20261020/order-hardware-v1/candidate"
+}

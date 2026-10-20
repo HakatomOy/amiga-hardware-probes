@@ -1,8 +1,8 @@
 {
   "experiment": "cpu-dma-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\cpu-dma-regression",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-sampling-20261020\\pointer-v1\\cpu-dma",
   "identity": {
-    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "binary_sha256": "143db3c695ab4af8f1adc72aef932d52241f1b240f1cb317ffd237aae11bca9d",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "cdb43469328394efaa9dac4efc6d6754db3c6f85f900609fde437582a1d7c7f1",
     "source_id": "26d663f7a794a338b14cb2689c386b1a904ef08347b219ca7251676f57f4dcea"
@@ -21,8 +21,13 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-dma-v2-run2"
   ],
   "evidence_fingerprint": "a4d536c77b49a05a00b235f9bcff77bf9d3a26d8ce20cfb9cc1d13410b935c27",
-  "no_new_evidence": 7,
-  "validation": [],
+  "no_new_evidence": 8,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
   "decision": "review evidence",
   "confirmed_facts": [
     "Accepted pointer candidate preserves1904/1920 matches; all16 differences remain end_ref (handler CIA ICR SP bit3), not handler beams, stacked PC or loop counts.",

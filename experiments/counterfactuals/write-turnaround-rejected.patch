@@ -1,0 +1,56 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index c0e9cfb4..4992f3fa 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -7234,7 +7234,10 @@ impl Bus {
+             }
+             let mut wait_cck = 0;
+             while !self.cpu_can_use_current_slot()
+-                || (matches!(kind, CpuBusAccessKind::Read | CpuBusAccessKind::Fetch)
++                || (matches!(
++                    kind,
++                    CpuBusAccessKind::Read | CpuBusAccessKind::Fetch | CpuBusAccessKind::Write
++                )
+                     && self.cpu_cycle_crosses_line_end_refresh())
+                 || (self.cpu_short_bus_cycle && self.emulated_cck < self.cpu_chip_port_free_at)
+             {
+diff --git a/src/bus/dma_slots.rs b/src/bus/dma_slots.rs
+index 12cfe99a..ad1bb9f5 100644
+--- a/src/bus/dma_slots.rs
++++ b/src/bus/dma_slots.rs
+@@ -812,9 +812,10 @@ impl Bus {
+     }
+ 
+     pub(super) fn cpu_cycle_crosses_line_end_refresh(&self) -> bool {
+-        // Kind65 and trace controls isolate DRAM read turnaround after a
+-        // Copper transfer immediately before refresh. Uncontended reads,
+-        // writes and register grants retain their existing phase.
++        // DRAM transfers need turnaround after a Copper transfer immediately
++        // before refresh. This includes writes: kind78/80/81 hardware races
++        // expose the launch witness's RAM writeback and CPU/Copper ordering.
++        // Uncontended transfers and custom-register grants keep their phase.
+         !self.cpu_short_bus_cycle
+             && !self.aga_enabled()
+             && self.last_chip_bus_owner == ChipBusOwner::Copper
+diff --git a/src/bus/tests.rs b/src/bus/tests.rs
+index 12384c5a..94796fb4 100644
+--- a/src/bus/tests.rs
++++ b/src/bus/tests.rs
+@@ -11846,11 +11846,12 @@ fn stock_cpu_cycle_waits_before_crossing_line_end_refresh() {
+         other.agnus.hpos = 0x0e1;
+         other.last_chip_bus_owner = ChipBusOwner::Copper;
+         other.grant_cpu_bus_access(2, kind);
+-        assert_eq!(
+-            other.take_slice_bus_advance().0,
+-            2,
+-            "writes/registers preserve their grant phase"
+-        );
++        let elapsed = other.take_slice_bus_advance().0;
++        if matches!(kind, CpuBusAccessKind::Write) {
++            assert!(elapsed > 2, "DRAM writes also wait through refresh turnaround");
++        } else {
++            assert_eq!(elapsed, 2, "custom registers preserve their grant phase");
++        }
+     }
+ }
+ 

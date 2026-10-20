@@ -1,8 +1,8 @@
 {
   "experiment": "copper-pointer-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\copper-pointer-regression",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-sampling-20261020\\pointer-v1\\copper-pointer-neighbor",
   "identity": {
-    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "binary_sha256": "143db3c695ab4af8f1adc72aef932d52241f1b240f1cb317ffd237aae11bca9d",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "adc7db8a28fda1034d820e576c5f3c6ef4201ca237b8de66af0a2c5128e8394f",
     "source_id": "834af823af2b3b253542af941006a52509b466095661e3d906788ebea38d5e7c"
@@ -21,8 +21,8 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run2"
   ],
-  "evidence_fingerprint": "d070b5cbc044b2fc56e76e73c81c69305257a29e77aa17065b5fb73f75f7a9fc",
-  "no_new_evidence": 4,
+  "evidence_fingerprint": "ed14d187ccf9fcc709781193502f27c673a7c67944baa76fffef8d29d7672ca4",
+  "no_new_evidence": 0,
   "validation": [],
   "decision": "review evidence"
 }

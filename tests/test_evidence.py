@@ -84,6 +84,11 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(result['unchanged_family_cases'], 8)
         self.assertEqual(result['changed_families'][0]['change'], 'resolved')
         self.assertEqual(result['changed_families'][0]['detail_run'], str(baseline.resolve()))
+        spec = copy.deepcopy(self.spec)
+        spec['comparison']['required_field_repairs'] = {'counter': 1}
+        self.save(self.run, self.report, spec)
+        updated = e.packet(self.run, self.cache, baseline)
+        self.assertEqual(updated['changed_families'][0]['id'], result['changed_families'][0]['id'])
 
     def test_case_delta_detects_value_removal_and_shift_despite_equal_family_counts(self):
         baseline = self.root/'before'

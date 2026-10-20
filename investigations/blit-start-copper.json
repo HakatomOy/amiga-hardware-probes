@@ -15,7 +15,7 @@
     "source ordering and status/beam repairs without regressions": "Supports generic eligible startup,require focused/neighbor/broad acceptance.",
     "new field/qualification or ordering regressions": "Reject or narrow;never gate on plane count."
   },
-  "next_question": "Isolate208 remaining CPU/Copper-pressure handoff differences with a source-write race and verified finite Copper activity.",
+  "next_question": "Copper-pressure extensions and direct CPU/Copper races now isolated;see investigations/copper-rga-refresh.json and docs/copper-pressure-investigation-2026-10-20.md. No later emulator candidate accepted yet.",
   "references": [
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run2"
@@ -150,6 +150,7 @@
     "3642 core tests pass;37 ignored,548 window tests filtered;strict Clippy/fmt and277 probe tests pass."
   ],
   "history": [
-    "docs/handoff-race-investigation-2026-10-20.md"
+    "docs/handoff-race-investigation-2026-10-20.md",
+    "docs/copper-pressure-investigation-2026-10-20.md"
   ]
 }

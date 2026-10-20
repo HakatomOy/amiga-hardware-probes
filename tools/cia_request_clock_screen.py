@@ -35,8 +35,9 @@ def read_clocks(trace, rows):
 
 def screen(hardware, candidate, policy, clocks, delays=range(9)):
     fields = [next(f for f in policy['measurements'] if f['name']==name) for name in NAMES]
-    if any(r['kind'] != 68 for r in [*candidate, *hardware]):
-        raise ValueError('requires the kind68 one-shot latch sweep')
+    kinds = {r['kind'] for r in [*candidate, *hardware]}
+    if len(kinds) != 1 or not kinds <= {68, 84}:
+        raise ValueError('requires one uniform kind68 or kind84 one-shot latch sweep')
     if len(clocks)!=len(candidate):
         raise ValueError('clock/descriptor count differs')
     def cohort(r, latch):
@@ -45,6 +46,8 @@ def screen(hardware, candidate, policy, clocks, delays=range(9)):
     table = {}
     for r,times in zip(candidate,clocks):
         table.setdefault(cohort(r,r['delay']),set()).add((times,tuple(e.value(r,f) for f in fields)))
+    if not any(table.get(cohort(r, r['delay'])) for r in hardware):
+        raise ValueError('no exact qualified hardware/candidate cohorts; cannot screen source delays')
     results = []
     for delay in delays:
         compared = {}
@@ -96,4 +99,4 @@ if __name__=='__main__':
     result.update(packet_sha256=e.digest(packet),trace_sha256=e.digest(trace),
                   interval_counts=dict(Counter(b-a for t in clocks for a,b in zip(t,t[1:]))))
     e.write(a.out,result)
-    print(json.dumps(result))
+    print(json.dumps({**result, 'pairwise': [p for p in result['pairwise'] if p['delays_CCK'] in ([5,6],[6,7])], 'detail': str(a.out)}))

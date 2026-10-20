@@ -85,6 +85,12 @@ def validate_spec(spec):
     comparison = spec['comparison']
     if comparison.get('alignment') != 'exact' or not comparison.get('measurements'):
         raise ValueError('explicit measurements and exact alignment required')
+    required = comparison.get('required_field_repairs', {})
+    names = {f.get('name',f['field']) for f in comparison['measurements']}
+    if (not isinstance(required, dict)
+            or any(k not in names or type(v) is not int or v < 1 for k,v in required.items())
+            or (required and not spec.get('baseline'))):
+        raise ValueError('required_field_repairs needs a baseline and positive counts for declared measurements')
     known = set(rom_results.FIELDS) - {'pc_hi', 'pc_lo'} | {'saved_pc_offset', 'reference_ticks'}
     for f in comparison['measurements'] + comparison['qualification'] + capture.get('coverage',[]):
         if f['field'] not in known or not f.get('unit') or not f.get('meaning'):
@@ -285,6 +291,16 @@ def delta(before, after, names=()):
             examples[category].append(k)
     return dict(counts=dict(counts), representatives=dict(examples),
                 repaired_fields=dict(field_repairs),regressed_fields=dict(field_regressions))
+
+
+def require_repairs(spec, report):
+    repairs = report.get('delta', {}).get('repaired_fields', {})
+    unmet = {name: dict(required=count, observed=repairs.get(name, 0))
+             for name,count in spec['comparison'].get('required_field_repairs', {}).items()
+             if repairs.get(name, 0) < count}
+    if unmet:
+        raise ValueError('declared repair target not met; broader validation not run: '
+                         + json.dumps(unmet, sort_keys=True))
 
 
 def bounded_failure(stdout, stderr):
@@ -562,7 +578,7 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
         else:
             previous_report = dict(groups=[])
         report['family_delta'] = evidence.family_delta(
-            report, previous_report, dict(experiment=spec['id'], comparison=spec['comparison']))
+            report, previous_report, dict(experiment=spec['id'], comparison=evidence.comparison_contract(spec['comparison'])))
         prior_patterns = {json.dumps(g['pattern']) for g in previous_report['groups']}
         current_patterns = {json.dumps(g['pattern']) for g in report['groups']}
         report['pattern_delta'] = dict(new=len(current_patterns-prior_patterns),
@@ -582,6 +598,7 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
         if (report['counts']['excluded'] > spec['comparison'].get('max_excluded', 0)
                 or report['counts']['unstable_reference'] > spec['comparison'].get('max_unstable', 0)):
             raise ValueError('qualification/instability exceeds declared budget; revise experiment or preserve constraint')
+        require_repairs(spec, report)
         for command in spec.get('validation', []):
             if through == 'comparison' or TIERS.index(command['tier']) > TIERS.index(through):
                 break
@@ -678,6 +695,7 @@ def resume(out, through='broad', repeat=()):
     if (report['counts']['excluded']>spec['comparison'].get('max_excluded',0)
             or report['counts']['unstable_reference']>spec['comparison'].get('max_unstable',0)):
         raise ValueError('cannot resume an unqualified comparison')
+    require_repairs(spec, report)
     if any(name not in {c['name'] for c in spec.get('validation',[])} for name in repeat):
         raise ValueError('repeat names must be declared validation commands')
     attempts=out/'validation-retries';attempts.mkdir(exist_ok=True)
@@ -839,7 +857,7 @@ def packets(before, after, suites, binary=None, config=None):
                 status='failed' if counts['changed_cases'] or counts['missing_suites'] else 'unchanged')
 
 
-def aggregate(out, status, group_by, fields, limit=8):
+def aggregate(out, status, group_by, fields, limit=8, paired=False):
     """Summarize selected evidence without dumping matching records."""
     out = resolve(out)
     spec = read(out/'experiment.json')
@@ -847,19 +865,27 @@ def aggregate(out, status, group_by, fields, limit=8):
                    spec['comparison']['measurements'] + spec['comparison']['qualification']}
     if any(f not in definitions for f in fields) or any(f not in DESCRIPTOR for f in group_by):
         raise ValueError('use declared measurement names and descriptor grouping fields')
+    measurements = {f.get('name',f['field']): i for i,f in enumerate(spec['comparison']['measurements'])}
+    if paired and (status not in ('matches','mismatches') or any(f not in measurements for f in fields)):
+        raise ValueError('paired aggregation requires stable matched/mismatched measurement fields')
     groups = defaultdict(list)
     for case, detail in read(out/'cases.json').items():
         if detail['status'] == status:
             r = detail['candidate']
-            groups[tuple(r[f] for f in group_by)].append((case,r))
+            groups[tuple(r[f] for f in group_by)].append((case,detail))
     result = []
     for condition, rows in sorted(groups.items(), key=lambda item:(-len(item[1]),item[0]))[:limit]:
         observed = {}
         for name in fields:
-            distribution = Counter(value(row,definitions[name]) for _,row in rows)
+            distribution = Counter(value(detail['candidate'],definitions[name]) for _,detail in rows)
             observed[name] = dict(unit=definitions[name]['unit'], minimum=min(distribution),
                                   maximum=max(distribution), distinct=len(distribution),
                                   common=distribution.most_common(3))
+            if paired:
+                i = measurements[name]
+                pairs = Counter((detail['expected'][i], detail['actual'][i]) for _,detail in rows)
+                observed[name].update(expected_actual_pairs=pairs.most_common(3),
+                                      different_cases=sum(n for (a,b),n in pairs.items() if a != b))
         result.append(dict(condition=dict(zip(group_by,condition)), count=len(rows),
                            fields=observed, representatives=[case for case,_ in rows[:3]]))
     return dict(status=status, cases=sum(map(len,groups.values())), groups_total=len(groups),
@@ -904,6 +930,7 @@ def main():
     p.add_argument('--group-by', default='target,variant,phase')
     p.add_argument('--fields', default='')
     p.add_argument('--limit', type=int, default=8, choices=range(1,17))
+    p.add_argument('--paired', action='store_true', help='bounded hardware/candidate value pairs; no time conversion')
     p = sub.add_parser('resume')
     p.add_argument('run')
     p.add_argument('--through', choices=TIERS,default='broad')
@@ -933,7 +960,7 @@ def main():
             return 1 if result['status'] == 'failed' else 0
         if args.command == 'aggregate':
             result = aggregate(args.run, args.status, [x for x in args.group_by.split(',') if x],
-                               [x for x in args.fields.split(',') if x], args.limit)
+                               [x for x in args.fields.split(',') if x], args.limit, args.paired)
             print(json.dumps(result))
             return 0
         if args.command == 'resume':

@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "id": "regression-handoff-focus-turnaround",
+  "investigation": "investigations/regression-handoff-focus-turnaround.json",
+  "hypothesis": "The candidate preserves or repairs qualified existing bus measurements without new field regressions.",
+  "competitor": "The new timing rule overfits the focused family or changes existing valid controls.",
+  "test": "Replay immutable handoff-focus; compare exact cohorts and per-field delta against accepted baseline.",
+  "outcomes": {
+    "repairs/unchanged only": "Continue validation; retain known differences and exclusions explicitly.",
+    "new field or qualification regression": "Reject or narrow the candidate before acceptance."
+  },
+  "next_question": "Does this candidate generalize to handoff-focus?",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "romdir": "build/handoff-focus-v1",
+  "rom_sha256": "eb3badf88bbc517b2f78154f9ee416c22033fa60b7147c425a20a320b2edfabd",
+  "capture": {
+    "minimum_seconds": 500,
+    "expected_cases": 128,
+    "valid_statuses": [
+      0
+    ],
+    "validator": "handoff"
+  },
+  "comparison": {
+    "alignment": "exact",
+    "measurements": [
+      {
+        "name": "clear_status",
+        "field": "launch_ref",
+        "unit": "DMACONR bits",
+        "meaning": "First clear status",
+        "mask": 24576,
+        "shift": 0
+      },
+      {
+        "name": "early_D",
+        "field": "end_beam",
+        "unit": "data word",
+        "meaning": "Immediate data read",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "post_status",
+        "field": "end_ref",
+        "unit": "DMACONR bits",
+        "meaning": "Postwrite status",
+        "mask": 24576,
+        "shift": 0
+      },
+      {
+        "name": "handoff",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "Handoff observation",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "post_beam",
+        "field": "icr",
+        "unit": "packed beam",
+        "meaning": "Postwrite observation",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "unit": "data word",
+        "meaning": "Final first destination",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "unit": "data word",
+        "meaning": "Final last destination",
+        "mask": 65535,
+        "shift": 0
+      },
+      {
+        "name": "blit_irq",
+        "field": "saved_pc_offset",
+        "unit": "INTREQ bit",
+        "meaning": "Settled BLIT request",
+        "mask": 64,
+        "shift": 16
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "unit": "packed beam",
+        "meaning": "Settled observation",
+        "mask": 65535,
+        "shift": 0
+      }
+    ],
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-write beam"
+      }
+    ],
+    "max_excluded": 0,
+    "max_unstable": 0
+  },
+  "baseline": "captures\\handoff-race-20261020\\copper-start-acceptance\\regression-handoff-focus\\candidate",
+  "references": [
+    "references/handoff-focus-v1-run1",
+    "references/handoff-focus-v1-run2"
+  ],
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "build": [],
+  "validation": [],
+  "budget_evidence": {
+    "baseline": "captures/handoff-focus-20261019/baseline-v1",
+    "counts": {
+      "total": 128,
+      "matches": 64,
+      "mismatches": 64,
+      "missing_results": 0,
+      "excluded": 0,
+      "unstable_reference": 0,
+      "invalid_captures": 0,
+      "reference_conflicting_cohorts": 0
+    },
+    "rule": "Freeze baseline exclusions; never derive budget from candidate."
+  },
+  "purpose": "regression"
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "reference_id": "cia-request-aperture-v2-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cia-aperture-20261020\\hardware-v2\\hardware-2",
+  "test_rom_sha256": "8bd9950a8db196bf191725f96d68465bc8b17dc7b7575b9a901f84fef165c01c",
+  "source_id": "81db15ae5fc0f71f83e694ea1567dfac9ad46ecad58e6a601c818c93eb7056a3",
+  "results_sha256": "4ba2ccd2789845225f654e5ba85e3a94e8462ef7bc6753706978454e90c854fc",
+  "record_count": 1280,
+  "metadata": {
+    "version": 1,
+    "source_id": "81db15ae5fc0f71f83e694ea1567dfac9ad46ecad58e6a601c818c93eb7056a3",
+    "record_count": 1280,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "4ba2ccd2789845225f654e5ba85e3a94e8462ef7bc6753706978454e90c854fc"
+  },
+  "restoration": {
+    "backup_sha256": "1ce9dbebcc56d4fdd5cbb2cc2702f4cf80e55a89eedeb4b1123bd87094070f40",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "1ce9dbebcc56d4fdd5cbb2cc2702f4cf80e55a89eedeb4b1123bd87094070f40",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 84,
+    "aligned": true,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA-A TimerA",
+      "CIA-B TimerA"
+    ],
+    "masks": null,
+    "phases": "bit0=NOP2CCK vs EXG-self3CCK after PB6;bit1=existing launch EXG;bit2=PBON toggle control",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line68 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line72 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": null,
+    "limitations": "Actual grants,not nominal spacing,decide sub-E timing. No ICR read until cleanup. Pin propagation versus Paula sampling may still require electrical observation.",
+    "measurement_fields": "kind68 TA/PB6/four INTREQ snapshots and independent PRA/launch/read brackets"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 1280,
+    "independently_repeated_cohorts": 1280,
+    "candidate_cases_with_independent_repeats": 1280,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "Completion flags only; delayed-cascade UF brackets are not electrical edges. PAL A500 stock68000,512KiB chip/512KiB slow. Silicon revisions unconfirmed.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\cia-aperture-20261020\\hardware-v2\\reference-2"
+}

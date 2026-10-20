@@ -1,8 +1,8 @@
 {
   "experiment": "regression-handoff-read",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\regression-handoff-read",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-sampling-20261020\\pointer-v1\\handoff-read",
   "identity": {
-    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "binary_sha256": "143db3c695ab4af8f1adc72aef932d52241f1b240f1cb317ffd237aae11bca9d",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "91e8277c53239b516b925de75f49120d1cf9b962bca218f305312f76a16159c7",
     "source_id": "1eb2d6a2cc5748ab9e6f057453ef40883b90b191f216570b4eede7bcd99056da"
@@ -20,7 +20,12 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-read-v1-run1"
   ],
   "evidence_fingerprint": "dd26b3e270b3c8d6485a0d554eedd5b96386097d7faff865056ee2b746be6712",
-  "no_new_evidence": 3,
-  "validation": [],
+  "no_new_evidence": 4,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
   "decision": "review evidence"
 }

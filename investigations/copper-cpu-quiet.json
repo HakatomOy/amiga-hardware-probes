@@ -1,0 +1,38 @@
+{
+  "experiment": "copper-cpu-quiet",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\quiet-hardware-v1",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "bff64216c98e6d86ea517dc01227c60293331ee76f42e5f2d0cc1a0f4ec940f1",
+    "source_id": "c94b658e98d67ec8524eecf4b2a7ac1ca8396462e6665f23fb142107086568bc"
+  },
+  "hypothesis": "The remaining order discrepancy is a shared CPU/Copper data phase independent of display DMA.",
+  "competitor": "Six-plane starvation and the line-end boundary create the request/visibility discrepancy.",
+  "test": "Repeat safe no-blitter IR2 overwrite withzeroactiveplanes,Copper enabled/disabled,instruction0/4/8/12,NOP0..7 and neighboring launch controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "quietCopper also differs in data": "Retain general request/data phase model.",
+    "quiet matches while six-plane differs": "Constrain next fix to contention/line-end sequencing;do not globally shift DMA data.",
+    "controls/qualification fail": "Narrow witness before interpretation."
+  },
+  "next_question": "Obtain physical request/data-phase constraints;keep bus timing and DMA data visibility separate.",
+  "references": [
+    "references/copper-cpu-quiet-v1/run1",
+    "references/copper-cpu-quiet-v1/run2"
+  ],
+  "evidence_fingerprint": "0699db4d0714dffcdb20e49d9325f37deb2faaad3c8c947229643044508debf8",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "512 qualified independently repeated rows:492match,20 data-order differences;allbeam observations match;zero invalid/excluded/unstable;restores verified.",
+    "No active display planes or blitter;HWnewSOFT versus modeloldDSKBLK for20 source-write races. Generic CPU/DMA data visibility remainsin scope independently ofsix-plane line-end starvation.",
+    "Do not apply global clock offsets or accept rejected timing candidates;need direct bus-phase constraints for a causal data model.",
+    "Byte-identical independent-stream trace coversall256enabledCoppercases;currentreturnphase reproducesflags;earlierwritevisibilityrepairs8leaves12butregresses8display-pressurebaselinecases.",
+    "All512rawreadbracketsmatch;32earlyINTREQdifferences,12despitecorrectfinalorder. KeepCopperexecutionandPaulasamplingdistinct."
+  ],
+  "history": [
+    "docs/copper-pressure-investigation-2026-10-20.md"
+  ]
+}

@@ -126,7 +126,10 @@
   },
   "reuse_preflight": true,
   "replay_inputs": [],
-  "references": [],
+  "references": [
+    "references/handoff-copper-access-v1/run1",
+    "references/handoff-copper-access-v1/run2"
+  ],
   "comparison": {
     "alignment": "exact",
     "max_excluded": 0,

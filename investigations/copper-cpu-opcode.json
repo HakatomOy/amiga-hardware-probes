@@ -1,0 +1,36 @@
+{
+  "experiment": "copper-cpu-opcode",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\opcode-hardware-v1",
+  "identity": {
+    "binary_sha256": "2d062cb805162755c0df0c49daee8975014ca894b4d9a9b4eb02485a00b5eabe",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "501ffbb39f9be5cc3c92dd4282eff8155e496c00cd60b101d8c8cc8bc9578d64",
+    "source_id": "8e7d6cd9628ea0476e8af16891cda3bbc0cefb4db91873275bdcfafac41debfb"
+  },
+  "hypothesis": "Copper has a shared request/data-latch phase for both instruction words,not just IR2.",
+  "competitor": "Only IR2 decode/data visibility or CPU write completion explains the ordering difference.",
+  "test": "Same CPU/Copper overwrite protocol,but replace IR1 NOP01fe with INTREQ009c while IR2 stays8004;selected instruction indices and NOP sweep;all no-blitter/activity controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "both IR1 and IR2 require later DMA data sampling": "Supports shared Copper memory data phase;validate a causal pipeline model,not time alignment.",
+    "only IR2 differs": "Retain instruction decode/data-specific or CPU visibility explanations.",
+    "activity/control failure": "Reject capture."
+  },
+  "next_question": "Model shared CPU/DMA request/data phase with causal ordering;need additional bus-phase constraints before accepting arbitration changes.",
+  "references": [
+    "references/copper-cpu-opcode-v1/run1",
+    "references/copper-cpu-opcode-v1/run2"
+  ],
+  "evidence_fingerprint": "f10b0a8e930ac04289e22bc24777ef2b542c7af044ce4dc3deff08d177882bc2",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "512 qualified withindependent repeats;496 matches,16 opcode-order mismatches;zero invalid/excluded/unstable;both restores verified.",
+    "All512 beam fields match underunacceptedRGA counterfactual;16 opcode flags areHWnewINTREQ versus modeloldNOP atselectedMOVE8.",
+    "BothIR1 opcode andIR2data races disagree evenwithmatchedobservationclocks;notIR2-only. Fullcausal request/data model remainsunresolved;do notshipstartup/RGA patchesalone."
+  ],
+  "history": [
+    "docs/copper-pressure-investigation-2026-10-20.md"
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "experiment": "collision-sample-pointer",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-sampling-20261020\\pointer-v1",
+  "identity": {
+    "binary_sha256": "143db3c695ab4af8f1adc72aef932d52241f1b240f1cb317ffd237aae11bca9d",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "89e928cb35641a5e0d5519d6103ebcfc97a2d7ec206fab8feb9ac8a64c013aaf",
+    "source_id": "6386f8702df804478280c5f0639af82f9a4301d4817512fcfe02d6f1fde28aaf"
+  },
+  "hypothesis": "CLXDAT is sampled/cleared too late at CPU return, including tail collisions in the preceding transfer.",
+  "competitor": "The early mismatch originates in display-data output or collision generation rather than read sampling.",
+  "test": "Sample/clear CLXDAT on its granted word transfer, preserve events during the CPU tail for later reads; replay both independent hardware sweeps and neighbors.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "early repairs with no new fields": "Validate neighboring display, IRQ and bus cases before acceptance.",
+    "no effect or regressions": "Reject read-phase-only correction; investigate output pipeline with a narrower observer."
+  },
+  "next_question": "Distinguish remaining pixel-output boundary from CLXDAT sampling; preserve accepted transfer-time clear behavior.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\pointer-collision-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\pointer-collision-v2\\run2"
+  ],
+  "evidence_fingerprint": "725a73be73868bacc51c5027a6b129d26ee445baa8787cf8ee8ebdcaff080c09",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    },
+    {
+      "name": "copper-pointer-neighbor",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "native-blit-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "operand-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "cpu-dma-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-onset",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-completion",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "bus-pressure",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-focus",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-read",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "handoff-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-packets",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-preservation",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "strict-clippy",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "rust-format",
+      "exit": 0,
+      "tier": "broad"
+    }
+  ],
+  "decision": "accept",
+  "decision_reason": "Transfer-time CLXDAT sampling repairs eight pointer cases plus thirteen independent Copper/display cases, with zero new field/qualification regressions; neighboring packets and full core/strict lint/format pass.",
+  "evidence": [
+    "captures/collision-sampling-20261020/copper-v2/comparison.json",
+    "captures/collision-sampling-20261020/pointer-v1/summary.json"
+  ],
+  "accepted_commits": [
+    "2efe86ad"
+  ],
+  "history": [
+    "docs/collision-readback-2026-10-20.md"
+  ],
+  "confirmed_facts": [
+    "13Copper/display and8pointer earlycases repair;zero new field orqualification regressions;362/199unchanged exclusions remain excluded.",
+    "Focused/neighbor/legacy gates andfullcore3664tests,strictClippy,format pass.",
+    "Eight earlycollisiondifferences remain; CPUcyclelengthandDMAgranttiming unchanged."
+  ]
+}

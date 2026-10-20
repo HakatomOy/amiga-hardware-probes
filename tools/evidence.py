@@ -37,6 +37,11 @@ def families(report, scope):
     return result
 
 
+def comparison_contract(comparison):
+    # A hypothesis's acceptance target does not change measured signatures.
+    return {k:v for k,v in comparison.items() if k != 'required_field_repairs'}
+
+
 def family_delta(report, previous, scope):
     current, prior = families(report, scope), families(previous, scope)
     changed = []
@@ -89,10 +94,11 @@ def packet(run, cache, baseline=None, limit=5, refresh=False):
     else:
         summary, report, spec = (read(p) for p in paths[:3])
         case_delta = report.get('delta')
-        scope = dict(experiment=spec['id'], comparison=spec['comparison'])
+        scope = dict(experiment=spec['id'], comparison=comparison_contract(spec['comparison']))
         if baseline:
             previous, prior_spec = (read(p) for p in paths[3:5])
-            if prior_spec['id'] != spec['id'] or prior_spec['comparison'] != spec['comparison']:
+            if (prior_spec['id'] != spec['id']
+                    or comparison_contract(prior_spec['comparison']) != comparison_contract(spec['comparison'])):
                 raise ValueError('baseline comparison contract differs')
             if (not report.get('reference_hashes')
                     or previous.get('reference_hashes') != report['reference_hashes']):

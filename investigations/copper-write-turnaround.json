@@ -1,0 +1,76 @@
+{
+  "experiment": "copper-write-turnaround",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\write-turnaround-acceptance",
+  "identity": {
+    "binary_sha256": "e8fc5c438907314ace757f735221a4d7209023397b8b07354886b7ec3a8a52fc",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "5bee2901d3bcee79e34d8e51f3f2b99d6542d6d49c961bc0c015f1f5c1f3822b",
+    "source_id": "c6ae2bae618a402f7877ecf379a77d9d1b753aeef3f020d3de3e01253e555955"
+  },
+  "hypothesis": "CPU DRAM writes after Copper need the same pre-refresh turnaround already applied to reads.",
+  "competitor": "Instruction/Copper fetch phase,not the write exemption,explains the bus-order errors.",
+  "test": "Repair direct kind81 no-blitter ordering and beam fields;require zero new fields/qualification regressions across kinds78/79/80/77 and held-out suites.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "repairs without field or qualification regressions": "Run focused,neighbor,broad gates before accepting.",
+    "any new field regression": "Reject or narrow."
+  },
+  "next_question": "Does the write turnaround rule generalize across source ordering and no-start controls?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-order-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-order-v1\\run2"
+  ],
+  "evidence_fingerprint": "e11cdceb9723faf04554e8ddcbdbf41cea26bfb9f41077d76564848de3fc9bf0",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    },
+    {
+      "name": "handoff-copper-race",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-copper-access",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-copper-witness",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-race-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-startup-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-request-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "native-blit-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-access-regression",
+      "exit": 0,
+      "tier": "focused"
+    }
+  ],
+  "decision": "preserve",
+  "decision_reason": "Write-only pre-refresh exemption change has zero effect on the direct ordering probe;do not accept or run broad checks. Inert custom grant atE1 requires a different RGA hypothesis.",
+  "evidence": [
+    "captures/copper-race-20261020/write-turnaround-acceptance/comparison.json"
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "version": 1,
+  "id": "handoff-copper-witness",
+  "hypothesis": "The RAM-writeback half of the memory-to-memory launch witness changes CPU phase incorrectly under Copper.",
+  "competitor": "Copper/CPU grant behavior differs independently of the launch witness RAM writeback.",
+  "test": "Paired memory versus register-held launch witness;same NOP0..3/source race;D-only,preseed,no-start,neighbor controls;phase0/pad0 smaller reproducer.",
+  "outcomes": {
+    "memory witness differs but register witness matches": "Narrow CPU memory-to-memory access/prefetch phase before tuning DMA.",
+    "both witness modes differ": "Retain general Copper/CPU grant or request setup explanation.",
+    "controls fail": "Reject capture."
+  },
+  "next_question": "Do no-start first-post-beam and source-order errors persist without RAM writeback between launch sample and BLTSIZE?",
+  "investigation": "investigations/handoff-copper-witness.json",
+  "binary": "captures/handoff-race-20261020/copper-start-acceptance/emulator.exe",
+  "romdir": "build/handoff-copper-witness-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "033084852bbf7d0b72474d427cbc521941804797b399b2709c85e50a5d0156e9",
+  "capture": {
+    "minimum_seconds": 180,
+    "expected_cases": 768,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "unit": "word",
+        "meaning": "CPU overwrite completed at selected address",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "Preloaded overwrite value preserved",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "unit": "word",
+        "meaning": "No-start destination stays zero",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 0,
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "D-only ignores A overwrite",
+        "require_values": [
+          65535
+        ],
+        "allowed_values": [
+          65535
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 6,
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "Preseeded AD confirms new value can reach D",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 24,
+            "equals": 16
+          }
+        },
+        "unit": "word",
+        "meaning": "Unused-neighbor overwrite cannot change A data",
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 24,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "Race copies old or new source; old baseline witness required",
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690,
+          21845
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/handoff-copper-witness-v1/run1",
+    "references/handoff-copper-witness-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Fixed5555 CPU overwrite value, not a register read"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "written_word",
+        "field": "aux",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Selected CPU-written source/neighbor word after settling"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite Copper activity witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 360,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": []
+}

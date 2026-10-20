@@ -12,8 +12,8 @@ import rom_results
 
 def analyze(lines, rows):
     real = [r for r in rows if not r['variant'] & 8]
-    if any(r['kind'] != 78 for r in rows):
-        raise ValueError('requires kind78 descriptors')
+    if any(r['kind'] not in (78, 80) for r in rows):
+        raise ValueError('requires kind78/80 descriptors')
     index, current = 0, None
     counts = Counter(real_blits=0, copper_blits=0, with_overlap_moves=0, with_copper_owner=0)
     examples = []

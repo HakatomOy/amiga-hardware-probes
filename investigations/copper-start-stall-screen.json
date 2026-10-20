@@ -1,0 +1,15 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-race-20261020\\stall-screen-v1",
+  "hypothesis": "CPU normal startup waits through Copper-owned clocks,as well as fixed DMA;Copper-launched deferred startup remains internal.",
+  "test": "Replay independently repeated kind80 memory/register witness,priority,NOP/source controls;require zero new field/qualification regressions before neighboring suites.",
+  "smaller_reproducer": null,
+  "next_question": "Does startup eligibility include Copper exclusion?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "c11da727b252d81f844623d4a1cada7903b641e5609923369d5c9f39123a717a",
+  "decision": "narrow",
+  "decision_reason": "Reject CPU startup exclusion of Copper:18 repairs but36 regressions;152 newly wrong fields across54cases. Restore accepted2b100669;test direct CPU/Copper instruction-data ordering without blitter.",
+  "evidence": [
+    "captures/copper-race-20261020/stall-screen-v1/comparison.json",
+    "captures/copper-race-20261020/candidate-stall-copper/source.diff"
+  ]
+}

@@ -35,5 +35,50 @@ class RequestProbeTests(unittest.TestCase):
             self.assertIn('move.w d7,38(a4)', text)
 
 
+class ApertureProbeTests(unittest.TestCase):
+    def test_banks_preserve_samples_and_only_change_post_pb_aperture(self):
+        import shutil
+        import build_cia_request_aperture_rom as aperture
+        rows = aperture.trials()
+        self.assertEqual(len(rows), 1280)
+        self.assertEqual(len(set(rows)), 1280)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shutil.copytree(aperture.base.ROOT / 'src', root / 'src')
+            experiment = root / 'src/rom/experiment.asm'
+            experiment.write_text(experiment.read_text().replace('        cmpi.w #10,(a4)', '        cmpi.w #56,(a4)\n        cmpi.w #10,(a4)', 1))
+            aperture.transform(root)
+            text = (root / 'src/rom/edge_kernel.asm').read_text()
+            tail = text[text.index('        dcb.b $ffda00-*,0'):]
+            self.assertEqual(tail.count('        exg d2,d2'), 2)
+            self.assertEqual(tail.count('move.w $1e(a6),'), 16)
+            self.assertNotIn('move.b $bfed01', tail)
+            self.assertNotIn('move.b $bfdd00', tail)
+            for address in ('ffda00', 'ffdc00', 'ffde00', 'ffe000'):
+                self.assertIn('dcb.b $' + address + '-*,0', tail)
+
+
+class RequestClearProbeTests(unittest.TestCase):
+    def test_clear_and_pb_controls_have_identical_ack_and_aperture(self):
+        import shutil
+        import build_cia_request_clear_rom as clear
+        self.assertEqual(len(clear.trials()), 640)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shutil.copytree(clear.base.ROOT / 'src', root / 'src')
+            experiment = root / 'src/rom/experiment.asm'
+            experiment.write_text(experiment.read_text().replace('        cmpi.w #10,(a4)',
+                                  '        cmpi.w #56,(a4)\n        cmpi.w #10,(a4)', 1))
+            clear.transform(root)
+            text = (root / 'src/rom/edge_kernel.asm').read_text()
+            tail = text[text.index('        dcb.b $ffda00-*,0'):]
+            self.assertEqual(tail.count('move.w #$2008,$9c(a6)'), 8)
+            self.assertEqual(tail.count('move.w $1e(a6),'), 32)
+            self.assertEqual(tail.count('move.b $bfed01,d1'), 2)
+            self.assertEqual(tail.count('move.b $bfdd00,d1'), 2)
+            self.assertEqual(tail.count('exg d2,d2'), 4)
+            self.assertIn('addi.w #24,d0', (root / 'src/rom/irq_stage_kernel.i').read_text())
+
+
 if __name__ == '__main__':
     unittest.main()

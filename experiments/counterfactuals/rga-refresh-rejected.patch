@@ -1,0 +1,74 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index c0e9cfb4..89846ae6 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -7234,8 +7234,7 @@ impl Bus {
+             }
+             let mut wait_cck = 0;
+             while !self.cpu_can_use_current_slot()
+-                || (matches!(kind, CpuBusAccessKind::Read | CpuBusAccessKind::Fetch)
+-                    && self.cpu_cycle_crosses_line_end_refresh())
++                || self.cpu_cycle_crosses_line_end_refresh()
+                 || (self.cpu_short_bus_cycle && self.emulated_cck < self.cpu_chip_port_free_at)
+             {
+                 if self.frame_analyzer_enabled {
+diff --git a/src/bus/dma_slots.rs b/src/bus/dma_slots.rs
+index 12cfe99a..e68e29a9 100644
+--- a/src/bus/dma_slots.rs
++++ b/src/bus/dma_slots.rs
+@@ -812,12 +812,14 @@ impl Bus {
+     }
+ 
+     pub(super) fn cpu_cycle_crosses_line_end_refresh(&self) -> bool {
+-        // Kind65 and trace controls isolate DRAM read turnaround after a
+-        // Copper transfer immediately before refresh. Uncontended reads,
+-        // writes and register grants retain their existing phase.
++        // A CPU cycle cannot overlap the Copper's pipelined RGA access on
++        // line-end refresh. The Copper is locked out one clock earlier, so
++        // last_chip_bus_owner alone misses a running stream's next request.
++        // Custom-register cycles share the RGA path (kind78/80/81 controls).
+         !self.cpu_short_bus_cycle
+             && !self.aga_enabled()
+-            && self.last_chip_bus_owner == ChipBusOwner::Copper
++            && (self.last_chip_bus_owner == ChipBusOwner::Copper
++                || self.copper_ready_for_slot())
+             && Self::line_end_refresh_slot(self.agnus.hpos + 1)
+             && !Self::line_end_refresh_slot(self.agnus.hpos)
+     }
+diff --git a/src/bus/tests.rs b/src/bus/tests.rs
+index 12384c5a..88809260 100644
+--- a/src/bus/tests.rs
++++ b/src/bus/tests.rs
+@@ -11846,12 +11846,27 @@ fn stock_cpu_cycle_waits_before_crossing_line_end_refresh() {
+         other.agnus.hpos = 0x0e1;
+         other.last_chip_bus_owner = ChipBusOwner::Copper;
+         other.grant_cpu_bus_access(2, kind);
+-        assert_eq!(
+-            other.take_slice_bus_advance().0,
+-            2,
+-            "writes/registers preserve their grant phase"
+-        );
++        let elapsed = other.take_slice_bus_advance().0;
++        assert!(elapsed > 2, "CPU transfers share the refresh RGA turnaround");
++    }
++}
++
++#[test]
++fn stock_cpu_turnaround_checks_upcoming_copper_refresh_even_after_idle_lockout() {
++    for kind in [CpuBusAccessKind::Read, CpuBusAccessKind::Write, CpuBusAccessKind::Custom] {
++        let mut bus = empty_bus();
++        bus.set_cpu_bus_arbitration_enabled(true);
++        bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
++        bus.copper.jump(0x1000);
++        bus.agnus.hpos = 0x0e1;
++        bus.last_chip_bus_owner = ChipBusOwner::Idle;
++        assert!(bus.cpu_cycle_crosses_line_end_refresh());
++        bus.grant_cpu_bus_access(2, kind);
++        assert!(bus.take_slice_bus_advance().0 > 2);
+     }
++    let mut quiet = empty_bus();
++    quiet.agnus.hpos = 0x0e1;
++    assert!(!quiet.cpu_cycle_crosses_line_end_refresh());
+ }
+ 
+ #[test]
