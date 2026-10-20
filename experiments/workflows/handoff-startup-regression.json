@@ -11,7 +11,7 @@
   },
   "next_question": "Does the startup rule hold across source masks and a different fixed-DMA slot pattern?",
   "investigation": "investigations/handoff-startup-regression.json",
-  "binary": "captures/accuracy-round-20261020/pointer-candidate-v2/emulator.exe",
+  "binary": "../Copperline/target/ci/copperline.exe",
   "romdir": "build/handoff-startup-v1",
   "config": "../Copperline/tmp/golden-a500-ecs.toml",
   "rom_sha256": "d77a6d9fcf2571c3915f850af0bd4310260d2fe7de5be5ea82e947d6e224adc9",

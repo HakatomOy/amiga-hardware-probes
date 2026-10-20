@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-race-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\baseline-v1\\hardware-2",
+  "test_rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+  "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364",
+  "results_sha256": "1d933f6680612f25038c12466c06f4491248bb78f8fade2ab6058be1aff4c944",
+  "record_count": 2304,
+  "metadata": {
+    "version": 1,
+    "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364",
+    "record_count": 2304,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "1d933f6680612f25038c12466c06f4491248bb78f8fade2ab6058be1aff4c944"
+  },
+  "restoration": {
+    "backup_sha256": "2089af985f90f9e3a6150d4a1054c2275b9ed720b5aa026c10d4da16c018753b",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "2089af985f90f9e3a6150d4a1054c2275b9ed720b5aa026c10d4da16c018753b",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 77,
+    "aligned": false,
+    "targets": [
+      "0 D-only",
+      "3 AD source initially aaaa",
+      "6 AD preseeded5555 positive control"
+    ],
+    "sources": [
+      "CPU BLTSIZE or inert write"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "phase0/1,pad0/1; exact pre-start beam authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "packed beam,data/register words; no alignment",
+    "launch": "Fixed MOVE.W D0,(A1) overwrite after start, value5555 preloaded before launch witness",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Relative CPU/blitter ordering witness,not electrical timestamps. Same opcode for source/neighbor; preseed before ROM alignment. No Copper DMA.",
+    "widths_words": [
+      1
+    ],
+    "variants": "bit0 priority;bits2:1 no/four/six planes;bit3 no-start;bit4 write unused source neighbor12002 instead of12000;bits6:5 NOP0..3",
+    "measurement_fields": "kind71 except end_beam stores overwrite value5555, aux verifies written word after settling; irq_beam/irq_level identify fetched old/new source in D"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 1152,
+    "independently_repeated_cohorts": 1152,
+    "candidate_cases_with_independent_repeats": 2304,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\baseline-v1\\reference-2"
+}

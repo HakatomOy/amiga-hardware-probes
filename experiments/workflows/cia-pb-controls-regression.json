@@ -9,7 +9,7 @@
     "new qualified pulse/continuous difference": "Reject or narrow the output model with a physical explanation."
   },
   "next_question": "Does early-transfer PB6 visibility generalize without counter/request regressions?",
-  "investigation": "investigations/cia-pb-controls.json",
+  "investigation": "investigations/cia-pb-controls-regression.json",
   "binary": "../Copperline/target/ci/copperline.exe",
   "romdir": "build/cia-pb-control-v1",
   "config": "../Copperline/tmp/golden-a500-ecs.toml",
@@ -147,5 +147,6 @@
     "total_descriptor_combinations": 192,
     "independently_repeated_qualified_cases": 192,
     "rule": "Freeze baseline scope before candidate; exclusions are not repairs; every distinct descriptor combination has an independent exact-cohort repeat."
-  }
+  },
+  "purpose": "regression"
 }

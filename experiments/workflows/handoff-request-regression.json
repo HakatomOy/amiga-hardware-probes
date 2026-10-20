@@ -11,7 +11,7 @@
   },
   "next_question": "Does the CPU timing mismatch require the destination channel?",
   "investigation": "investigations/handoff-request-regression.json",
-  "binary": "captures/accuracy-round-20261020/pointer-candidate-v2/emulator.exe",
+  "binary": "../Copperline/target/ci/copperline.exe",
   "romdir": "build/handoff-request-v2",
   "config": "../Copperline/tmp/golden-a500-ecs.toml",
   "rom_sha256": "862672cd471922140a969f3f16554accae26b5983b04e84efe89aaf10819ff1e",

@@ -1,0 +1,50 @@
+{
+  "experiment": "handoff-race",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\baseline-v1",
+  "identity": {
+    "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+    "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364"
+  },
+  "hypothesis": "The first A-source transfer is misplaced relative to the CPU under display DMA.",
+  "competitor": "Source ordering is correct; the remaining mismatch comes from completion or status observation.",
+  "test": "Fixed5555 CPU overwrite of first A word versus unused neighbor after one-word AD; D-only,no-start,preseeded5555 positive controls; no/four/six planes,normal/nasty,NOP0..3,neighboring launches.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "old/new destination boundary differs": "First A-fetch/CPU ordering is wrong; inspect request/grant sequencing before completion.",
+    "destination ordering matches but status or beams differ": "Keep completion/status or CPU observation in scope; do not move source fetch.",
+    "control destination or stored word wrong": "Reject capture before inference."
+  },
+  "next_question": "Isolate208 remaining CPU/Copper-pressure handoff differences with a source-write race and verified finite Copper activity.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\baseline-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\baseline-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "83de2a548d02d3ab0f756b314581997cd6e9d4c87bc67a9448421e7bd7f067fa",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "Two A500 runs agree on all2304 measurement records; only boot VPOSR/header checksum differ; both restorations verified.",
+    "64 source-overwrite ordering errors establish live source visibility after BLTSIZE.",
+    "Accepted candidate matches8832 focused rows,passes15 reference suites with zero new field/qualification regressions,and preserves5136 legacy packets.",
+    "3642 core tests pass;37 ignored,548 window tests filtered;strict Clippy/fmt and277 probe tests pass."
+  ],
+  "reference_capture_ids": [
+    "handoff-race-v1-run1",
+    "handoff-race-v1-run2"
+  ],
+  "history": [
+    "docs/handoff-race-investigation-2026-10-20.md"
+  ],
+  "source_files": [
+    "build_handoff_race_rom.py",
+    "tools/summarize_handoff_race.py",
+    "../Copperline/src/chipset/blitter.rs",
+    "../Copperline/src/bus/dma_slots.rs"
+  ],
+  "accepted_commits": [
+    "Copperline 2b100669"
+  ]
+}

@@ -11,7 +11,7 @@
   },
   "next_question": "Which access classes expose the first divergent grant and does a CPU start-stage model preserve independent source controls?",
   "investigation": "investigations/handoff-access-regression.json",
-  "binary": "captures/accuracy-round-20261020/pointer-candidate-v2/emulator.exe",
+  "binary": "../Copperline/target/ci/copperline.exe",
   "romdir": "build/handoff-access-v1",
   "config": "../Copperline/tmp/golden-a500-ecs.toml",
   "rom_sha256": "f5d1ba31139af195bb63457999ac8ed0b665f195f28b24a378f0a83fbba8e11d",

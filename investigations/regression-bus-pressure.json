@@ -1,8 +1,8 @@
 {
   "experiment": "regression-bus-pressure",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-regression-bus-pressure",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\regression-bus-pressure",
   "identity": {
-    "binary_sha256": "11b65868ac7f86dcde000b12d878fc2260c94e9c843dcdc74bf25982a900ab6e",
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "e1a1a333720a545c82b5723c0a1e05c223fac9128a6f7468ccd8985fb039220a",
     "source_id": "82d77772a7896fa1c356097d29ee742567f07f0365cacd0fc89459671715e002"
@@ -20,12 +20,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\bus-pressure-v2-run1"
   ],
   "evidence_fingerprint": "ecab3b6235c59bd85af5da18fb7164e787bbc05c99349ff27af1b78e871ea97f",
-  "no_new_evidence": 2,
-  "validation": [
-    {
-      "name": "preflight",
-      "exit": 0
-    }
-  ],
+  "no_new_evidence": 1,
+  "validation": [],
   "decision": "review evidence"
 }

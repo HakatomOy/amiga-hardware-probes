@@ -1,0 +1,155 @@
+{
+  "experiment": "blit-start-copper",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+    "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364"
+  },
+  "hypothesis": "CPU normal startup waits for fixed DMA but can overlap Copper; Copper-launched blits keep their calibrated deferred/internal startup. A/B fetch live RAM.",
+  "competitor": "Startup stalls all bus owners identically; timing repairs are overfit to CPU-only launches.",
+  "test": "Preserve CPU kind77/71/74/75/76 repairs while restoring source-qualified bus-onset/completion/pressure and CPU-with-Copper neighbors; mirror live and deadline ownership rules.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "source ordering and status/beam repairs without regressions": "Supports generic eligible startup,require focused/neighbor/broad acceptance.",
+    "new field/qualification or ordering regressions": "Reject or narrow;never gate on plane count."
+  },
+  "next_question": "Isolate208 remaining CPU/Copper-pressure handoff differences with a source-write race and verified finite Copper activity.",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run2"
+  ],
+  "evidence_fingerprint": "0cb6b80283604425067106b47d4afc5f4bf6f261c9771af7d0cad72482700903",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    },
+    {
+      "name": "handoff-startup-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-request-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "native-blit-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "handoff-access-regression",
+      "exit": 0,
+      "tier": "focused"
+    },
+    {
+      "name": "regression-bus-onset",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "regression-bus-completion",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "regression-bus-pressure",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "regression-handoff-focus",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "regression-handoff-read",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "regression-handoff-neighbor",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "cpu-operand-regression",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "cpu-dma-regression",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "copper-pointer-regression",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "cia-request-regression",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "cia-pb-controls-regression",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-replay",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "legacy-packets",
+      "exit": 0,
+      "tier": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "strict-clippy",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "rust-format",
+      "exit": 0,
+      "tier": "broad"
+    },
+    {
+      "name": "probe-tests",
+      "exit": 0,
+      "tier": "broad"
+    }
+  ],
+  "decision": "accept",
+  "decision_reason": "Both A500 runs agree on all2304 records. Final candidate matches8832 focused rows, passes15 saved-reference suites with zero new field/qualification regressions, preserves5136 legacy packets, and passes core/strict Clippy/fmt plus277 probe tests. Fix CPU fixed-DMA startup eligibility with Copper overlap/source distinction and live A/B DMA reads; retain208 known Copper-pressure handoff differences.",
+  "evidence": [
+    "captures/handoff-race-20261020/copper-start-acceptance/summary.json",
+    "references/handoff-race-v1/run1/manifest.json",
+    "references/handoff-race-v1/run2/manifest.json"
+  ],
+  "accepted_commits": [
+    "Copperline 2b100669"
+  ],
+  "confirmed_facts": [
+    "Two A500 runs agree on all2304 measurement records; only boot VPOSR/header checksum differ; both restorations verified.",
+    "64 source-overwrite ordering errors establish live source visibility after BLTSIZE.",
+    "Accepted candidate matches8832 focused rows,passes15 reference suites with zero new field/qualification regressions,and preserves5136 legacy packets.",
+    "3642 core tests pass;37 ignored,548 window tests filtered;strict Clippy/fmt and277 probe tests pass."
+  ],
+  "history": [
+    "docs/handoff-race-investigation-2026-10-20.md"
+  ]
+}

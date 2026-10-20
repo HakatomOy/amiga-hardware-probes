@@ -3,7 +3,7 @@
   "hypothesis": "The CPU/blitter request handoff has a pipeline phase; removing USED removes a terminal-request contribution to the CPU read-slot mismatch.",
   "test": "One-word D-only,AD,A-only; identical first-read opcode for custom/chip; no/four/six-plane,normal/nasty,no-start,launch phase0/1,pad0/1,NOP0..3. Compare exact launches without alignment.",
   "smaller_reproducer": null,
-  "next_question": "Constrain first A-fetch/CPU ordering with a timed source overwrite; use settled D old/new data plus launch/post-write witnesses,not status alone.",
+  "next_question": "208 remaining Copper-pressure handoff differences; see handoff-race investigation.",
   "no_new_evidence": 0,
   "evidence_fingerprint": "265ff3bc3df67529f644269dc24fdd0bacb1a68947a04e846eddb65fd909ebaa",
   "decision": "narrow",
@@ -54,5 +54,6 @@
   ],
   "history": [
     "docs/handoff-request-investigation-2026-10-20.md"
-  ]
+  ],
+  "resolution": "Kind77 established64 source-order errors; Copperline2b100669 repairs startup/live-source causes and all8832 focused cases."
 }

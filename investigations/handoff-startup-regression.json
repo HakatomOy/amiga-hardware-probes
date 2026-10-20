@@ -1,10 +1,28 @@
 {
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-startup",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\handoff-startup-regression",
   "hypothesis": "Normal-blit startup INIT needs an eligible cycle,including when no source channel is enabled.",
   "test": "Cross D-only,AD,ABCD one-word starts with no/four/six-plane DMA,normal/hog,no-start and neighboring fixed-delay observations.",
   "smaller_reproducer": null,
   "next_question": "Does the startup rule hold across source masks and a different fixed-DMA slot pattern?",
-  "no_new_evidence": 0,
-  "evidence_fingerprint": "98433acea45c054995b4d9454629de5f578b4d2e3447c7b6f8d50631280fa162",
-  "decision": "validation failed"
+  "no_new_evidence": 2,
+  "evidence_fingerprint": "55d4b90c61afbc4c61e2a933e95dc6214650d947a15dc789cd1ff7c570f81522",
+  "decision": "review evidence",
+  "experiment": "handoff-startup-regression",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "d77a6d9fcf2571c3915f850af0bd4310260d2fe7de5be5ea82e947d6e224adc9",
+    "source_id": "9955050dc0ee327d30856e93d8429bbf841d9cc43a485064566f1da428cbe27f"
+  },
+  "competitor": "The four-plane AD result is specific to a source mask or CPU grant interaction rather than generic startup.",
+  "outcomes": {
+    "consistent fixed-DMA-only pattern across masks": "Supports generic eligible startup rather than an AD-specific delay.",
+    "different D-only or ABCD direction": "Reject or revise generic startup before acceptance.",
+    "no-start or timing cohorts disagree": "Keep independent arbitration/qualification differences visible."
+  },
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-startup-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-startup-v1\\run2"
+  ],
+  "validation": []
 }

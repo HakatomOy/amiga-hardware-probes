@@ -1,8 +1,8 @@
 {
   "experiment": "native-blit-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\bbusy-native",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\native-blit-regression",
   "identity": {
-    "binary_sha256": "69a5f2e463617c403edc23cdee58a8351ea6821011b8fb0b9967efe1f41eb437",
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "50a54642b7a32579e55895460fd8cc0e557022848a1304e1f76a9cc73e2ab22f",
     "source_id": "3f8596f74d419cb1185867d62154bf020c7d39b7071c25fccd3080bcb17b3fef"
@@ -21,13 +21,8 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-edge-v2\\run2"
   ],
-  "evidence_fingerprint": "86f3342c62ccaa37124198bb66a23d1423f1428c6e9bc97db91b20000aee659b",
-  "no_new_evidence": 0,
-  "validation": [
-    {
-      "name": "preflight",
-      "exit": 0
-    }
-  ],
-  "decision": "validation failed"
+  "evidence_fingerprint": "a7cfa8b21a8e286e9797177096920a0f8c54cc1c0403a57ae7cf0cb157dbca84",
+  "no_new_evidence": 2,
+  "validation": [],
+  "decision": "review evidence"
 }

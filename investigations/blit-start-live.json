@@ -1,0 +1,49 @@
+{
+  "experiment": "blit-start-live",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\live-start-acceptance",
+  "identity": {
+    "binary_sha256": "8305c4d85c4e3338b6b6d782e336ec09f3987730d3a46b79c25dbf94b0026af3",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+    "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364"
+  },
+  "hypothesis": "Both normal startup stages consume eligible clocks and A/B source words come from live RAM at DMA fetch,not BLTSIZE snapshots.",
+  "competitor": "Timing repairs mask source-order or neighbor regressions; snapshots were compensating for another bus error.",
+  "test": "Add live A/B fetch to the verified two-stage candidate; require complete kind77 ordering/timing repair,kind71/74/75/76 neighbors,legacy edges and broad checks.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "source ordering and status/beam repairs without regressions": "Supports generic eligible startup,require focused/neighbor/broad acceptance.",
+    "new field/qualification or ordering regressions": "Reject or narrow;never gate on plane count."
+  },
+  "next_question": "Do the bus/Copper/CPU/CIA neighbors and core/Clippy checks preserve the accepted controls?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run2"
+  ],
+  "evidence_fingerprint": "0cb6b80283604425067106b47d4afc5f4bf6f261c9771af7d0cad72482700903",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "narrow",
+  "confirmed_facts": [
+    "All2304 kind77 cases match;440 complete-case repairs,1152 field repairs,no regressions.",
+    "All8832 focused rows match across kind71/74/75/76/77; no invalid/excluded/unstable or qualification regression.",
+    "Both eligible startup stages correct timing; live A/B reads correct64 remaining source-data errors."
+  ],
+  "history": [
+    "docs/handoff-race-investigation-2026-10-20.md"
+  ],
+  "source_files": [
+    "../Copperline/src/chipset/blitter.rs",
+    "../Copperline/src/bus/tests.rs"
+  ],
+  "decision_reason": "CPU-only focused suites all pass, but generic eligibility regresses Copper launches and16 fields in CPU-with-Copper neighbors. Preserve rejected candidate. Separate deferred Copper startup and test CPU startup overlap with Copper,keeping fixed-DMA waits.",
+  "evidence": [
+    "captures/handoff-race-20261020/neighbor-batch/regression-bus-onset/comparison.json",
+    "captures/handoff-race-20261020/neighbor-batch/regression-handoff-neighbor/comparison.json"
+  ]
+}

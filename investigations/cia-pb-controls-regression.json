@@ -1,0 +1,27 @@
+{
+  "experiment": "cia-pb-controls-regression",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\cia-pb-controls-regression",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "eeab46d1ab2530423d72d57c044ea00927fb1a15fe38f440fcc925e183bc5d72",
+    "source_id": "d062e325dc64b105052d743af0313d7ce9896c3c71878790115a296168147294"
+  },
+  "hypothesis": "PB6 E-high underflow visibility generalizes across pulse/toggle and one-shot/continuous output modes.",
+  "competitor": "Previewing output early overfits one-shot toggle or changes a real continuous/pulse phase.",
+  "test": "Calibrated576-case TA/PB6/request/TA/ICR sweep with PBON-off,continuous and pulse controls,then replay immutable PB6 candidate.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "candidate repairs only": "Require existing settled output and IRQ controls plus broad tests.",
+    "new qualified pulse/continuous difference": "Reject or narrow the output model with a physical explanation."
+  },
+  "next_question": "Does early-transfer PB6 visibility generalize without counter/request regressions?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-pb-controls-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-pb-controls-v1\\run2"
+  ],
+  "evidence_fingerprint": "4bb8ccae6f805cf504a42a7c9d48baddbe93601b63a1ebf697e330f735dba8bd",
+  "no_new_evidence": 1,
+  "validation": [],
+  "decision": "review evidence"
+}

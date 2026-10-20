@@ -1,0 +1,28 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\default-replay-check",
+  "hypothesis": "The first A-source transfer is misplaced relative to the CPU under display DMA.",
+  "test": "Fixed5555 CPU overwrite of first A word versus unused neighbor after one-word AD; D-only,no-start,preseeded5555 positive controls; no/four/six planes,normal/nasty,NOP0..3,neighboring launches.",
+  "smaller_reproducer": null,
+  "next_question": "Does the blitter fetch A before or after the CPU overwrite,relative to the model?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "0cb6b80283604425067106b47d4afc5f4bf6f261c9771af7d0cad72482700903",
+  "decision": "review evidence",
+  "experiment": "handoff-race-regression",
+  "identity": {
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+    "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364"
+  },
+  "competitor": "Source ordering is correct; the remaining mismatch comes from completion or status observation.",
+  "outcomes": {
+    "old/new destination boundary differs": "First A-fetch/CPU ordering is wrong; inspect request/grant sequencing before completion.",
+    "destination ordering matches but status or beams differ": "Keep completion/status or CPU observation in scope; do not move source fetch.",
+    "control destination or stored word wrong": "Reject capture before inference."
+  },
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run2"
+  ],
+  "validation": []
+}

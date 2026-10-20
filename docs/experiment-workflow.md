@@ -347,3 +347,16 @@ control and reference without changing qualification/regression budgets. If no
 existing sample brackets the transition, widen the actual observer before
 requesting hardware again. Post-read beam witnesses also include contention in
 the following beam read; do not present them as the preceding bus grant time.
+
+When timing hypotheses keep trading one mismatch family for another, add an
+ordering witness: a timed CPU source overwrite plus settled blitter data can
+separate transfer order from status visibility. Include preseeded old/new,
+unused-neighbor and no-start controls. Check that emulator DMA actually reads
+live memory; a launch-time source snapshot can mask every such race. Treat CPU
+launch, Copper launch and CPU launch under Copper pressure as separate neighbors
+before accepting a startup rule. Reuse their saved captures rather than repeating
+unchanged hardware experiments after each candidate.
+
+When turning a ROM witness into a Rust test, copy its explicit register
+preconditions, including both A word masks, rather than relying on constructor
+defaults. Check the fixture setup against the ROM before a slow core-test build.

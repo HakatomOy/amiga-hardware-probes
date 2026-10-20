@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "id": "blit-start-eligible",
+  "hypothesis": "Both normal-blit startup stages consume eligible slots; fixed DMA stalls StartDelay as well as INIT.",
+  "competitor": "Only INIT stalls or CPU memory commit/grant phase causes the source ordering difference.",
+  "test": "Classify both normal startup stages BusFree and mirror prediction; replay64 source-order errors,all controls,then kind71/74/75/76 six-plane and Copper neighbors before broad tests.",
+  "outcomes": {
+    "source ordering and status/beam repairs without regressions": "Supports generic eligible startup,require focused/neighbor/broad acceptance.",
+    "new field/qualification or ordering regressions": "Reject or narrow;never gate on plane count."
+  },
+  "next_question": "Do both eligible startup stages explain four- and six-plane ordering and status controls together?",
+  "investigation": "investigations/blit-start-eligible.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/handoff-race-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+  "capture": {
+    "minimum_seconds": 300,
+    "expected_cases": 2304,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "unit": "word",
+        "meaning": "CPU overwrite completed at selected address",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "Preloaded overwrite value preserved",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "unit": "word",
+        "meaning": "No-start destination stays zero",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 0,
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "D-only ignores A overwrite",
+        "require_values": [
+          65535
+        ],
+        "allowed_values": [
+          65535
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 6,
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "Preseeded AD confirms new value can reach D",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 24,
+            "equals": 16
+          }
+        },
+        "unit": "word",
+        "meaning": "Unused-neighbor overwrite cannot change A data",
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 24,
+            "equals": 0
+          }
+        },
+        "unit": "word",
+        "meaning": "Race copies old or new source; old baseline witness required",
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690,
+          21845
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/handoff-race-v1/run1",
+    "references/handoff-race-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Fixed5555 CPU overwrite value, not a register read"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "written_word",
+        "field": "aux",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Selected CPU-written source/neighbor word after settling"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 360,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/handoff-race-20261020/baseline-v1/candidate"
+}

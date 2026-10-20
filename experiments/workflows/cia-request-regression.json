@@ -10,7 +10,7 @@
     "read/phase brackets differ": "Exclude timing inference; narrow calibration or measurement before patching."
   },
   "next_question": "Across timer periods and sample offsets, which request transitions are early without changing timer state?",
-  "investigation": "investigations/cia-request.json",
+  "investigation": "investigations/cia-request-regression.json",
   "binary": "../Copperline/target/ci/copperline.exe",
   "romdir": "build/cia-request-v2",
   "config": "../Copperline/tmp/golden-a500-ecs.toml",
@@ -138,5 +138,6 @@
   },
   "build": [],
   "validation": [],
-  "baseline": "captures/cia-source-20261019/request-baseline-v2/candidate"
+  "baseline": "captures/cia-source-20261019/request-baseline-v2/candidate",
+  "purpose": "regression"
 }

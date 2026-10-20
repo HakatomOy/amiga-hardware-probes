@@ -1,0 +1,37 @@
+{
+  "experiment": "blit-start-eligible",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\start-eligible-only",
+  "identity": {
+    "binary_sha256": "14924aa3f27826a1d639efe52d0319cf045cdfe9614b1f2f1214122dbaa17cc1",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+    "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364"
+  },
+  "hypothesis": "Both normal-blit startup stages consume eligible slots; fixed DMA stalls StartDelay as well as INIT.",
+  "competitor": "Only INIT stalls or CPU memory commit/grant phase causes the source ordering difference.",
+  "test": "Classify both normal startup stages BusFree and mirror prediction; replay64 source-order errors,all controls,then kind71/74/75/76 six-plane and Copper neighbors before broad tests.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "source ordering and status/beam repairs without regressions": "Supports generic eligible startup,require focused/neighbor/broad acceptance.",
+    "new field/qualification or ordering regressions": "Reject or narrow;never gate on plane count."
+  },
+  "next_question": "Do both eligible startup stages explain four- and six-plane ordering and status controls together?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run2"
+  ],
+  "evidence_fingerprint": "c8d4984d2f5bd34a1c9f2ee40160ba1665cdc9743bde77a981053c686e34b9f7",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "patch",
+  "decision_reason": "Both eligible startup stages repair all384 beam witnesses with zero field regressions;64 frozen-source errors remain. Hardware5555 destination after post-BLTSIZE CPU write disproves A/B snapshot semantics; replace source reads with live RAM and validate jointly.",
+  "evidence": [
+    "captures/handoff-race-20261020/baseline-v1/comparison.json",
+    "captures/handoff-race-20261020/start-eligible-only/comparison.json"
+  ]
+}

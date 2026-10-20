@@ -1,8 +1,8 @@
 {
   "experiment": "handoff-access-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-cpu-20261020\\init-access",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\handoff-race-20261020\\copper-start-acceptance\\handoff-access-regression",
   "identity": {
-    "binary_sha256": "11b65868ac7f86dcde000b12d878fc2260c94e9c843dcdc74bf25982a900ab6e",
+    "binary_sha256": "831e263ee4b3c945fc3b8a019fe4568f3500c31a84177630379aca6545485669",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "f5d1ba31139af195bb63457999ac8ed0b665f195f28b24a378f0a83fbba8e11d",
     "source_id": "f2e319c108e5e95e526ab2fe3b5708201192e2aa383e37b2b3058f9058edf801"
@@ -22,12 +22,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-access-v1\\run2"
   ],
   "evidence_fingerprint": "d476bf9a9d2d68c162c7700315020063b25ff826d80e3372d79e05d282a94d9b",
-  "no_new_evidence": 0,
-  "validation": [
-    {
-      "name": "preflight",
-      "exit": 0
-    }
-  ],
+  "no_new_evidence": 3,
+  "validation": [],
   "decision": "review evidence"
 }
