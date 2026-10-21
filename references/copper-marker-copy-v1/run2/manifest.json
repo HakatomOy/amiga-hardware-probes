@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "reference_id": "copper-marker-copy-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\marker-copy-hardware-v1\\hardware-2",
+  "test_rom_sha256": "6d1a9016d711d2a7e87da7ef237cf718c1cfaababe7a2b4646ef013246c6c778",
+  "source_id": "3a5ff122f9945194bc286fb26aee7130a4bbe1f0e95c3a101dd4c3b01b2fee45",
+  "results_sha256": "980e664fcb7b110180ad48aeb37efa0575629a6e4ec556f9db193cc753dc6a0a",
+  "record_count": 96,
+  "metadata": {
+    "version": 1,
+    "source_id": "3a5ff122f9945194bc286fb26aee7130a4bbe1f0e95c3a101dd4c3b01b2fee45",
+    "record_count": 96,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "980e664fcb7b110180ad48aeb37efa0575629a6e4ec556f9db193cc753dc6a0a"
+  },
+  "restoration": {
+    "backup_sha256": "ab7274fc5c37bb56deb5d9ead92b916c71f318d5d2a3230a7a3a6462a76d2a69",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "ab7274fc5c37bb56deb5d9ead92b916c71f318d5d2a3230a7a3a6462a76d2a69",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 94,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "No blitter; unknown marker instruction lies inside measured window. Exact raw input qualification; no alignment.",
+    "variants": "bit11 register-marker+twoNOP control instead of memory marker;gate-first,RGAread only;off/WAIT/active;phase0/1,pad0..3",
+    "fields": {
+      "12": "input before prefix",
+      "18": "first marker sample",
+      "22": "following register marker",
+      "20": "post-access beam",
+      "16": "access result",
+      "28": "settled IRQ",
+      "30": "settled beam"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 48,
+    "independently_repeated_cohorts": 48,
+    "candidate_cases_with_independent_repeats": 96,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\marker-copy-hardware-v1\\reference-2"
+}

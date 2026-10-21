@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "id": "copper-restart-prefix",
+  "hypothesis": "MOVEA.L immediate prefix timing explains the four-CCK pre-strobe skew independently of restart ownership.",
+  "competitor": "The common entry/read anchor or restart path is responsible, rather than MOVEA immediate.",
+  "test": "Measure an input beam before the unknown prefix, then a pre-strobe beam after MOVEA immediate versus register+twoNOPs, followed by immediate RGAread/write; both gate orders, off/WAIT/active, phases0/1 and pads0..7.",
+  "outcomes": {
+    "prefix differs while input anchor matches": "Fix CPU instruction/prefetch timing before judging restart.",
+    "both prefix controls match but post-access differs": "Constrain restart arbitration by RGA direction/gate order.",
+    "input anchor fails": "Repair input qualification; never align away the skew."
+  },
+  "next_question": "Is the prefix skew a MOVEA timing error or a common input/entry error?",
+  "investigation": "investigations/copper-restart-prefix.json",
+  "binary": "captures/copper-phase-20261020/body-final-candidate/emulator.exe",
+  "romdir": "build/copper-restart-prefix-v3",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "bac128e7e9449e815756dfe537d365b913bea081d8683c6004d7d83d36a99e73",
+  "capture": {
+    "minimum_seconds": 520,
+    "expected_cases": 768,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "Write source remains5555",
+        "where": {
+          "variant": {
+            "mask": 32,
+            "equals": 32
+          }
+        },
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "end_beam",
+        "shift": 8,
+        "mask": 255,
+        "unit": "VHPOSR vertical low byte",
+        "meaning": "RGAread returns current experiment line",
+        "where": {
+          "variant": {
+            "mask": 32,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          66
+        ],
+        "allowed_values": [
+          66,
+          67
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "comparison": {
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact input beam before unknown prefix; no alignment"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "prefix_complete",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "First observer after immediate/register prefix, before any restart"
+      },
+      {
+        "name": "access_result",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "RAM/VHPOSR read result, or write source"
+      },
+      {
+        "name": "post_access",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "First beam observer after immediate access"
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "After fixed ROM DBRA settling loop"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite stream completion witness"
+      }
+    ],
+    "alignment": "exact",
+    "min_matches": 768
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "references": [
+    "references/copper-restart-prefix-v1/run1",
+    "references/copper-restart-prefix-v1/run2"
+  ],
+  "baseline": "captures/copper-phase-20261020/restart-prefix-hardware-v3/candidate"
+}

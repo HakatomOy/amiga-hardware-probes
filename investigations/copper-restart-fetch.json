@@ -1,0 +1,29 @@
+{
+  "experiment": "copper-restart-fetch",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\lockout-read-controls\\restart-fetch",
+  "identity": {
+    "binary_sha256": "9f1735443fd57d885eb175cb48fc3a823933d5b91b00ab881c7b7bfc026591f6",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "1d94f7eb5f084ca1b60ffd1f5959e59addec4b8219be5673f27f8a0b3f836bdd",
+    "source_id": "026918ef3de35a37db782b7b5ddd2b88d043828297114f9b08138c1e279fd520"
+  },
+  "hypothesis": "Chip-RAM instruction prefetch ownership differs during Copper restart, while ROM-executed operand controls match.",
+  "competitor": "Restart/fetch ordering is correct; legacy collision qualification is caused by first-marker entry or missing phase cohorts.",
+  "test": "Execute identical copied banks from ROM or30000 chip RAM. Common ROM input marker precedes venue entry. Pair gate orders,RGAread/write,off/WAIT/active,phase0/1,pad0..3 and repeat twice; no blitter.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "RAM-only post-gate discrepancy": "Constrain CPU-prefetch/reload arbitration, not operand or Init delays.",
+    "RAM prefix differs before gate": "Isolate chip instruction fetch/entry timing before restart.",
+    "both venues match": "Reject generic fetch distinction; isolate original first-marker path.",
+    "input/control failure": "Repair probe before interpreting."
+  },
+  "next_question": "Does RAM instruction prefetch expose restart ownership errors absent from ROM controls?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\restart-fetch-hardware-v2\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\restart-fetch-hardware-v2\\reference-2"
+  ],
+  "evidence_fingerprint": "5d9522d383f3427969b7882434f927e7c4830607a1b1cbaee87b608a9d03be6e",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "validation failed"
+}

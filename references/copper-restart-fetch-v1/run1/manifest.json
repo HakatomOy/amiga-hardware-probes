@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "reference_id": "copper-restart-fetch-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\restart-fetch-hardware-v2\\hardware-1",
+  "test_rom_sha256": "1d94f7eb5f084ca1b60ffd1f5959e59addec4b8219be5673f27f8a0b3f836bdd",
+  "source_id": "026918ef3de35a37db782b7b5ddd2b88d043828297114f9b08138c1e279fd520",
+  "results_sha256": "863c1b453a20ccf92f3b226ca03a7341e92bdb60ada9a94d74833c663ecb7e2d",
+  "record_count": 384,
+  "metadata": {
+    "version": 1,
+    "source_id": "026918ef3de35a37db782b7b5ddd2b88d043828297114f9b08138c1e279fd520",
+    "record_count": 384,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "863c1b453a20ccf92f3b226ca03a7341e92bdb60ada9a94d74833c663ecb7e2d"
+  },
+  "restoration": {
+    "backup_sha256": "e47e5c77b1a7dbe1500e710eb9fadc4b11acf07ec94dbaf312e3b25cb8ff0adc",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "e47e5c77b1a7dbe1500e710eb9fadc4b11acf07ec94dbaf312e3b25cb8ff0adc",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 95,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "All banks copied for both venues before alignment. Same instructions; address/prefetch arbitration differs. No blitter, exact raw qualification, no alignment.",
+    "variants": "bit12 execute from30000 shadow instead offfb000 ROM;bit10 gate order;bit5 RGAread/write;bits9:8 off/WAIT/active",
+    "fields": {
+      "12": "input beam",
+      "18": "prefix-complete beam",
+      "20": "post-access beam",
+      "16": "access result",
+      "28": "settled IRQ",
+      "30": "settled beam"
+    },
+    "scratch": "30000..30fff; outside code starting20000 and results40000"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 192,
+    "independently_repeated_cohorts": 192,
+    "candidate_cases_with_independent_repeats": 384,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required. Identical banks copied to30000..30fff for both venues; input in common ROM before jumping to RAM/ROM. No blitter.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\restart-fetch-hardware-v2\\reference-1"
+}

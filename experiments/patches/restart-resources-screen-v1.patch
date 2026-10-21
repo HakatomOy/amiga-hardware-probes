@@ -1,0 +1,1327 @@
+diff --git a/docs/internals/timing.md b/docs/internals/timing.md
+index 55d3fb55..87ad5cfd 100644
+--- a/docs/internals/timing.md
++++ b/docs/internals/timing.md
+@@ -169,6 +169,30 @@ aligned longword use the AGA fetch latch and do not request or wait for the
+ same value twice. This read/write asymmetry is covered by
+ `aga_68020_chip_reads_wait_for_data_but_writes_are_posted`.
+ 
++### Classic CPU/Copper transfer boundaries
++
++On the synchronous classic chip-bus path, a granted word transfers before
++the CPU's trailing colour clock. Chip-RAM stores publish each word at that
++boundary, including the two separate halves of a longword. Copper samples
++COPEN before the tail; an odd CPU grant can therefore expose an earlier
++even Copper restart phase. Other DMACON consumers retain their calibrated
++write phase. CPU COPJMP reads and writes take effect at the granted word's end,
++then enter the same two restart phases as a Copper-issued strobe. A pointer
++write while DMA is disabled preserves a pending restart and its live reload.
++The first restart phase is free; the second reserves a DMA slot for pointer
++reload without inventing an instruction-word memory transfer.
++
++A stock CPU chip/RGA cycle also waits when it would enter the Copper's
++pre-refresh turnaround. The guard considers the upcoming Copper request,
++not just the previous bus owner. CPU-started normal blitter StartDelay can
++overlap Copper, but Init and normal bus-free body phases require a free RGA
++clock and cannot enter that turnaround. Memory-transfer cycles and internal
++terminal phases retain their separate rules. The completion predictor walks
++the same phase-specific reservation. These distinctions are constrained by repeated
++A500 CPU/Copper instruction-word races, settled-WAIT controls and blitter
++source/readback races; they are not uniform timing offsets. The 020+ posted
++write path retains its separate timing.
++
+ ### Deferred timed-device ticks
+ 
+ The chipset and beam advance every colour clock, but the *timed devices*
+@@ -431,9 +455,9 @@ wait for the blitter to go idle.
+ 
+ ### COPJMP and frame reload
+ 
+-- A CPU write to COPJMP1/COPJMP2 loads the Copper program counter
+-  immediately, but the target list has no visible effect until the Copper
+-  gets DMA slots to fetch it.
++- A CPU write to COPJMP1/COPJMP2 strobes at the granted word's end, then
++  enters the two Copper restart phases. The second phase reserves a DMA
++  slot and loads the live list pointer; instruction fetching follows it.
+ - A CPU *read* of COPJMP1/COPJMP2 fires the same strobe: the register
+   decode acts on the address alone (reading a write-only register performs
+   a bus write of the floating data-bus residue into it -- the UAE/vAmiga
+@@ -447,9 +471,9 @@ wait for the blitter to go idle.
+   `timing-test/copprobe-jmpread.asm` (vAmiga-verified).
+ - A Copper MOVE can update COP1LC/COP2LC; a later COPJMP strobe branches
+   through the *current* value. A Copper MOVE to COPJMP1/COPJMP2 spends its
+-  second word fetch on the strobe, then two more bus-free Copper cycles
++  second word fetch on the strobe, then two more Copper cycles
+   (vAmiga COP_JMP1/COP_JMP2); the program counter reloads on the second of
+-  those, so the first fetch from the new list lands three Copper cycles
++  those, reserving that slot, so the first fetch from the new list lands three Copper cycles
+   after the strobe (verified against the vAmiga copper trace: a COPJMP2
+   MOVE at hpos $04 fetches the target list's first MOVE at $0A, its write
+   landing at $0C).
+diff --git a/src/bus.rs b/src/bus.rs
+index 1a0758e8..8db43e79 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -743,6 +743,22 @@ pub(crate) struct RollbackState {
+ // field needs only `#[serde(default)]` (or to be an Option) for older
+ // states to keep loading; bump the owning chunk's version, with a
+ // migration, only when a change has no correct default.
++fn default_copper_read_guard() -> bool {
++    true
++}
++
++// Temporary experiment selector; remove after the saved-HW resource screen.
++fn experiment_restart_resources() -> u8 {
++    use std::sync::OnceLock;
++    static MODE: OnceLock<u8> = OnceLock::new();
++    *MODE.get_or_init(|| {
++        crate::envcfg::var("COPPERLINE_EXPERIMENT_RESTART_RESOURCES")
++            .and_then(|value| value.parse::<u8>().ok())
++            .unwrap_or(0)
++            & 3
++    })
++}
++
+ #[derive(serde::Serialize, serde::Deserialize)]
+ pub struct Bus {
+     pub mem: Memory,
+@@ -762,6 +778,13 @@ pub struct Bus {
+     pub paula: Paula,
+     pub agnus: Agnus,
+     pub copper: Copper,
++    /// Actual Copper word transfer in the last access phase before lockout.
++    /// Old states retain their conservative read-turnaround rule by default.
++    #[serde(default = "default_copper_read_guard")]
++    copper_fetched_before_lockout: bool,
++    /// A CPU COPEN rise reaches the memory request pipe at the next odd clock.
++    #[serde(default)]
++    cpu_copen_memory_pending: bool,
+     pub denise: Denise,
+     denise_revision: DeniseRevision,
+     /// Effective chip-bus DMA address mask: installed chip RAM capped by the
+@@ -3739,6 +3762,8 @@ impl Bus {
+             paula,
+             agnus: Agnus::new(),
+             copper: Copper::new(),
++            copper_fetched_before_lockout: false,
++            cpu_copen_memory_pending: false,
+             denise: Denise::new(),
+             denise_revision: DeniseRevision::Ocs,
+             chip_dma_mask: 0x0007_FFFF,
+@@ -5522,6 +5547,8 @@ impl Bus {
+         self.slice_bus_advanced_cck = 0;
+         self.slice_bus_tick = AgnusTick::default();
+         self.last_chip_bus_owner = ChipBusOwner::Idle;
++        self.copper_fetched_before_lockout = false;
++        self.cpu_copen_memory_pending = false;
+         self.device_clock.reset();
+         self.emulated_cck = 0;
+         self.emulated_frames = 0;
+@@ -7258,10 +7285,21 @@ impl Bus {
+             }
+             let mut wait_cck = 0;
+             while !self.cpu_can_use_current_slot()
+-                || (matches!(kind, CpuBusAccessKind::Read | CpuBusAccessKind::Fetch)
+-                    && self.cpu_cycle_crosses_line_end_refresh())
++                || (self.cpu_cycle_crosses_line_end_refresh()
++                    && !(experiment_restart_resources() & 1 != 0
++                        && !self.copper_fetched_before_lockout
++                        && matches!(kind, CpuBusAccessKind::Read | CpuBusAccessKind::Fetch)))
+                 || (self.cpu_short_bus_cycle && self.emulated_cck < self.cpu_chip_port_free_at)
+             {
++                if trace_cpu_bus {
++                    eprintln!(
++                        "CPUWAIT kind={} addr={:08x} v={:03x} h={:02x} owner={:?} copper={} lockout={} prior_word={} copen_pending={}",
++                        cpu_bus_access_kind_name(kind), addr.unwrap_or(0), self.agnus.vpos,
++                        self.agnus.hpos, self.scheduled_dma_owner(true), self.copper.state_label(),
++                        self.copper_bus_lockout_active_at(self.agnus.hpos),
++                        self.copper_fetched_before_lockout, self.cpu_copen_memory_pending,
++                    );
++                }
+                 if self.frame_analyzer_enabled {
+                     self.cpu_bus_wait = Some(self.cpu_bus_wait_sample(kind, true));
+                 }
+@@ -9684,6 +9722,14 @@ impl Bus {
+             CpuBusAccessKind::Custom,
+             |bus, slot, stride, phase| {
+                 let word_off = off.wrapping_add((slot as usize * stride) as u16) & 0xFFE;
++                let copjmp = !bus.aga_enabled() && matches!(word_off, 0x088 | 0x08a);
++                if copjmp {
++                    if phase == CpuBusSamplePhase::End {
++                        bus.copjmp_strobe(if word_off == 0x088 { 1 } else { 2 });
++                        sampled_words[slot as usize] = Some(bus.data_bus);
++                    }
++                    return;
++                }
+                 let sample_phase = if word_off == 0x00E {
+                     CpuBusSamplePhase::Start
+                 } else {
+@@ -9815,17 +9861,48 @@ impl Bus {
+     /// should preempt the slice so the freshly-asserted IRQ can be
+     /// delivered before agnus has a chance to OR in VERTB.
+     pub fn custom_write(&mut self, addr: u64, size: usize, val: u64) -> bool {
+-        self.grant_cpu_bus_access_at(
+-            Some(custom_register_cpu_addr(addr)),
+-            size,
+-            CpuBusAccessKind::Custom,
+-        );
++        let off = (addr & 0xFFF) as u16;
++        // Copper samples COPEN at transfer, before the CPU tail. Other
++        // DMACON consumers retain their own calibrated write phase.
++        let mut sampled_strobes = [false; 2];
++        let phase_sensitive = |word: u16| matches!(word & !1, 0x088 | 0x08a | 0x096);
++        if !self.cpu_short_bus_cycle
++            && !self.aga_enabled()
++            && (phase_sensitive(off) || size == 4 && phase_sensitive(off.wrapping_add(2)))
++        {
++            self.grant_cpu_bus_access_sampled_phased(
++                Some(custom_register_cpu_addr(addr)),
++                size,
++                CpuBusAccessKind::Custom,
++                |bus, slot, stride, phase| {
++                    let word_off = off.wrapping_add((slot as usize * stride) as u16) & !1;
++                    if matches!(word_off, 0x088 | 0x08a) && phase == CpuBusSamplePhase::End {
++                        bus.copjmp_strobe(if word_off == 0x088 { 1 } else { 2 });
++                        sampled_strobes[slot as usize] = true;
++                    }
++                    if word_off == 0x096 && phase == CpuBusSamplePhase::End {
++                        let word = match size {
++                            1 => (val as u8 as u16) * 0x0101,
++                            4 if slot == 0 => (val >> 16) as u16,
++                            _ => val as u16,
++                        };
++                        bus.flush_timed_devices();
++                        bus.sample_cpu_copper_dma_gate(word);
++                    }
++                },
++            );
++        } else {
++            self.grant_cpu_bus_access_at(
++                Some(custom_register_cpu_addr(addr)),
++                size,
++                CpuBusAccessKind::Custom,
++            );
++        }
+         // Apply deferred device clocks before the write lands: registers such as
+         // INTREQ/INTENA/ADKCON/DSKLEN/AUDxxx/SERDAT change timed-device state, so
+         // the device must first be advanced to this color clock (e.g. so a
+         // pending IRQ is latched before an INTREQ clear).
+         self.flush_timed_devices();
+-        let off = (addr & 0xFFF) as u16;
+         if self.regcheck.is_some() {
+             self.note_cpu_custom_access(addr, off, size, false);
+         }
+@@ -9847,7 +9924,8 @@ impl Bus {
+                 if diag_cpu_writes_on() {
+                     self.diag_cpu_write(off & 0xFFE, word);
+                 }
+-                self.write_custom_word_from(off & 0xFFE, word, BeamWriteSource::Cpu)
++                !sampled_strobes[0]
++                    && self.write_custom_word_from(off & 0xFFE, word, BeamWriteSource::Cpu)
+             }
+             4 => {
+                 // MOVE.L to $DFFxxx writes two consecutive register
+@@ -9861,8 +9939,10 @@ impl Bus {
+                     self.diag_cpu_write(off, hi);
+                     self.diag_cpu_write(off.wrapping_add(2), lo);
+                 }
+-                let p1 = self.write_custom_word_from(off, hi, BeamWriteSource::Cpu);
+-                let p2 = self.write_custom_word_from(off.wrapping_add(2), lo, BeamWriteSource::Cpu);
++                let p1 = !sampled_strobes[0]
++                    && self.write_custom_word_from(off, hi, BeamWriteSource::Cpu);
++                let p2 = !sampled_strobes[1]
++                    && self.write_custom_word_from(off.wrapping_add(2), lo, BeamWriteSource::Cpu);
+                 p1 || p2
+             }
+             _ => {
+@@ -9871,7 +9951,7 @@ impl Bus {
+                 if diag_cpu_writes_on() {
+                     self.diag_cpu_write(off, word);
+                 }
+-                self.write_custom_word_from(off, word, BeamWriteSource::Cpu)
++                !sampled_strobes[0] && self.write_custom_word_from(off, word, BeamWriteSource::Cpu)
+             }
+         }
+     }
+diff --git a/src/bus/custom_regs.rs b/src/bus/custom_regs.rs
+index 97da4ea6..afaa1062 100644
+--- a/src/bus/custom_regs.rs
++++ b/src/bus/custom_regs.rs
+@@ -159,17 +159,31 @@ impl Bus {
+         value
+     }
+ 
+-    /// COPJMP1/COPJMP2 strobe: reload the Copper program counter from
+-    /// COP1LC/COP2LC now. Fired by any bus access to the strobe address,
++    /// COPJMP1/COPJMP2 strobe: begin the two restart phases before reloading
++    /// the program counter from COP1LC/COP2LC. Any access to the address fires,
+     /// read or write, since the decode acts on the address alone.
+-    fn copjmp_strobe(&mut self, list: u8) {
++    pub(super) fn copjmp_strobe(&mut self, list: u8) {
+         self.invalidate_copper_wake_bound();
+         self.pending_copper_frame_start = None;
+         self.copper_current_list = list;
+-        self.copper.jump(match list {
+-            1 => self.agnus.cop1lc,
+-            _ => self.agnus.cop2lc,
+-        });
++        self.copper.start_jump_tail(list != 1);
++    }
++
++    /// Copper's request gate samples COPEN before the CPU tail. Do not move
++    /// bitplane/audio/blitter enable delivery or their write observers with it.
++    pub(super) fn sample_cpu_copper_dma_gate(&mut self, value: u16) {
++        let enabled_before = self.copper_dma_enabled();
++        let copen_before = self.agnus.dmacon & crate::chipset::copper::DMACON_COPEN != 0;
++        self.agnus.write_dmacon(value & 0x8080);
++        if self.copper_dma_enabled() != enabled_before {
++            self.invalidate_copper_wake_bound();
++        }
++        if !copen_before && self.agnus.dmacon & crate::chipset::copper::DMACON_COPEN != 0 {
++            self.cpu_copen_memory_pending = true;
++            self.copper_active_in_frame = true;
++        } else if self.agnus.dmacon & crate::chipset::copper::DMACON_COPEN == 0 {
++            self.cpu_copen_memory_pending = false;
++        }
+     }
+ 
+     pub(super) fn pot_pins(&self) -> PotPins {
+diff --git a/src/bus/dma_slots.rs b/src/bus/dma_slots.rs
+index 12cfe99a..48f9b712 100644
+--- a/src/bus/dma_slots.rs
++++ b/src/bus/dma_slots.rs
+@@ -137,6 +137,9 @@ impl Bus {
+         // any sleeping WAIT cycle) to the blitter/CPU. `allow_fetch` is false
+         // when a forced owner (a granted CPU access) already holds this cycle.
+         let hpos = self.agnus.hpos;
++        if hpos & 1 != 0 {
++            self.cpu_copen_memory_pending = false;
++        }
+         let fixed_dma_owner = if matches!(forced_owner, Some(ChipBusOwner::Cpu)) {
+             // A forced CPU owner is only used after `cpu_can_use_current_slot`
+             // has already proved that fixed DMA does not own this color clock.
+@@ -158,9 +161,13 @@ impl Bus {
+             Some(_) => false,
+         };
+         let eligible = copper_runs && copper_sees_free_slot;
++        let copper_was_reloading = self.copper.restart_needs_bus();
+         let copper_took_bus = eligible
+             && !copper_invariant_before_deadline
+             && self.step_copper_eligible_slot(forced_owner.is_none(), true);
++        if hpos == self.copper_pre_lockout_access_hpos() {
++            self.copper_fetched_before_lockout = copper_took_bus && !copper_was_reloading;
++        }
+         if !eligible && copper_runs && !copper_invariant_before_deadline {
+             // A fixed DMA owner (bitplane/sprite/disk/audio/refresh) holds
+             // this color clock, but the Copper's WAIT/SKIP comparator is
+@@ -230,17 +237,28 @@ impl Bus {
+             && match self.blitter.current_slot_class() {
+                 crate::chipset::blitter::BlitSlotClass::Bus => false,
+                 crate::chipset::blitter::BlitSlotClass::Internal => true,
+-                crate::chipset::blitter::BlitSlotClass::BusFree => match owner {
+-                    ChipBusOwner::Idle => true,
+-                    ChipBusOwner::Cpu => {
+-                        !(matches!(forced_owner, Some(ChipBusOwner::Cpu))
+-                            && self.blitter_yields_to_waiting_cpu())
+-                    }
+-                    ChipBusOwner::Copper => {
+-                        fixed_dma_owner.is_none() && self.blitter.startup_clock_mask(1) != 0
++                crate::chipset::blitter::BlitSlotClass::BusFree => {
++                    // Bus-free body phases need the same RGA turnaround as
++                    // Init. StartDelay is a clocked startup counter and can
++                    // overlap Copper; it does not request this resource.
++                    if self.blitter.current_slot_uses_free_rga()
++                        && self.cpu_cycle_crosses_line_end_refresh()
++                    {
++                        false
++                    } else {
++                        match owner {
++                            ChipBusOwner::Idle => true,
++                            ChipBusOwner::Cpu => {
++                                !(matches!(forced_owner, Some(ChipBusOwner::Cpu))
++                                    && self.blitter_yields_to_waiting_cpu())
++                            }
++                            ChipBusOwner::Copper => {
++                                fixed_dma_owner.is_none() && self.blitter.startup_clock_mask(1) != 0
++                            }
++                            _ => false,
++                        }
+                     }
+-                    _ => false,
+-                },
++                }
+             };
+         if self.frame_analyzer_enabled && self.blitter.busy {
+             self.record_frame_blit_quantum(
+@@ -493,6 +511,10 @@ impl Bus {
+         let fetch_pc = (self.mem_watches_armed() || trace_full).then(|| self.copper.pc());
+         let sleeping_before = trace_copper_events && self.copper.sleeping_wait().is_some();
+         let was_asleep = self.copper.sleeping_wait().is_some();
++        let allow_fetch = allow_fetch
++            && !(experiment_restart_resources() & 2 != 0
++                && self.cpu_copen_memory_pending
++                && self.copper.is_running());
+         let mut copper = std::mem::take(&mut self.copper);
+         let action = copper.step_eligible_slot(
+             &self.mem.chip_ram,
+@@ -519,7 +541,7 @@ impl Bus {
+         // wait -- which re-latched a watch hit as fast as the debugger
+         // could clear it.
+         if let Some(pc) = fetch_pc {
+-            if !matches!(action, CopperSlotAction::Idle) {
++            if !matches!(action, CopperSlotAction::Idle | CopperSlotAction::Restart) {
+                 self.note_dma_read(crate::debugger::WatchSource::Copper, pc, 4);
+             }
+         }
+@@ -528,6 +550,7 @@ impl Bus {
+         }
+         match action {
+             CopperSlotAction::Idle => false,
++            CopperSlotAction::Restart => true,
+             CopperSlotAction::BusUsed { subtype, word } => {
+                 if let Some(pc) = fetch_pc {
+                     self.annotate_bus_slot(
+@@ -610,6 +633,8 @@ impl Bus {
+         let old_hpos = self.agnus.hpos;
+         let old_frame_lines = self.agnus.current_frame_lines();
+         let old_emulated_cck = self.emulated_cck;
++        let pre_lockout = self.copper_pre_lockout_access_hpos();
++        let old_line_cck = self.agnus.current_line_cck();
+         self.emulated_cck = self.emulated_cck.saturating_add(cck as u64);
+         self.coper_cpu_irq_delay_cck = self.coper_cpu_irq_delay_cck.saturating_sub(cck);
+         if let Some(delay) = self.blit_irq_delay_cck {
+@@ -634,6 +659,14 @@ impl Bus {
+             }
+         }
+         let tick = self.agnus.advance_by_cck(cck);
++        if tick.new_lines > 0 || (old_hpos < pre_lockout && old_hpos + cck > pre_lockout) {
++            self.copper_fetched_before_lockout = false;
++        }
++        let includes_odd =
++            old_hpos & 1 != 0 || cck >= 3 || (cck == 2 && old_hpos + 1 != old_line_cck);
++        if cck != 0 && includes_odd {
++            self.cpu_copen_memory_pending = false;
++        }
+         if !self.ui_beam_traps.is_empty() {
+             self.check_ui_beam_traps((old_vpos, old_hpos), old_frame_lines, tick.new_frames);
+         }
+@@ -812,14 +845,21 @@ impl Bus {
+     }
+ 
+     pub(super) fn cpu_cycle_crosses_line_end_refresh(&self) -> bool {
+-        // Kind65 and trace controls isolate DRAM read turnaround after a
+-        // Copper transfer immediately before refresh. Uncontended reads,
+-        // writes and register grants retain their existing phase.
++        // Stock chip/RGA cycles cannot enter the pre-refresh turnaround
++        // behind a Copper transfer or its upcoming pipelined request. The
++        // Copper's own line-end lockout makes last owner alone insufficient.
++        self.rga_refresh_turnaround_at(
++            self.agnus.hpos,
++            self.last_chip_bus_owner == ChipBusOwner::Copper || self.copper_ready_for_slot(),
++        )
++    }
++
++    fn rga_refresh_turnaround_at(&self, hpos: u32, copper_requested: bool) -> bool {
+         !self.cpu_short_bus_cycle
+             && !self.aga_enabled()
+-            && self.last_chip_bus_owner == ChipBusOwner::Copper
+-            && Self::line_end_refresh_slot(self.agnus.hpos + 1)
+-            && !Self::line_end_refresh_slot(self.agnus.hpos)
++            && copper_requested
++            && Self::line_end_refresh_slot(hpos + 1)
++            && !Self::line_end_refresh_slot(hpos)
+     }
+ 
+     /// Who is denying the CPU the current colour clock, for the frame
+@@ -958,7 +998,10 @@ impl Bus {
+         }
+ 
+         let mut copper = self.copper.clone();
++        let mut copen_memory_pending = self.cpu_copen_memory_pending;
+         let startup_mask = self.blitter.startup_clock_mask(slot_count);
++        let rga_mask = self.blitter.rga_turnaround_clock_mask(slot_count);
++        let mut previous_copper = self.last_chip_bus_owner == ChipBusOwner::Copper;
+         let mut slot_idx = 0u32;
+         let mut elapsed = 0u32;
+         let mut hpos = self.agnus.hpos;
+@@ -977,6 +1020,9 @@ impl Bus {
+             }
+             let line_cck = self.agnus.line_cck_for(lol);
+             let quantum = next_chip_bus_quantum_at(hpos, line_cck);
++            if hpos & 1 != 0 {
++                copen_memory_pending = false;
++            }
+ 
+             // Mirror the live path's per-color-clock Copper cadence on the
+             // clone (stepped on every non-fixed-DMA color clock) so the
+@@ -1032,7 +1078,9 @@ impl Bus {
+                         self.blitter.busy,
+                         self.agnus.cop1lc,
+                         self.agnus.cop2lc,
+-                        true,
++                        !(experiment_restart_resources() & 2 != 0
++                            && copen_memory_pending
++                            && copper.is_running()),
+                         line_cck,
+                         true,
+                     ),
+@@ -1040,11 +1088,19 @@ impl Bus {
+                 )
+             };
+ 
++            let copper_requested = previous_copper
++                || (pending_copper_frame_start.is_none()
++                    && self.copper_dma_enabled()
++                    && (copper.is_running() || copper.restart_needs_bus()));
++            let rga_reserved = self.rga_refresh_turnaround_at(hpos, copper_requested);
++
+             let slot_needs_bus = access_mask & (1u64 << slot_idx) != 0;
+             let slot_consumed = if slot_needs_bus {
+                 // Body cycles need a clock the blitter could have won. CPU
+                 // startup can overlap Copper, but still waits for fixed DMA.
+-                slot_grantable && (!copper_blocks || startup_mask & (1u64 << slot_idx) != 0)
++                slot_grantable
++                    && (!copper_blocks || startup_mask & (1u64 << slot_idx) != 0)
++                    && !(rga_reserved && rga_mask & (1u64 << slot_idx) != 0)
+             } else {
+                 // Internal cycle: elapses unconditionally.
+                 true
+@@ -1056,6 +1112,7 @@ impl Bus {
+                 }
+             }
+ 
++            previous_copper = copper_blocks;
+             elapsed = elapsed.saturating_add(quantum);
+             hpos = hpos.saturating_add(quantum);
+             if hpos >= line_cck {
+@@ -1533,7 +1590,11 @@ impl Bus {
+         if !self.copper_dma_enabled() {
+             return false;
+         }
+-        self.copper.is_running()
++        (self.copper.is_running()
++            && !(experiment_restart_resources() & 2 != 0
++                && self.cpu_copen_memory_pending
++                && self.agnus.hpos & 1 == 0))
++            || self.copper.restart_needs_bus()
+     }
+ 
+     /// Whether the Copper's WAIT/SKIP comparator advances this color clock.
+@@ -1549,6 +1610,10 @@ impl Bus {
+         hpos == self.copper_bus_lockout_hpos()
+     }
+ 
++    fn copper_pre_lockout_access_hpos(&self) -> u32 {
++        self.copper_bus_lockout_hpos().saturating_sub(1) & !1
++    }
++
+     pub(super) fn copper_bus_lockout_hpos(&self) -> u32 {
+         if self.agnus.lol {
+             COPPER_BUS_LOCKOUT_HPOS_LONG_LINE
+@@ -1704,6 +1769,7 @@ impl Bus {
+         // constructed test states (DMACON preset without a register write)
+         // on the latch-only path a live Copper uses.
+         if !self.copper_active_in_frame
++            && !self.copper.restart_pending()
+             && !self.copper_dma_enabled()
+             && self.copper_current_list == list
+         {
+diff --git a/src/bus/tests.rs b/src/bus/tests.rs
+index 0550a78f..36af1785 100644
+--- a/src/bus/tests.rs
++++ b/src/bus/tests.rs
+@@ -42,7 +42,7 @@ use crate::chipset::denise::BPLCON2_RDRAM;
+ use crate::chipset::denise::{rgb12_to_rgba8, DeniseRevision, DiwHigh, COLOR_TRANSPARENCY_BIT};
+ use crate::chipset::paula::{
+     pending_ipl, Paula, DMACON_DMAEN, INT_AUD0, INT_BLIT, INT_COPER, INT_EXTER, INT_MASTER,
+-    INT_PORTS, INT_VERTB, PAULA_CLOCK_HZ,
++    INT_PORTS, INT_SOFT, INT_VERTB, PAULA_CLOCK_HZ,
+ };
+ use crate::floppy::{FloppyController, ADF_SIZE};
+ use crate::memory::Memory;
+@@ -1859,7 +1859,7 @@ fn run_copper_guarded_move(revision: AgnusRevision, register: u16, cdang: bool)
+     assert!(!bus.custom_write(0x080, 2, 0x0000));
+     assert!(!bus.custom_write(0x082, 2, cop1 as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    bus.advance_chipset(8);
++    bus.advance_chipset(12);
+     bus
+ }
+ 
+@@ -3092,8 +3092,8 @@ fn copper_jump_latches_bitplane_state_from_chip_ram() {
+     assert!(!bus.custom_write(0x080, 2, 0x0000));
+     assert!(!bus.custom_write(0x082, 2, 0x0100));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    // Four MOVEs at the 4-color-clock Copper cadence (last write at +14).
+-    bus.advance_chipset(18);
++    // CPU restart adds four clocks; four MOVEs follow (last write at +18).
++    bus.advance_chipset(22);
+ 
+     assert_eq!(bus.denise.bplpt[0], 0x6090);
+     assert_eq!(bus.denise.bplcon0, 0x4200);
+@@ -3117,7 +3117,7 @@ fn copper_can_fetch_list_from_chip_ram_base() {
+     assert!(!bus.custom_write(0x080, 2, 0x0000));
+     assert!(!bus.custom_write(0x082, 2, 0x0000));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    bus.advance_chipset(6);
++    bus.advance_chipset(10);
+ 
+     assert_eq!(bus.denise.palette[0], 0x00F0);
+ }
+@@ -3186,7 +3186,8 @@ fn bus_with_copper_intreq_move_on_second_word_slot() -> Bus {
+     bus.agnus.cop1lc = cop1 as u32;
+     bus.agnus.hpos = 0x20;
+     bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
+-    assert!(!bus.custom_write(0x088, 2, 0xFFFF));
++    // Start the stream directly: this fixture isolates read sampling, not COPJMP.
++    bus.copper.jump(cop1 as u32);
+ 
+     // The first MOVE word is fetched at $20. The CPU's granted read at $21
+     // samples before the Copper fetches the value and asserts INTREQ during
+@@ -3462,7 +3463,7 @@ fn copper_dma_enable_gates_instruction_execution() {
+ 
+     bus.agnus.hpos = 0x20;
+     assert!(!bus.custom_write(0x096, 2, (0x8000 | DMACON_DMAEN | DMACON_COPEN) as u64));
+-    bus.advance_chipset(4);
++    bus.advance_chipset(8);
+     assert_eq!(bus.denise.bplcon0, 0x4200);
+ }
+ 
+@@ -3490,7 +3491,8 @@ fn copper_lc_write_retargets_dormant_copper_pc() {
+     bus.agnus.hpos = 0x20;
+     assert!(!bus.custom_write(0x080, 2, 0x0000));
+     assert!(!bus.custom_write(0x082, 2, cop1 as u64));
+-    assert!(!bus.custom_write(0x088, 2, 0xFFFF)); // strobe: list 1, PC = cop1
++    // Isolate the dormant VBL reload from a CPU strobe's pending phases.
++    bus.copper.jump(cop1 as u32);
+ 
+     // Dormant retarget: the rewrite moves the PC, no strobe needed.
+     assert!(!bus.custom_write(0x082, 2, redirected as u64));
+@@ -3562,7 +3564,7 @@ fn copper_dma_enable_gates_current_pc_until_copjmp_strobe() {
+     assert_eq!(bus.denise.bplcon0, 0);
+ 
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    bus.advance_chipset(4);
++    bus.advance_chipset(8);
+     assert_eq!(bus.denise.bplcon0, 0x4200);
+ }
+ 
+@@ -3608,7 +3610,7 @@ fn copjmp_strobe_fires_on_read_access() {
+         0xCAFE,
+         "the strobe address is undriven: the read must float to the residue"
+     );
+-    bus.advance_chipset(4);
++    bus.advance_chipset(8);
+     assert_eq!(
+         bus.denise.bplcon0, 0x4200,
+         "a read of COPJMP1 must strobe the jump to COP1LC"
+@@ -3622,7 +3624,7 @@ fn copjmp_strobe_fires_on_read_access() {
+         0xBEEF,
+         "the strobe address is undriven: the read must float to the residue"
+     );
+-    bus.advance_chipset(4);
++    bus.advance_chipset(8);
+     assert_eq!(
+         bus.denise.palette[0], 0x0999,
+         "a read of COPJMP2 must strobe the jump to COP2LC"
+@@ -4475,12 +4477,12 @@ fn copper_write_restrictions_require_copcon_for_blitter_registers() {
+     assert!(!bus.custom_write(0x080, 2, 0x0000));
+     assert!(!bus.custom_write(0x082, 2, cop1 as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    bus.advance_chipset(4);
++    bus.advance_chipset(8);
+     assert_eq!(bus.blitter.bltcon0, 0);
+ 
+     assert!(!bus.custom_write(0x02E, 2, 0x0002));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    bus.advance_chipset(4);
++    bus.advance_chipset(8);
+     assert_eq!(bus.blitter.bltcon0, 0x1234);
+ }
+ 
+@@ -4578,12 +4580,12 @@ fn copper_halts_on_forbidden_register_move_until_next_strobe() {
+     assert!(!bus.custom_write(0x086, 2, legal as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+ 
+-    bus.advance_chipset(8);
++    bus.advance_chipset(12);
+     assert_eq!(bus.denise.palette[0], 0);
+     assert!(!bus.copper.is_running());
+ 
+     assert!(!bus.custom_write(0x08A, 2, 0xFFFF));
+-    bus.advance_chipset(4);
++    bus.advance_chipset(8);
+     assert_eq!(bus.denise.palette[0], 0x0666);
+ }
+ 
+@@ -4645,7 +4647,7 @@ fn copper_move_updates_cop1lc_location_register() {
+     assert!(!bus.custom_write(0x080, 2, 0x0000));
+     assert!(!bus.custom_write(0x082, 2, cop1 as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    bus.advance_chipset(12);
++    bus.advance_chipset(16);
+ 
+     assert_eq!(bus.agnus.cop1lc, 0x030200);
+     assert_eq!(bus.denise.palette[0], 0x0555);
+@@ -4673,6 +4675,24 @@ fn copper_cannot_set_copcon_itself() {
+     assert_eq!(bus.blitter.bltcon0, 0);
+ }
+ 
++#[test]
++fn copper_restart_reload_reserves_the_slot_before_a_waiting_cpu() {
++    let mut bus = empty_bus();
++    bus.set_cpu_bus_arbitration_enabled(true);
++    bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
++    bus.agnus.cop1lc = 0x1000;
++    bus.copper.start_jump_tail(false);
++    bus.agnus.hpos = 0x40;
++    bus.advance_chipset(1); // First phase is free; reload now requests a slot.
++    assert!(bus.copper.restart_needs_bus());
++    bus.agnus.hpos = 0x42;
++    let before = bus.emulated_cck;
++    bus.grant_cpu_bus_access_at(Some(0x12000), 2, CpuBusAccessKind::Write);
++    assert_eq!(bus.emulated_cck - before, 3);
++    assert_eq!(bus.copper.pc(), 0x1002);
++    assert!(bus.copper.mid_instruction());
++}
++
+ #[test]
+ fn cpu_copjmp1_strobe_waits_for_target_instruction_dma_slots() {
+     let mut bus = empty_bus();
+@@ -4692,15 +4712,240 @@ fn cpu_copjmp1_strobe_waits_for_target_instruction_dma_slots() {
+     assert_eq!(bus.denise.palette[0], 0);
+     assert!(bus.current_render_events().is_empty());
+ 
+-    // First-word fetch at 0x20, idle half at 0x21, second-word fetch+write
+-    // at 0x22 (recorded at its Denise-effective position, 0x26).
+-    bus.advance_chipset(2);
++    // Restart phases at 0x20/0x22, IR1 at 0x24, IR2+write at 0x26.
++    bus.advance_chipset(6);
+     assert_eq!(bus.denise.palette[0], 0x0123);
+     let event = &bus.current_render_events()[0];
+-    assert_eq!(event.hpos, 0x26);
++    assert_eq!(event.hpos, 0x2a);
+     assert_eq!(event.source, super::BeamWriteSource::Copper);
+ }
+ 
++#[test]
++fn cpu_copjmp_transfer_starts_before_the_bus_tail() {
++    for (read, grant) in [(false, 0x40), (true, 0x40), (false, 0x41), (true, 0x41)] {
++        let mut bus = empty_bus();
++        bus.set_cpu_bus_arbitration_enabled(true);
++        bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
++        bus.agnus.cop1lc = 0x1000;
++        write_chip_word(&mut bus, 0x1000, 0x0180);
++        write_chip_word(&mut bus, 0x1002, 0x0123);
++        write_chip_word(&mut bus, 0x1004, 0xffff);
++        write_chip_word(&mut bus, 0x1006, 0xfffe);
++        bus.agnus.hpos = grant;
++        if read {
++            bus.custom_read(0x088, 2);
++        } else {
++            bus.custom_write(0x088, 2, 0);
++        }
++        while bus.agnus.hpos < 0x48 {
++            bus.advance_chipset(1);
++        }
++        assert_eq!(bus.denise.palette[0], 0);
++        bus.advance_chipset(1);
++        assert_eq!(bus.denise.palette[0], 0x0123, "read={read}");
++    }
++}
++
++#[test]
++fn cpu_pointer_write_preserves_a_pending_disabled_restart() {
++    let mut bus = empty_bus();
++    bus.set_cpu_bus_arbitration_enabled(true);
++    bus.agnus.dmacon = DMACON_DMAEN;
++    bus.agnus.hpos = 0x40;
++    bus.custom_write(0x088, 2, 0);
++    bus.custom_write(0x082, 2, 0x1000);
++    assert_eq!(bus.agnus.cop1lc, 0x1000);
++    assert!(bus.copper.restart_pending());
++    bus.agnus.dmacon |= DMACON_COPEN;
++    for _ in 0..4 {
++        bus.advance_chipset(1);
++    }
++    assert_eq!(bus.copper.pc(), 0x1000);
++}
++
++#[test]
++fn cpu_copen_transfer_exposes_the_same_restart_phase_at_neighboring_grants() {
++    for grant in [0x40, 0x41] {
++        let mut bus = empty_bus();
++        bus.set_cpu_bus_arbitration_enabled(true);
++        bus.agnus.dmacon = DMACON_DMAEN;
++        bus.agnus.cop1lc = 0x1000;
++        write_chip_word(&mut bus, 0x1000, 0x009c);
++        write_chip_word(&mut bus, 0x1002, 0x8004);
++        bus.copper.start_jump_tail(false);
++        bus.agnus.hpos = grant;
++        bus.custom_write(0x096, 2, 0x8080);
++        while bus.agnus.hpos < 0x47 {
++            bus.advance_chipset(1);
++        }
++        assert_eq!(bus.copper.pc(), 0x1002, "grant {grant:x}");
++        assert!(bus.copper.mid_instruction());
++        assert_eq!(bus.paula.intreq & INT_SOFT, 0);
++    }
++}
++
++#[test]
++fn cpu_copen_clear_prevents_a_copper_fetch_in_the_bus_tail() {
++    let mut bus = empty_bus();
++    bus.set_cpu_bus_arbitration_enabled(true);
++    bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
++    write_chip_word(&mut bus, 0x1000, 0x009c);
++    write_chip_word(&mut bus, 0x1002, 0x8004);
++    bus.copper.jump(0x1000);
++    bus.agnus.hpos = 0x40;
++    bus.advance_chipset(1);
++    bus.custom_write(0x096, 2, 0x0080);
++    assert!(bus.copper.mid_instruction());
++    assert_eq!(bus.paula.intreq & INT_SOFT, 0);
++}
++
++#[test]
++fn uncontended_cpu_writes_preserve_init_overlap() {
++    for priority in [0, DMACON_BLTPRI] {
++        for (kind, next) in [
++            (CpuBusAccessKind::Read, "D"),
++            (CpuBusAccessKind::Write, "D"),
++            (CpuBusAccessKind::Custom, "D"),
++        ] {
++            let mut bus = empty_bus();
++            bus.set_cpu_bus_arbitration_enabled(true);
++            bus.agnus.dmacon = DMACON_DMAEN | DMACON_BLTEN | priority;
++            bus.blitter.bltcon0 = 0x09f0;
++            bus.blitter.start_scheduled(0x41, &bus.mem.chip_ram);
++            bus.agnus.hpos = 0x40;
++            bus.advance_chipset(1);
++            assert!(bus.blitter.cpu_start_initializing());
++            let before = bus.emulated_cck;
++            if matches!(kind, CpuBusAccessKind::Custom) {
++                bus.custom_write(0x1fe, 2, 0);
++            } else {
++                bus.grant_cpu_bus_access_at(Some(0x12000), 2, kind);
++            }
++            assert_eq!(bus.emulated_cck - before, 2);
++            assert_eq!(bus.blitter.current_slot_label(), next);
++        }
++    }
++}
++
++#[test]
++fn cpu_blitter_init_waits_for_copper_but_start_delay_can_overlap_it() {
++    let mut bus = empty_bus();
++    bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN | DMACON_BLTEN;
++    bus.copper.jump(0x1000);
++    bus.blitter.bltcon0 = 0x09f0;
++    bus.blitter.start_scheduled(0x41, &bus.mem.chip_ram);
++    bus.agnus.hpos = 0x40;
++    bus.advance_chipset(1); // Copper overlaps the start delay.
++    assert_eq!(bus.blitter.current_slot_label(), "INIT");
++    bus.agnus.hpos = 0x42; // Another Copper fetch cannot consume Init.
++    bus.advance_chipset(1);
++    assert_eq!(bus.blitter.current_slot_label(), "INIT");
++    bus.advance_chipset(1); // Free clock permits Init, without fetching A yet.
++    assert_eq!(bus.blitter.current_slot_label(), "A");
++}
++
++#[test]
++fn cpu_blitter_init_does_not_enter_the_copper_refresh_turnaround() {
++    let mut bus = empty_bus();
++    bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN | DMACON_BLTEN;
++    for word in (0x1000..0x1040).step_by(4) {
++        write_chip_word(&mut bus, word, 0x01fe);
++        write_chip_word(&mut bus, word + 2, 0);
++    }
++    bus.copper.jump(0x1000);
++    bus.blitter.bltcon0 = 0x09f0;
++    bus.blitter.start_scheduled(0x41, &bus.mem.chip_ram);
++    bus.agnus.hpos = 0x40;
++    bus.advance_chipset(1);
++    assert!(bus.blitter.cpu_start_initializing());
++    bus.agnus.hpos = 0xe1;
++    bus.advance_chipset(1);
++    assert!(
++        bus.blitter.cpu_start_initializing(),
++        "next refresh carries a Copper request"
++    );
++    while bus.agnus.hpos != 7 {
++        bus.advance_chipset(1);
++    }
++    assert!(bus.blitter.cpu_start_initializing());
++    bus.advance_chipset(1);
++    assert_eq!(bus.blitter.current_slot_label(), "A");
++}
++
++#[test]
++fn normal_blitter_math_waits_for_refresh_turnaround_and_deadline_agrees() {
++    for copper_enabled in [false, true] {
++        let mut bus = empty_bus();
++        for word in (0x1000..0x1080).step_by(4) {
++            write_chip_word(&mut bus, word, 0x01fe);
++            write_chip_word(&mut bus, word + 2, 0);
++        }
++        bus.agnus.dmacon = DMACON_DMAEN | DMACON_BLTEN;
++        if copper_enabled {
++            bus.agnus.dmacon |= DMACON_COPEN;
++        }
++        bus.copper.jump(0x1000);
++        bus.agnus.vpos = 66;
++        bus.agnus.hpos = if copper_enabled { 0xdb } else { 0xde };
++        bus.blitter.bltcon0 = 0x09f0;
++        bus.blitter.start_scheduled(0x41, &bus.mem.chip_ram);
++        while bus.agnus.hpos != 0xe1 {
++            bus.advance_chipset(1);
++        }
++        let predicted = bus.next_blitter_completion_cck().unwrap();
++        let start = bus.emulated_cck;
++        if copper_enabled {
++            assert_eq!(bus.blitter.current_slot_label(), "D");
++            bus.advance_chipset(1);
++            assert_eq!(bus.blitter.current_slot_label(), "D");
++            while bus.agnus.hpos != 7 {
++                bus.advance_chipset(1);
++            }
++            assert_eq!(bus.blitter.current_slot_label(), "D");
++        }
++        while bus.blitter.busy {
++            bus.advance_chipset(1);
++            assert!(bus.emulated_cck - start < 100);
++        }
++        assert_eq!(bus.emulated_cck - start, u64::from(predicted));
++    }
++}
++
++#[test]
++fn pre_refresh_read_can_follow_copper_lockout_but_not_a_memory_transfer() {
++    for long_line in [false, true] {
++        for kind in [
++            CpuBusAccessKind::Read,
++            CpuBusAccessKind::Fetch,
++            CpuBusAccessKind::Write,
++            CpuBusAccessKind::Custom,
++        ] {
++            let mut bus = empty_bus();
++            bus.set_cpu_bus_arbitration_enabled(true);
++            bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
++            bus.agnus.lol = long_line;
++            for word in (0x1000..0x1040).step_by(4) {
++                write_chip_word(&mut bus, word, 0x01fe);
++                write_chip_word(&mut bus, word + 2, 0);
++            }
++            bus.copper.jump(0x1000);
++            bus.agnus.hpos = 0xe0;
++            bus.advance_chipset(1);
++            assert_eq!(bus.agnus.hpos, 0xe1);
++            assert_eq!(bus.last_chip_bus_owner, ChipBusOwner::Copper);
++            assert_eq!(bus.copper.pc(), if long_line { 0x1002 } else { 0x1000 });
++            let before = bus.emulated_cck;
++            bus.grant_cpu_bus_access_at(Some(0x12000), 2, kind);
++            let read = matches!(kind, CpuBusAccessKind::Read | CpuBusAccessKind::Fetch);
++            if !long_line && read {
++                assert_eq!(bus.emulated_cck - before, 2);
++            } else {
++                assert!(bus.emulated_cck - before > 2);
++            }
++        }
++    }
++}
++
+ #[test]
+ fn copper_move_to_copjmp2_loads_second_list() {
+     let mut bus = empty_bus();
+@@ -4722,10 +4967,10 @@ fn copper_move_to_copjmp2_loads_second_list() {
+     assert!(!bus.custom_write(0x084, 2, 0x0000));
+     assert!(!bus.custom_write(0x086, 2, cop2 as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    // COPJMP2 MOVE fetch (4 cck), the strobe's two tail cycles
++    // CPU restart (4 cck), COPJMP2 MOVE fetch (4 cck), two tail cycles
+     // (COP_JMP1/COP_JMP2, reloading the program counter), then the cop2
+-    // MOVE fetch: write at hpos 0x2A.
+-    bus.advance_chipset(11);
++    // MOVE fetch: write at hpos 0x2E.
++    bus.advance_chipset(15);
+ 
+     assert_eq!(bus.denise.palette[0], 0x0456);
+     assert_eq!(
+@@ -4756,7 +5001,7 @@ fn copper_copjmp2_strobe_waits_for_target_instruction_dma_slots() {
+     assert!(!bus.custom_write(0x086, 2, cop2 as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+ 
+-    bus.advance_chipset(2);
++    bus.advance_chipset(6);
+     assert_eq!(bus.denise.palette[0], 0);
+     assert!(bus.current_render_events().is_empty());
+ 
+@@ -4764,14 +5009,13 @@ fn copper_copjmp2_strobe_waits_for_target_instruction_dma_slots() {
+     assert_eq!(bus.denise.palette[0], 0);
+     assert!(bus.current_render_events().is_empty());
+ 
+-    // COPJMP2 strobe completes at 0x22, spends its two tail cycles
+-    // (COP_JMP1 0x24, COP_JMP2 0x26 reloading the program counter), then
+-    // the cop2 MOVE fetch writes at hpos 0x2A (recorded at its
+-    // Denise-effective position, 0x2E).
++    // CPU restart precedes the COPJMP2 MOVE, which completes at 0x26.
++    // Its tail phases at 0x28/0x2A reload the PC; the cop2 MOVE writes
++    // at 0x2E (recorded at its Denise-effective position, 0x32).
+     bus.advance_chipset(8);
+     assert_eq!(bus.denise.palette[0], 0x0456);
+     let event = &bus.current_render_events()[0];
+-    assert_eq!(event.hpos, 0x2E);
++    assert_eq!(event.hpos, 0x32);
+     assert_eq!(event.source, super::BeamWriteSource::Copper);
+ }
+ 
+@@ -4806,7 +5050,7 @@ fn copper_can_program_cop2lc_before_copjmp2_loop_branch() {
+     // Three programming MOVEs, the strobe's two tail cycles
+     // (COP_JMP1/COP_JMP2), then the jumped-to MOVE: the final write lands
+     // at hpos 0x32.
+-    bus.advance_chipset(19);
++    bus.advance_chipset(23);
+ 
+     assert_eq!(bus.agnus.cop2lc, programmed_cop2 as u32);
+     assert_eq!(bus.denise.palette[0], 0x0789);
+@@ -4838,7 +5082,7 @@ fn copper_can_program_cop1lc_before_copjmp1_loop_branch() {
+     // Two programming MOVEs and the COPJMP1 MOVE, the strobe's two tail
+     // cycles (COP_JMP1/COP_JMP2), then the jumped-to MOVE: the final write
+     // lands at hpos 0x32.
+-    bus.advance_chipset(19);
++    bus.advance_chipset(23);
+ 
+     assert_eq!(bus.agnus.cop1lc, programmed_cop1 as u32);
+     assert_eq!(bus.denise.palette[0], 0x0789);
+@@ -4865,7 +5109,7 @@ fn copper_programmed_cop1lc_sets_automatic_frame_restart() {
+     assert!(!bus.custom_write(0x080, 2, 0x0000));
+     assert!(!bus.custom_write(0x082, 2, cop1 as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    bus.advance_chipset(8);
++    bus.advance_chipset(12);
+ 
+     assert_eq!(bus.agnus.cop1lc, programmed_cop1 as u32);
+ 
+@@ -4903,15 +5147,15 @@ fn automatic_vblank_reload_restarts_cop1_after_copjmp2_branch() {
+     assert!(!bus.custom_write(0x084, 2, 0x0000));
+     assert!(!bus.custom_write(0x086, 2, cop2 as u64));
+     assert!(!bus.custom_write(0x088, 2, 0xFFFF));
+-    // MOVE 0x0111 writes at 0x22; the COPJMP2 MOVE, its two strobe tail
+-    // cycles (COP_JMP1/COP_JMP2), then the cop2 MOVE follow, writing 0x0222
+-    // at hpos 0x2E. Recorded render events sit at the writes'
++    // After CPU restart, MOVE 0x0111 writes at 0x26; the COPJMP2 MOVE,
++    // its two strobe tail cycles, then the cop2 MOVE follow, writing 0x0222
++    // at hpos 0x32. Recorded render events sit at the writes'
+     // Denise-effective positions (+4).
+-    bus.advance_chipset(15);
++    bus.advance_chipset(19);
+ 
+     assert_eq!(bus.denise.palette[0], 0x0222);
+-    assert_eq!(bus.current_render_events()[0].hpos, 0x26);
+-    assert_eq!(bus.current_render_events()[1].hpos, 0x32);
++    assert_eq!(bus.current_render_events()[0].hpos, 0x2A);
++    assert_eq!(bus.current_render_events()[1].hpos, 0x36);
+ 
+     bus.agnus.vpos = crate::chipset::agnus::PAL_LINES - 1;
+     bus.agnus.hpos = COLORCLOCKS_PER_LINE - 1;
+@@ -11855,14 +12099,32 @@ fn stock_cpu_cycle_waits_before_crossing_line_end_refresh() {
+         other.agnus.hpos = 0x0e1;
+         other.last_chip_bus_owner = ChipBusOwner::Copper;
+         other.grant_cpu_bus_access(2, kind);
+-        assert_eq!(
+-            other.take_slice_bus_advance().0,
+-            2,
+-            "writes/registers preserve their grant phase"
++        assert!(
++            other.take_slice_bus_advance().0 > 2,
++            "writes and registers also share the refresh request path"
+         );
+     }
+ }
+ 
++#[test]
++fn stock_cpu_refresh_guard_checks_the_upcoming_copper_request() {
++    for kind in [
++        CpuBusAccessKind::Read,
++        CpuBusAccessKind::Write,
++        CpuBusAccessKind::Custom,
++    ] {
++        let mut bus = empty_bus();
++        bus.set_cpu_bus_arbitration_enabled(true);
++        bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
++        bus.copper.jump(0x1000);
++        bus.agnus.hpos = 0xe1;
++        bus.last_chip_bus_owner = ChipBusOwner::Idle;
++        assert!(bus.cpu_cycle_crosses_line_end_refresh());
++        bus.grant_cpu_bus_access(2, kind);
++        assert!(bus.take_slice_bus_advance().0 > 2);
++    }
++}
++
+ #[test]
+ fn aga_68020_chip_reads_wait_for_data_but_writes_are_posted() {
+     let mut bus = empty_bus();
+diff --git a/src/chipset/blitter.rs b/src/chipset/blitter.rs
+index f10e8194..ac21ca1d 100644
+--- a/src/chipset/blitter.rs
++++ b/src/chipset/blitter.rs
+@@ -904,14 +904,14 @@ impl Blitter {
+             return Some((0, limit));
+         }
+         let (mask, count) = match self.pending.as_ref()? {
+-            PendingBlit::Normal(state) => state.slot_access_pattern(limit - prefix),
++            PendingBlit::Normal(state) => state.slot_access_pattern(limit - prefix, false),
+             PendingBlit::Line(state) => state.slot_access_pattern(limit - prefix),
+         };
+         Some((mask << prefix, count + prefix))
+     }
+ 
+-    /// CPU normal-start slots in the upcoming pattern. They wait for fixed
+-    /// DMA, but can advance alongside Copper; body bus-free slots cannot.
++    /// CPU normal-start delay slots in the upcoming pattern. They wait for
++    /// fixed DMA, but can advance alongside Copper. Init cannot overlap it.
+     pub(crate) fn startup_clock_mask(&self, limit: u32) -> u64 {
+         let Some(PendingBlit::Normal(state)) = &self.pending else {
+             return 0;
+@@ -922,8 +922,7 @@ impl Blitter {
+         let limit = limit.min(64);
+         let prefix = u32::from(self.start_strobe_clocks).min(limit);
+         let count = match state.phase {
+-            NormalBlitPhase::StartDelay => state.start_extra.saturating_add(2),
+-            NormalBlitPhase::Init => 1,
++            NormalBlitPhase::StartDelay => state.start_extra.saturating_add(1),
+             _ => 0,
+         }
+         .min(limit - prefix);
+@@ -934,6 +933,34 @@ impl Blitter {
+         }
+     }
+ 
++    /// Normal bus-free RGA phases, excluding the clocked StartDelay counter.
++    pub(crate) fn rga_turnaround_clock_mask(&self, limit: u32) -> u64 {
++        if !self.busy {
++            return 0;
++        }
++        let Some(PendingBlit::Normal(state)) = &self.pending else {
++            return 0;
++        };
++        let limit = limit.min(64);
++        let prefix = u32::from(self.start_strobe_clocks).min(limit);
++        if prefix == limit {
++            return 0;
++        }
++        state.slot_access_pattern(limit - prefix, true).0 << prefix
++    }
++
++    pub(crate) fn current_slot_uses_free_rga(&self) -> bool {
++        matches!(&self.pending, Some(PendingBlit::Normal(state))
++            if self.start_strobe_clocks == 0
++                && state.phase_uses_free_rga(state.phase, state.pipeline_full))
++    }
++
++    #[cfg(test)]
++    pub(crate) fn cpu_start_initializing(&self) -> bool {
++        matches!(self.pending.as_ref(), Some(PendingBlit::Normal(state))
++            if state.startup_eligible && matches!(state.phase, NormalBlitPhase::Init))
++    }
++
+     /// Diagnostic label of the pipeline cycle the next `tick_scheduled_slot`
+     /// will process (the COPPERLINE_DIAG_BLT_SLOTS slot-trace probe). "-"
+     /// when no blit is pending.
+@@ -1961,11 +1988,22 @@ impl NormalBlitState {
+         self.use_d && pipeline_full
+     }
+ 
++    fn phase_uses_free_rga(&self, phase: NormalBlitPhase, pipeline_full: bool) -> bool {
++        match phase {
++            NormalBlitPhase::Init => self.startup_eligible,
++            NormalBlitPhase::A => !self.use_a,
++            NormalBlitPhase::C => !self.use_c,
++            NormalBlitPhase::D => !self.d_phase_needs_bus_with(pipeline_full),
++            NormalBlitPhase::FillIdle => true,
++            _ => false,
++        }
++    }
++
+     /// Access pattern of the next `limit` scheduled slots (bit k = slot k
+     /// consumes a blitter-eligible colour clock: a bus access or a bus-free
+     /// micro-cycle; clear = internal, elapses unconditionally). Mirrors
+     /// process_phase, including the internal startup and terminal clocks.
+-    fn slot_access_pattern(&self, limit: u32) -> (u64, u32) {
++    fn slot_access_pattern(&self, limit: u32, rga_only: bool) -> (u64, u32) {
+         let count = self.slots_remaining.min(limit).min(64);
+         let mut mask = 0u64;
+ 
+@@ -1994,7 +2032,7 @@ impl NormalBlitState {
+                 NormalBlitPhase::F => self.use_d && pipeline_full,
+                 NormalBlitPhase::E | NormalBlitPhase::Done => false,
+             };
+-            if needs {
++            if needs && (!rga_only || self.phase_uses_free_rga(phase, pipeline_full)) {
+                 mask |= 1u64 << k;
+             }
+ 
+@@ -2579,7 +2617,7 @@ mod tests {
+             let restored: Blitter = bincode::deserialize(&bincode::serialize(&b).unwrap()).unwrap();
+             assert_eq!(
+                 restored.startup_clock_mask(64),
+-                if clocks == 0 { 3 } else { 0 }
++                if clocks == 0 { 1 } else { 0 }
+             );
+             let Some(PendingBlit::Normal(state)) = &b.pending else {
+                 unreachable!()
+diff --git a/src/chipset/copper.rs b/src/chipset/copper.rs
+index d09291bd..54af00dc 100644
+--- a/src/chipset/copper.rs
++++ b/src/chipset/copper.rs
+@@ -262,8 +262,8 @@ enum CopperState {
+         skip: CopperWait,
+         phase: CopperSkipPhase,
+     },
+-    /// A Copper MOVE to COPJMP1/COPJMP2 spends two more Copper cycles after
+-    /// its second-word fetch (vAmiga COP_JMP1/COP_JMP2) before the program
++    /// A CPU strobe or Copper MOVE to COPJMP1/COPJMP2 spends two Copper
++    /// restart phases (COP_JMP1/COP_JMP2) before the program
+     /// counter is reloaded from the live location register; the first fetch
+     /// from the new list lands one Copper cycle after that. (vAmiga's
+     /// "$E0 continues in $E1" sub-quirk of COP_JMP1 is not modelled.)
+@@ -317,6 +317,8 @@ pub enum CopperSlotAction {
+     /// asleep WAIT comparator check, or stopped). The slot is free for the
+     /// blitter/CPU.
+     Idle,
++    /// Restart pointer reload reserves a DMA slot without decoding an instruction.
++    Restart,
+     /// The Copper used the bus this color clock but produced no register write
+     /// the caller must apply (a first-word fetch, an applied COPJMP/WAIT/SKIP).
+     /// `subtype` is 0 for a first word/MOVE/COPJMP, 1 for WAIT, and 2 for
+@@ -417,7 +419,7 @@ impl Copper {
+     /// Begin a COPJMP strobe's two bus-free tail cycles (COP_JMP1/COP_JMP2).
+     /// The program counter reloads on the second tail cycle, from the live
+     /// COP1LC/COP2LC at that moment.
+-    fn start_jump_tail(&mut self, second_list: bool) {
++    pub(crate) fn start_jump_tail(&mut self, second_list: bool) {
+         self.pending_first = None;
+         self.skip_next_move = false;
+         self.skip_eval = None;
+@@ -602,6 +604,20 @@ impl Copper {
+         matches!(self.state, CopperState::Running)
+     }
+ 
++    pub(crate) fn restart_pending(&self) -> bool {
++        matches!(self.state, CopperState::Jumping { .. })
++    }
++
++    pub(crate) fn restart_needs_bus(&self) -> bool {
++        matches!(
++            self.state,
++            CopperState::Jumping {
++                phase: CopperJumpPhase::Second,
++                ..
++            }
++        )
++    }
++
+     /// The OCS Copper is a two-cycle processor: it can take a chip-bus memory
+     /// cycle only on every other color clock, and that cadence is locked to the
+     /// beam's horizontal parity rather than to a free-running internal phase.
+@@ -733,12 +749,16 @@ impl Copper {
+                 CopperSlotAction::Idle
+             }
+             CopperState::Jumping { .. } => {
+-                // A COPJMP strobe's two tail cycles request no DMA either; the
+-                // program counter reloads on the second one, so the first fetch
+-                // from the new list lands three Copper cycles after the strobe
+-                // (vAmiga COP_JMP1/COP_JMP2 then COP_FETCH).
++                let reload = self.restart_needs_bus();
++                if reload && (!allow_fetch || !copper_cycle_free) {
++                    return CopperSlotAction::Idle;
++                }
+                 self.advance_jump_free_cycle(hpos, cop1lc, cop2lc);
+-                CopperSlotAction::Idle
++                if reload && Self::hpos_is_access_cycle(hpos) {
++                    CopperSlotAction::Restart
++                } else {
++                    CopperSlotAction::Idle
++                }
+             }
+             CopperState::Running => {
+                 // The Copper can only take a memory cycle on its access-parity
+diff --git a/src/cpu.rs b/src/cpu.rs
+index eed4d7d9..3aa49bbe 100644
+--- a/src/cpu.rs
++++ b/src/cpu.rs
+@@ -4627,11 +4627,29 @@ impl CpuBus {
+                 return;
+             }
+             Some(PlainMemRegion::ChipRam(off)) => {
++                let mut transferred = false;
++                // Publish each granted word before its DMA-visible tail;
++                // a long write must not defer both words until final return.
++                self.bus.grant_cpu_bus_access_sampled(
++                    Some(addr),
++                    size,
++                    CpuBusAccessKind::Write,
++                    |bus, slot, stride| {
++                        let offset = slot as usize * stride;
++                        let width = size.saturating_sub(offset).min(stride);
++                        let part = value >> ((size - offset - width) * 8);
++                        bus.record_cpu_chip_ram_write(off + offset, width, part);
++                        write_be(&mut bus.mem.chip_ram, off + offset, width, part);
++                        transferred = true;
++                    },
++                );
++                if !transferred {
++                    self.bus.record_cpu_chip_ram_write(off, size, value);
++                    write_be(&mut self.bus.mem.chip_ram, off, size, value);
++                }
+                 self.bus
+-                    .grant_cpu_bus_access_at(Some(addr), size, CpuBusAccessKind::Write);
+-                self.bus.record_cpu_chip_ram_write(off, size, value);
++                    .update_last_cpu_trace_data(u64::from(value), size.min(4) as u8);
+                 self.bus.ui_note_cpu_ram_write(addr, size);
+-                write_be(&mut self.bus.mem.chip_ram, off, size, value);
+                 self.dbg_note_memw(addr, size);
+                 if off as u32 != addr {
+                     // The write landed through an Agnus image repeat: note
+@@ -6807,6 +6825,41 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn chip_ram_writes_reach_copper_during_the_cpu_tail() {
++        use crate::chipset::copper::DMACON_COPEN;
++        use crate::chipset::paula::{INT_DSKBLK, INT_SOFT};
++        for size in [1, 2, 4] {
++            let mut bus = cpu_bus(test_bus_with_pc(0x100));
++            bus.bus.mem.overlay = false;
++            bus.bus.set_cpu_bus_arbitration_enabled(true);
++            bus.bus.agnus.dmacon = DMACON_DMAEN | DMACON_COPEN;
++            write_chip_word(
++                &mut bus.bus,
++                0x1000,
++                if size == 4 { 0x01fe } else { 0x009c },
++            );
++            write_chip_word(&mut bus.bus, 0x1002, 0x8002);
++            bus.bus.copper.jump(0x1000);
++            if size != 4 {
++                bus.bus.agnus.hpos = 0x40;
++                bus.bus.advance_chipset(1); // IR1 is already latched.
++            } else {
++                bus.bus.agnus.hpos = 0x41;
++            }
++            match size {
++                1 => bus.write_byte(0x1003, 4),
++                2 => bus.write_word(0x1002, 0x8004),
++                _ => bus.write_long(0x1000, 0x009c_8004),
++            }
++            assert_eq!(
++                bus.bus.paula.intreq & (INT_DSKBLK | INT_SOFT),
++                INT_SOFT,
++                "size {size}: each granted word must be visible before its DMA tail"
++            );
++        }
++    }
++
+     #[test]
+     fn motherboard_iack_uses_rom_tail_vector_byte() {
+         let mut bus = cpu_bus(test_bus_with_pc(0x100));

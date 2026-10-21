@@ -1,0 +1,28 @@
+{
+  "experiment": "copper-marker-copy",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\marker-copy-hardware-v1",
+  "identity": {
+    "binary_sha256": "9f1735443fd57d885eb175cb48fc3a823933d5b91b00ab881c7b7bfc026591f6",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "6d1a9016d711d2a7e87da7ef237cf718c1cfaababe7a2b4646ef013246c6c778",
+    "source_id": "3a5ff122f9945194bc286fb26aee7130a4bbe1f0e95c3a101dd4c3b01b2fee45"
+  },
+  "hypothesis": "The earlier pre-strobe skew belongs to the VHPOSR memory-destination marker rather than MOVEA or reload.",
+  "competitor": "Marker timing is correct in a qualified input window; the older first-marker entry path is responsible.",
+  "test": "Small96-case fixed-prefix control: compare VHPOSR-to-memory with VHPOSR-to-register+twoNOPs, then a following register marker; input precedes the unknown instruction;off/WAIT/active,gate-first,read only,phases0/1,pads0..3.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "memory form alone differs": "Investigate memory-to-memory MOVE operand/prefetch sequencing.",
+    "both forms match": "Reject generic marker timing explanation; isolate first-marker entry path.",
+    "input anchor fails": "Repair qualification without alignment."
+  },
+  "next_question": "Does the memory-destination marker differ within a qualified input window?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\marker-copy-hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\marker-copy-hardware-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "69ff162ce83eb03d1778149e3aba3028c6cd18e1ab8418f8351e3b91737de34f",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence"
+}

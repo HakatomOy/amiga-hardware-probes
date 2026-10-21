@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "id": "copper-marker-copy",
+  "hypothesis": "The earlier pre-strobe skew belongs to the VHPOSR memory-destination marker rather than MOVEA or reload.",
+  "competitor": "Marker timing is correct in a qualified input window; the older first-marker entry path is responsible.",
+  "test": "Small96-case fixed-prefix control: compare VHPOSR-to-memory with VHPOSR-to-register+twoNOPs, then a following register marker; input precedes the unknown instruction;off/WAIT/active,gate-first,read only,phases0/1,pads0..3.",
+  "outcomes": {
+    "memory form alone differs": "Investigate memory-to-memory MOVE operand/prefetch sequencing.",
+    "both forms match": "Reject generic marker timing explanation; isolate first-marker entry path.",
+    "input anchor fails": "Repair qualification without alignment."
+  },
+  "next_question": "Does the memory-destination marker differ within a qualified input window?",
+  "investigation": "investigations/copper-marker-copy.json",
+  "binary": "captures/copper-phase-20261020/body-final-candidate/emulator.exe",
+  "romdir": "build/copper-marker-copy-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "6d1a9016d711d2a7e87da7ef237cf718c1cfaababe7a2b4646ef013246c6c778",
+  "capture": {
+    "minimum_seconds": 80,
+    "expected_cases": 96,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "end_beam",
+        "shift": 8,
+        "mask": 255,
+        "unit": "VHPOSR vertical low byte",
+        "meaning": "RGAread returns current experiment line",
+        "where": {
+          "variant": {
+            "mask": 32,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          66
+        ],
+        "allowed_values": [
+          66,
+          67
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "comparison": {
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact input beam before unknown prefix; no alignment"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "first_marker",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "Memory destination or register+padding VHPOSR sample"
+      },
+      {
+        "name": "following_marker",
+        "field": "icr",
+        "unit": "packed beam",
+        "meaning": "Register observer immediately after marker/control"
+      },
+      {
+        "name": "access_result",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "RAM/VHPOSR read result, or write source"
+      },
+      {
+        "name": "post_access",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "First beam observer after immediate access"
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "After fixed ROM DBRA settling loop"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite stream completion witness"
+      }
+    ],
+    "alignment": "exact",
+    "min_matches": 96
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "references": [
+    "references/copper-marker-copy-v1/run1",
+    "references/copper-marker-copy-v1/run2"
+  ],
+  "baseline": "captures/copper-phase-20261020/marker-copy-hardware-v1/candidate"
+}

@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "id": "copper-restart-fetch",
+  "hypothesis": "Chip-RAM instruction prefetch ownership differs during Copper restart, while ROM-executed operand controls match.",
+  "competitor": "Restart/fetch ordering is correct; legacy collision qualification is caused by first-marker entry or missing phase cohorts.",
+  "test": "Execute identical copied banks from ROM or30000 chip RAM. Common ROM input marker precedes venue entry. Pair gate orders,RGAread/write,off/WAIT/active,phase0/1,pad0..3 and repeat twice; no blitter.",
+  "outcomes": {
+    "RAM-only post-gate discrepancy": "Constrain CPU-prefetch/reload arbitration, not operand or Init delays.",
+    "RAM prefix differs before gate": "Isolate chip instruction fetch/entry timing before restart.",
+    "both venues match": "Reject generic fetch distinction; isolate original first-marker path.",
+    "input/control failure": "Repair probe before interpreting."
+  },
+  "next_question": "Does RAM instruction prefetch expose restart ownership errors absent from ROM controls?",
+  "investigation": "investigations/copper-restart-fetch.json",
+  "binary": "captures/copper-phase-20261020/body-final-candidate/emulator.exe",
+  "romdir": "build/copper-restart-fetch-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "1d94f7eb5f084ca1b60ffd1f5959e59addec4b8219be5673f27f8a0b3f836bdd",
+  "capture": {
+    "minimum_seconds": 270,
+    "expected_cases": 384,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "Write source remains5555",
+        "where": {
+          "variant": {
+            "mask": 32,
+            "equals": 32
+          }
+        },
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "end_beam",
+        "shift": 8,
+        "mask": 255,
+        "unit": "VHPOSR vertical low byte",
+        "meaning": "RGAread returns current experiment line",
+        "where": {
+          "variant": {
+            "mask": 32,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          66
+        ],
+        "allowed_values": [
+          66,
+          67,
+          68
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "comparison": {
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Common ROM input before venue entry; exact raw beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "prefix_complete",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "First observer after immediate/register prefix, before any restart"
+      },
+      {
+        "name": "access_result",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "RAM/VHPOSR read result, or write source"
+      },
+      {
+        "name": "post_access",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "First beam observer after immediate access"
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "After fixed ROM DBRA settling loop"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite stream completion witness"
+      }
+    ],
+    "alignment": "exact",
+    "min_matches": 384,
+    "required_field_repairs": {
+      "access_result": 10,
+      "post_access": 20,
+      "settled_beam": 20
+    }
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required. Identical banks copied to30000..30fff for both venues; input in common ROM before jumping to RAM/ROM. No blitter."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "references": [
+    "references/copper-restart-fetch-v1/run1",
+    "references/copper-restart-fetch-v1/run2"
+  ],
+  "baseline": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate"
+}

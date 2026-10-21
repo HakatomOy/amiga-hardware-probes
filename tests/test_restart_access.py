@@ -14,8 +14,8 @@ class RestartAccessTests(unittest.TestCase):
         for item in rows:
             self.assertIn(item[:-1] + (1 - item[-1],), rows)
             variant = item[2]
-            self.assertEqual((variant >> 5) & 35,
-                             ((variant >> 5) & 3) + ((variant >> 10) * 32))
+            self.assertEqual((variant >> 5) & 97,
+                             ((variant >> 5) & 1) + (((variant >> 10) & 1) * 32) + ((variant >> 11) * 64))
             self.assertTrue(variant & 8)
 
     def test_critical_access_has_no_intervening_observer_or_blit_start(self):
@@ -33,6 +33,10 @@ class RestartAccessTests(unittest.TestCase):
             self.assertEqual(text.count('move.w #0,$88(a0)\n        move.w #$8080,$96(a0)\n        move.w'), 4)
             self.assertEqual(text.count('move.w #$8080,$96(a0)\n        move.w #0,$88(a0)\n        move.w'), 4)
             self.assertEqual(text.count('dbra d1,.settle_'), 8)
+            for block in text.split('restart_access_')[1:]:
+                self.assertLess(block.index('move.w 6(a6),d2'), block.index('movea.l '))
+            kernel = (stage / 'src/rom/blitter_handoff_kernel.i').read_text()
+            self.assertLess(kernel.index('move.l #$dff006,d4'), kernel.index('jsr sync_beam'))
 
 
 if __name__ == '__main__':

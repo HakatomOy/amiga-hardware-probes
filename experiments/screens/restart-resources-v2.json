@@ -1,0 +1,30 @@
+{
+  "hypothesis": "A cold first Copper memory word requires two CCK before the next read across line wrap; already primed streams retain existing wrap behavior.",
+  "competitor": "The preceding real transfer read guard is responsible, or neither model preserves independent ROM and collision controls.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_RESTART_RESOURCES": "0"
+    },
+    "1": {
+      "COPPERLINE_EXPERIMENT_RESTART_RESOURCES": "1"
+    },
+    "2": {
+      "COPPERLINE_EXPERIMENT_RESTART_RESOURCES": "2"
+    },
+    "3": {
+      "COPPERLINE_EXPERIMENT_RESTART_RESOURCES": "3"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "prefix": "experiments/workflows/copper-restart-prefix.json",
+    "collision-pointer": "experiments/workflows/copper-transfer-collision-pointer.json",
+    "collision-copper": "experiments/workflows/copper-transfer-collision-copper.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate/results.bin"
+  },
+  "rules": "Exact original qualification, exclusions, repair targets and floors remain active in every variant. Screen completion is not acceptance. Remove temporary emulator selector before final validation/commit."
+}

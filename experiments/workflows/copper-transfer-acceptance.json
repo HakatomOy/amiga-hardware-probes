@@ -446,6 +446,63 @@
       "parallel_group": "neighbor"
     },
     {
+      "name": "restart-prefix",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-restart-prefix.json",
+        "--out",
+        "{out}/restart-prefix",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "marker-copy",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-marker-copy.json",
+        "--out",
+        "{out}/marker-copy",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "restart-fetch",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-restart-fetch.json",
+        "--out",
+        "{out}/restart-fetch",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
       "name": "collision-pointer",
       "tier": "neighbor",
       "argv": [

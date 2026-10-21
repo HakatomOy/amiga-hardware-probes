@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\restart-access-hardware-v2",
+  "hypothesis": "Restart reload conflicts with CPU writes differently from reads, especially when COPEN precedes the strobe.",
+  "test": "Immediately access chip RAM read/write or RGA VHPOSRread/NOOPwrite after identical COPJMP/COPEN opcodes, in both gate orders; off/WAIT/active, phases0/1,pads0..7; no blitter.",
+  "smaller_reproducer": null,
+  "next_question": "Does reload arbitration differ by immediate CPU access kind or gate order?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "139d6dc7764754fd959b7a0cda14c346524d150eaba179bdee45425e19f287f9",
+  "decision": "validation failed"
+}

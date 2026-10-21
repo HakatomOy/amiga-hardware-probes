@@ -377,6 +377,23 @@ count. Check these first: an empty neighbor/control cohort is a probe-design
 omission, not evidence that a source race never crossed its timing boundary.
 Retain the missing control or revise the planned experiment explicitly before
 another preflight; do not remove a requirement merely to enable hardware.
+Place the input qualification marker before any unverified instruction prefix.
+Record a second marker after that prefix as a measurement. A timing error in
+the prefix then becomes evidence instead of excluding the entire experiment;
+keep both raw markers and do not automatically align them.
+
+For a bounded counterfactual screen, use `tools/screen_capture_variants.py` with
+a recipe such as `experiments/screens/restart-resources-v1.json`. It freezes
+one binary, records each explicit environment in the cache identity, retains
+the original comparison contracts, and requires a byte-identical emulator
+baseline before launching other variants. Its completion means the screen
+finished, not that any variant is accepted. Remove temporary emulator switches
+and run normal focused/neighbor/broad acceptance on the final binary.
+
+Read trace owner labels as reservations. A Copper-owned lockout or pointer
+reload need not transfer a memory word. `CPUWAIT` diagnostics record Copper
+state, lockout and request-pipeline context; inspect those before attributing a
+denied CPU access to a memory fetch. These are emulator signals, not HW pin traces.
 
 Coverage controls are checked on every reference packet as well as emulator
 preflight. Passing emulator controls cannot establish that the physical witness
