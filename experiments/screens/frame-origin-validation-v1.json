@@ -1,0 +1,29 @@
+{
+  "hypothesis": "Two-clock restart spacing and mature gap reservation belong to pending internal vertical-blank restart; explicit CPU COPJMP keeps its validated cadence.",
+  "competitor": "The repaired startup cases require the same new gap behavior for explicit CPU strobes, so origin scoping loses hardware matches.",
+  "test": "Compare unchanged0, generic104, frame-scoped360 on saved startup cases and busy-onset/handoff controls.360 must preserve768 startup matches and restore896 controls; any new measured field rejects it.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "0"
+    },
+    "104": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "104"
+    },
+    "360": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "360"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json",
+    "busy-onset": "experiments/workflows/handoff-busy-onset.json",
+    "handoff-neighbor": "experiments/workflows/regression-handoff-neighbor.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

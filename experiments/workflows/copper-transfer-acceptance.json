@@ -522,6 +522,25 @@
       ]
     },
     {
+      "name": "enable-tail",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-enable-tail.json",
+        "--out",
+        "{out}/enable-tail",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
       "name": "collision-pointer",
       "tier": "neighbor",
       "argv": [

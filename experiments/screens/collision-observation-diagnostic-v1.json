@@ -1,0 +1,21 @@
+{
+  "hypothesis": "Original collision data are unchanged; stronger diagnostic distinguishes CPU bracket differences from sparse timing qualification.",
+  "competitor": "The launch marker does not control bracket timing; independent captures will reveal unstable cohorts.",
+  "test": "Diagnostic only: exact launch input; all other old timing qualifiers become measurements. Original contracts, thresholds and acceptance remain untouched.",
+  "variants": {
+    "104": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "104"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "pointer-observation": "experiments/workflows/collision-pointer-observation-timing.json",
+    "copper-observation": "experiments/workflows/collision-copper-observation-timing.json"
+  },
+  "baseline": {
+    "variant": "104",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261021/restart-reservation-screen-v1/104-fetch/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

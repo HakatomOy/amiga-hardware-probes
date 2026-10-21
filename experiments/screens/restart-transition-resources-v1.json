@@ -1,0 +1,30 @@
+{
+  "hypothesis": "Disabled-frame restart remains pending; only the bus-free First-to-reload transition needs full two-CCK spacing. Address reload already primes the first word and retains fast wrap.",
+  "competitor": "Both transitions need spacing (prior screen), or neither does; preserving First-to-reload spacing alone would fail the same saved cases.",
+  "test": "Modes0 unchanged,32 pending disabled-frame restart,96 pending+First-to-reload spacing only,224 both restart transitions (counterfactual control equivalent to previous96). No WAIT-tail, COPEN delay, ordinary word spacing or dummy reservation. Compare saved kinds95/96/97 with all strict fields.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "0"
+    },
+    "32": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "32"
+    },
+    "96": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "96"
+    },
+    "224": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "224"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

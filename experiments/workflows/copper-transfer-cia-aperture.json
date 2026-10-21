@@ -36,7 +36,10 @@
   },
   "reuse_preflight": true,
   "replay_inputs": [],
-  "references": [],
+  "references": [
+    "references/cia-request-aperture-v2/run1",
+    "references/cia-request-aperture-v2/run2"
+  ],
   "comparison": {
     "alignment": "exact",
     "max_excluded": 0,

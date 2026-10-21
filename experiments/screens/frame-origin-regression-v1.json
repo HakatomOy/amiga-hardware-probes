@@ -1,0 +1,46 @@
+{
+  "hypothesis": "Internal frame-origin restart correction preserves startup768 and busy/handoff896 controls; verify remaining saved regression contracts.",
+  "competitor": "Both gaps are free (mode96) or reload happens at0 immediately(mode32); raw equal mismatch counts can conceal different failed cohorts.",
+  "test": "Frozen360, unchanged strict comparison fields and thresholds; CIA reference lists repaired from versioned A500 captures. Original collision gates remain blocking if they fail.",
+  "variants": {
+    "360": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "360"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "pressure": "experiments/workflows/copper-transfer-pressure.json",
+    "steady": "experiments/workflows/copper-transfer-steady.json",
+    "opcode": "experiments/workflows/copper-transfer-opcode.json",
+    "handoff-race": "experiments/workflows/copper-transfer-handoff-race.json",
+    "handoff-access": "experiments/workflows/copper-transfer-handoff-access.json",
+    "handoff-witness": "experiments/workflows/copper-transfer-handoff-witness.json",
+    "busy-onset": "experiments/workflows/handoff-busy-onset.json",
+    "init-resource": "experiments/workflows/init-resource-race.json",
+    "init-launch-sweep": "experiments/workflows/init-resource-launch-sweep.json",
+    "source-race": "experiments/workflows/copper-transfer-source-race.json",
+    "native-blit-neighbor": "experiments/workflows/native-blit-regression.json",
+    "operand-neighbor": "experiments/workflows/cpu-operand-regression.json",
+    "cpu-dma-neighbor": "experiments/workflows/cpu-dma-regression.json",
+    "bus-onset": "experiments/workflows/regression-bus-onset.json",
+    "bus-completion": "experiments/workflows/regression-bus-completion.json",
+    "bus-pressure": "experiments/workflows/regression-bus-pressure.json",
+    "handoff-focus": "experiments/workflows/regression-handoff-focus.json",
+    "handoff-read": "experiments/workflows/regression-handoff-read.json",
+    "handoff-neighbor": "experiments/workflows/regression-handoff-neighbor.json",
+    "cia-aperture": "experiments/workflows/copper-transfer-cia-aperture.json",
+    "cia-clear": "experiments/workflows/copper-transfer-cia-clear.json",
+    "serial": "experiments/workflows/copper-transfer-serial.json",
+    "prefix": "experiments/workflows/copper-restart-prefix.json",
+    "marker": "experiments/workflows/copper-marker-copy.json",
+    "quiet": "experiments/workflows/copper-transfer-quiet.json",
+    "collision-pointer": "experiments/workflows/copper-transfer-collision-pointer.json",
+    "collision-copper": "experiments/workflows/copper-transfer-collision-copper.json"
+  },
+  "baseline": {
+    "variant": "360",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261021/frame-origin-validation-v1/360-fetch/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

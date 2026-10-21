@@ -1,0 +1,24 @@
+{
+  "hypothesis": "A pending disabled-frame restart retains a mature request reservation at the wrap gap, but a just-enabled cold request leaves that slot free. Both delay the address reload until a full phase passed.",
+  "competitor": "Both gaps are free (mode96) or reload happens at0 immediately(mode32); raw equal mismatch counts can conceal different failed cohorts.",
+  "test": "Held-out validation of mode104: all newly repaired384 are byte-identical to the selected parent before prefix768,marker96,quiet512 and original collision contracts. No changed thresholds or field exclusions.",
+  "variants": {
+    "104": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "104"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "prefix": "experiments/workflows/copper-restart-prefix.json",
+    "marker": "experiments/workflows/copper-marker-copy.json",
+    "quiet": "experiments/workflows/copper-transfer-quiet.json",
+    "collision-pointer": "experiments/workflows/copper-transfer-collision-pointer.json",
+    "collision-copper": "experiments/workflows/copper-transfer-collision-copper.json"
+  },
+  "baseline": {
+    "variant": "104",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261021/restart-reservation-screen-v1/104-fetch/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

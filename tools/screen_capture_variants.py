@@ -35,9 +35,26 @@ def checked_names(recipe):
         raise ValueError('baseline must name a declared variant and scenario')
 
 
+def validate_scenarios(recipe):
+    """Reject broken contracts before spending time on any emulator capture."""
+    for name, path in recipe['scenarios'].items():
+        try:
+            e.validate_spec(e.read(e.resolve(path)))
+        except (OSError, ValueError, KeyError) as error:
+            raise ValueError(f'{name}: invalid scenario {path}: {error}') from error
+
+
+def compact_families(comparison):
+    groups = comparison.get('groups', [])
+    return dict(examples=[dict(count=group['count'], first_field=group.get('first_divergent_field'),
+                               cases=group.get('representatives', [])[:2]) for group in groups[:2]],
+                omitted_families=max(0, len(groups)-2))
+
+
 def screen(recipe_path, out, binary, workers=3):
     recipe = e.read(recipe_path)
     checked_names(recipe)
+    validate_scenarios(recipe)
     if not 1 <= workers <= 3:
         raise ValueError('workers must be1..3; hardware is never run by this tool')
     out = out.resolve()
@@ -73,6 +90,7 @@ def screen(recipe_path, out, binary, workers=3):
                       new_fields=delta.get('field_regressions'),
                       qualification_changes=delta.get('qualification_regressions'),
                       error=status.get('error'), detail=str(out / name))
+        report['families'] = compact_families(e.read(out / name / 'comparison.json'))
         print(json.dumps(report), flush=True)
         return report
 

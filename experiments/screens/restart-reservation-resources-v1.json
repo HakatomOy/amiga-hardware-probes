@@ -1,0 +1,30 @@
+{
+  "hypothesis": "A pending disabled-frame restart retains a mature request reservation at the wrap gap, but a just-enabled cold request leaves that slot free. Both delay the address reload until a full phase passed.",
+  "competitor": "Both gaps are free (mode96) or reload happens at0 immediately(mode32); raw equal mismatch counts can conceal different failed cohorts.",
+  "test": "Modes0 unchanged,32 pending frame,96 first-phase spacing with free gap,104 same spacing plus reserved gap only when COPEN passed its next odd sampling clock before the first phase. Compare all strict saved kinds95/96/97; report representative family IDs as well as totals.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "0"
+    },
+    "32": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "32"
+    },
+    "96": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "96"
+    },
+    "104": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "104"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

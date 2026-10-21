@@ -549,3 +549,13 @@ Retrieve only the requested interval, for example:
 Beam coordinates are hexadecimal, interval length is raw CCK, and no alignment
 is performed. The report includes owner counts, bounded exact records, omitted
 event count and the raw sidecar path. See `docs/copper-restart-access-2026-10-21.md`.
+
+### Counterfactual screen preflight
+
+`tools/screen_capture_variants.py` validates every scenario manifest before
+starting any capture. Regression scenarios require both a frozen baseline and
+saved references. A valid screen still is not acceptance: retain original
+qualification fields and exclusion budgets, inspect representative family IDs
+as well as totals, then remove experiment selectors and validate the production
+binary. CIA request mismatches may be preserved baseline differences; report
+them explicitly instead of treating a passing no-regression contract as a match.

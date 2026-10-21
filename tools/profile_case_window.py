@@ -32,6 +32,13 @@ def window(run, beam, count=24, owners=('cpu', 'copper'), limit=24):
     if len(raw) != frame['rows'] * stride * SLOT.size:
         raise ValueError('truncated slot sidecar')
     start = vpos * stride + hpos
+    selection = json.loads((run/'case-profile-selection.json').read_text())
+    stopped = selection['stop']
+    first_observed = stopped['vpos'] * stride + stopped['hpos']
+    # The exporter labels a committed partial frame at the boundary counter;
+    # depending on field timing that is the entry counter or its successor.
+    if frame['frame'] not in (stopped['frame'], stopped['frame']+1) or start < first_observed:
+        raise ValueError('window precedes the selected case; partial-frame zeros are not observations')
     if start + count > len(raw)//SLOT.size:
         raise ValueError('window runs beyond the captured frame')
     events, counts = [], Counter()
@@ -44,7 +51,6 @@ def window(run, beam, count=24, owners=('cpu', 'copper'), limit=24):
             events.append(dict(beam=f'{row:02x}:{column:02x}', owner=owner, subtype=subtype,
                                bytes=size, reg=f'{reg:04x}', addr=f'{addr:08x}', data=f'{data:016x}',
                                flags=f'{flags:04x}', ipl=ipl, edges=edges))
-    selection = json.loads((run/'case-profile-selection.json').read_text())
     return dict(case=selection['case'], frame=frame['frame'], start=beam, cck=count,
                 units='Raw color-clock slots; hexadecimal beam/register/address/data; no alignment',
                 owner_cck=dict(counts), events=events[:limit], omitted_events=max(0,len(events)-limit),

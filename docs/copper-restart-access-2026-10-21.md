@@ -39,28 +39,41 @@ Trace packets reproduce their untraced parents exactly:
 under `captures/copper-phase-20261020/`. Detailed chronology, case IDs and
 screen matrices: [history](copper-restart-access-history-2026-10-21.md).
 
-## Current discriminator
+## Current discriminator and candidate
 
-Universal WAIT-tail ownership was rejected: it regresses32 kind95 settling
-fields. Full wrap word spacing improves kind97 to178/192 without new fields;
-strictly-next-odd COPEN fixes384/384 kind95 but regresses8 kind96 fields. Neither
-is accepted. The packet-qualified one-case profiler now supplies exact bus slots,
-replacing inferred fetch locations; see the linked history and workflow commands.
+The internal-frame-origin candidate (screen mode360) matches all1664 cases:
+restart-fetch384, initial-enable192, paired-tail192, busy-onset384 and handoff512.
+Zero measured-field regressions, qualification changes, exclusions or invalid
+captures. Generic spacing(mode104) matches startup768 but regresses64 busy-onset
+and32 handoff controls. Pending-frame alone(mode32) preserves both old controls.
+This distinguishes internal vertical-blank restart from explicit CPU COPJMP.
 
-Leading hypothesis: vertical blank with DMA disabled must leave a pending
-Copper address reload, rather than a preloaded running PC. Full restart phases
-may also need two-clock separation across wrap. Competing explanation: initial
-CPU/COPEN recognition, with the existing preloaded PC correct. Screen
-`frame-restart-resources-v1` tests modes0,32 pending restart,96 also restart
-spacing,98 also cold spacing against all three saved hardware sets. Enabled-DMA
-frame-start calibration is preserved. Baseline must reproduce its parent packet.
-Any new field or qualification regression rejects a candidate; strict neighbor
-and broad acceptance still follow a promising screen. No live HW run is active.
+DMA-off vertical blank retains a pending live-LC address reload. Its first phase
+must be separated from reload by two CCK even across a short-line wrap. The gap
+retains a reservation only when COPEN has passed the next odd sampling phase.
+CPU COPJMP cancels internal pending state and retains its validated cadence.
+Enabled-DMA frame-start calibration stays unchanged. This is a behavioral model,
+not an electrical identification of Agnus internals.
 
-Builders: `build_copper_{restart_access,restart_fetch,marker_copy,enable_boundary}_rom.py`;
-exact snapshots: `experiments/probe-sources/`. Strict workflows and explicit
-counterfactual recipes: `experiments/workflows/`, `experiments/screens/`.
-Emulator sources: `src/bus{.rs,/dma_slots.rs,/custom_regs.rs}`, `src/chipset/copper.rs`.
-Post-screen clean core3676 passed,37 ignored,559 window tests filtered; fmt and
-345 probe-tool tests passed. Broader acceptance remains blocked; no emulator
-commit or speed claim. Main record: [Init investigation](init-resource-investigation-2026-10-21.md).
+Frozen screen: `captures/copper-phase-20261021/frame-origin-validation-v1`;
+recipe/source snapshot: `experiments/screens/frame-origin-validation-v1.json`,
+`experiments/patches/frame-origin-validation-v1.patch`. Broader screen:
+`frame-origin-regression-v1`. Clean production source has no experiment selector;
+core tests are in progress. No emulator commit or final acceptance yet.
+Broad screen:26/28 contracts passed across23830 cases; only original collision
+qualification contracts fail. CIA aperture/clear preserve400/82 known mismatches
+respectively with zero new fields; these are not all-HW-matching suites.
+
+Original collision qualification gates remain unchanged and blocking. A separate
+observation-timing diagnostic found pointer exclusions entirely due to missing
+launch-phase coverage, and8 conflicting Copper HW cohorts at the same recorded
+launch marker. The old marker follows COPEN/COPJMP and is not a clean input.
+Supplemental saved pointer runs improve242 to270/480 qualified, with zero
+value mismatches, but210 exclusions still exceed the original199 budget.
+Do not waive these gates; resolve with better controlled evidence.
+
+CIA aperture/clear regression manifests had empty reference lists; restored their
+existing versioned two-run A500 references so they can actually run. Probe-tool
+suite347 passed. No hardware run is active; all prior ROM restorations verified.
+
+Main record: [Init investigation](init-resource-investigation-2026-10-21.md).

@@ -172,3 +172,77 @@ explaining short probe and long restart data together. Screen modes32 pending
 restart,96 also full restart phase spacing,98 also cold spacing against0; recipe
 and exact patch `frame-restart-resources-v1`. DMA-enabled frame starts retain
 existing calibration; dormant LC writes preserve the pending live-address load.
+
+## Pending-frame restart screen
+
+Mode32 pending disabled-frame restart reaches376/384 kind95 and184/192 each
+kind96/97. It repairs all earlier families except8 RAM cases at phase0pad3 or
+phase1pad2, consistently2CCK late;8/4 new settling fields are confined to those
+remaining cases. Mode96 with both restart transitions spaced repairs those8,
+but introduces earlier RAM cases2CCK early and loses ROM restart controls,
+reaching360/384,176/192,176/192. No model accepted.
+
+The transition screen now isolates First-to-reload spacing(bit64) from reload-to-
+first-word spacing(bit128). Mode96 is pending-frame plus First spacing only;
+mode224 retains both and must reproduce previous96 as a control. Leading
+hypothesis: the first bus-free phase needs a full phase edge, while the address
+reload primes its following word and retains the existing even-to-even wrap.
+This is tested against the exact saved packets rather than inferred row timing.
+
+## Transition membership and packet-qualified boundary traces
+
+First-only spacing mode96 has the same totals376/384,184/192,184/192 as mode32,
+but DIFFERENT cases: it repairs the late phase0pad3/phase1pad2 group and makes
+phase0pad2/phase1pad1 twoCCK early. Equal counts are not an unchanged result.
+Mode224 both-transitions is byte-for-byte checked against prior mode96 below.
+Selective traces `pending-ram-pad{1,2,3}-profile-v1` and
+`first-spacing-pad3-profile-v1` reproduce their respective packets exactly.
+
+Mode32 pad2: COPEN grantDE, CPU first prefetchE0, address reload0, words2/4/6/8,
+CPU second prefetch7, read returns4314 (HW4314). Pad3: COPEN grantE0, address
+reload0, same words2/4/6/8, CPU FIRST prefetch7, read4316 (HW4314).
+Mode96 pad3 frees0, reloads2, words4/6/8/A, CPU prefetch0 then7/9; read4314.
+But pad2 also gains0 for its SECOND prefetch, incorrectly returning4312.
+
+Revised discriminator: COPEN in pad2 was active through an odd sampling phase
+before the first restart phase; pad3 was latched at that phase. Retain a dummy
+RGA reservation in the wrap gap only for a mature request, without advancing
+address reload there. Mode104 adds that reservation to96 using the next-odd gate
+clock as an explicit phase boundary, not a case-ID/beam special case. Mode32
+and96 are counterfactual controls. No universal WAIT or enable delay is enabled.
+The batch tool now reports representative case IDs so moved families are visible
+before any detailed trace is requested.
+
+## Frame-origin discriminator
+
+`restart-origin-diagnostic-v1`: unchanged0 and pending-frame32 preserve busy384
+and handoff512. First-gap96 and mature-reserved104 each lose64 busy and32 handoff.
+`frame-origin-validation-v1` mode360 scopes104 to internal vertical-blank origin,
+clears it on CPU COPJMP, and restores all896 controls while preserving768 startup
+matches. Baseline packet is byte-identical; generic104 reproduces its failure.
+No alignment, field/floor/exclusion change. Three production unit tests encode
+live-LC reload, cold/mature short-line gap and CPU-strobe cancellation.
+
+`collision-observation-diagnostic-v1` keeps launch qualification and measures
+later brackets instead: pointer242/480 match,238 excluded and no timing mismatch;
+Copper396 match,118 bracket mismatches,278 excluded,8 conflicting HW cohorts.
+Diagnostic contracts do not replace original acceptance gates. The original
+launch marker follows DMA enable/restart and cannot uniquely identify input.
+
+Broad mode104 screen completed most comparisons but was invalid overall: CIA
+aperture/clear manifests had empty references. These are harness failures, not
+CIA mismatches. Existing references cia-request-aperture-v2 and clear-v2 run1/2
+are restored in manifests; frozen mode360 reruns the checks without changing
+comparison fields, baseline or thresholds. Full artifacts remain file-backed.
+
+## Completed frame-origin regression screen
+
+Frozen360:26/28 existing contracts pass,23830 total cases. Only original pointer
+and Copper collision qualification contracts fail:242/480 and396/800 qualified,
+238/404 excluded; no qualified value mismatch. CIA aperture880/1280 and clear
+558/640 preserve known400/82 mismatches with zero new fields or qualifications.
+Bus-onset preserves1 known mismatch, CPU-DMA16; other exclusions stay unchanged.
+Supplemental pointer phase references improve qualification to270/480,210excluded,
+zero value mismatch/unstable/invalid; still above original199 exclusion budget.
+This is diagnostic evidence, not changed acceptance. Source cleanup and three
+unit tests are compiling; production replay and final acceptance remain pending.

@@ -55,7 +55,8 @@ class CaseProfileTests(unittest.TestCase):
             profile = out/'case-profile'
             profile.mkdir()
             (out/'trace-verification.json').write_text(json.dumps(dict(byte_identical=True, actual_sha256='packet')))
-            (out/'case-profile-selection.json').write_text(json.dumps(dict(case=[96,3,1550,0,0,0])))
+            (out/'case-profile-selection.json').write_text(json.dumps(dict(case=[96,3,1550,0,0,0],
+                                                                         stop=dict(frame=7,vpos=0,hpos=2))))
             (profile/'profile.jsonl').write_text(json.dumps(dict(frame=7, rows=2, line_cck=4,
                                                    slots_file='slots.bin', slots_record_bytes=24))+'\n')
             raw = b''.join(profile_case_window.SLOT.pack(0x8c,3,0,2,0,0,i*2,i,0) for i in range(8))
@@ -63,8 +64,14 @@ class CaseProfileTests(unittest.TestCase):
             report = profile_case_window.window(out,'0:3',3,limit=2)
             self.assertEqual([event['beam'] for event in report['events']], ['00:03','01:00'])
             self.assertEqual(report['omitted_events'],1)
+            committed = json.loads((profile/'profile.jsonl').read_text())
+            committed['frame'] = 8
+            (profile/'profile.jsonl').write_text(json.dumps(committed)+'\n')
+            self.assertEqual(profile_case_window.window(out,'0:3',3,limit=2)['frame'],8)
             with self.assertRaises(ValueError):
                 profile_case_window.window(out,'1:3',2)
+            with self.assertRaisesRegex(ValueError, 'precedes'):
+                profile_case_window.window(out,'0:0',2)
 
 
 if __name__ == '__main__':

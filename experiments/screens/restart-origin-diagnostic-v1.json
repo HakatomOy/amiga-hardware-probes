@@ -1,0 +1,29 @@
+{
+  "hypothesis": "New gap behavior must distinguish the internal vertical-blank restart from explicit CPU COPJMP. CPU strobes may already have a qualified request and must retain their validated cadence.",
+  "competitor": "The pending-frame change itself causes the regression; removing gap behavior will not restore busy-onset cases.",
+  "test": "Isolate mode32 pending-frame from96 First-gap and104 reserved-gap using both newly failing held-out suites; unchanged0 must reproduce its prior packet.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "0"
+    },
+    "32": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "32"
+    },
+    "96": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "96"
+    },
+    "104": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "104"
+    }
+  },
+  "scenarios": {
+    "busy-onset": "experiments/workflows/handoff-busy-onset.json",
+    "handoff-neighbor": "experiments/workflows/regression-handoff-neighbor.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "busy-onset",
+    "packet": "captures/copper-phase-20261020/acceptance-body-final-v1/busy-onset/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}
