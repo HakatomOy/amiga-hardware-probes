@@ -1,0 +1,14 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\collision-startup-hardware-v1",
+  "hypothesis": "Initial enable/restart arbitration under active bitplane DMA causes the first difference.",
+  "test": "96 cases: ROM/RAM, main/planes-off/positive, pad0/1/2/6, four repeats. Measure pre-COPEN and immediate post-COPJMP, keeping common-ROM input as sole qualifier.",
+  "smaller_reproducer": null,
+  "next_question": "Does timing diverge before the first line44 polling marker?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "816362f22eb5b9c667fefd0c78e7a0d93a63da791c5e80af0592943473b2eb91",
+  "decision": "narrow",
+  "decision_reason": "All96 pre-COPEN values and all96 collision values agree.24 stable ROM cases first differ immediately after COPJMP by2CCK;32 active RAM cases conflict at that marker. Packet-verified active/off traces agree at COPEN grant61 and COPJMP69, then contention differs. Isolate enable versus strobe before choosing an emulator change; do not fit unstable RAM observations.",
+  "evidence": [
+    "captures/copper-phase-20261021/collision-startup-hardware-v1/field-stability-diagnostic.json"
+  ]
+}

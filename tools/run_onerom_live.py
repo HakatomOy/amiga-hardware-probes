@@ -216,8 +216,13 @@ def _stop_child(process, child_log, tree_killer):
 
 def collect_live(onerom, romdir, out, timeout=240, serial=None, *, runner=None,
                  popen_factory=None, sleep_fn=time.sleep, monotonic_fn=time.monotonic,
-                 tree_killer=None):
-    """Run a reset-held live-ROM swap, collect, and restore the fresh ROM backup.
+                 tree_killer=None, restore_after=True, session_backup=None):
+    """Run a reset-held live-ROM swap and collect a checksum-protected packet.
+
+    Share ``session_backup`` across runs and set ``restore_after=False`` while
+    continuing experiments. Restore from that original backup only on the last
+    run. Deferred runs record their state honestly and still release reset;
+    callers/users can restore the saved backup manually after an error.
 
     Hardware calls are ordinary ``onerom`` subprocesses. Tests inject a
     command runner and child process factory, so they never touch hardware.
@@ -267,6 +272,8 @@ def collect_live(onerom, romdir, out, timeout=240, serial=None, *, runner=None,
         "write_attempted": False,
         "backup_sha256": None,
         "restore_attempted": False,
+        "deferred": not restore_after,
+        "session_backup": str(session_backup) if session_backup else None,
         "restored_verified": False,
         "reset_release_verified": False,
         "errors": [],
@@ -283,8 +290,15 @@ def collect_live(onerom, romdir, out, timeout=240, serial=None, *, runner=None,
             raise RuntimeError(f"One ROM info did not confirm requested serial {serial!r}")
 
         backup_path = out / "live-before.bin"
-        command(["peek", "--address", "0", "--length", hex(ROM_BYTES),
-                 "--output", backup_path], "peek-backup")
+        session_path = Path(session_backup).resolve() if session_backup else None
+        if session_path is not None and session_path.exists():
+            backup_path.write_bytes(session_path.read_bytes())
+        else:
+            command(["peek", "--address", "0", "--length", hex(ROM_BYTES),
+                     "--output", backup_path], "peek-backup")
+            if session_path is not None and session_path != backup_path:
+                session_path.parent.mkdir(parents=True, exist_ok=True)
+                session_path.write_bytes(backup_path.read_bytes())
         backup = backup_path.read_bytes()
         if len(backup) != ROM_BYTES:
             raise RuntimeError(f"Fresh live ROM backup is {len(backup)} bytes, expected {ROM_BYTES}")
@@ -377,7 +391,7 @@ def collect_live(onerom, romdir, out, timeout=240, serial=None, *, runner=None,
             _stop_child(process, child_log, tree_killer)
         except BaseException as error:
             restore_report["errors"].append(f"Could not stop collector child: {error}")
-        if write_attempted and backup is not None:
+        if restore_after and write_attempted and backup is not None:
             restore_report["restore_attempted"] = True
             restore_ok = False
             try:
@@ -417,7 +431,7 @@ def collect_live(onerom, romdir, out, timeout=240, serial=None, *, runner=None,
                 restore_report["errors"].append(f"Could not release SEL_C to high impedance: {error}")
 
         _write_json(out / "restoration.json", restore_report)
-        if (write_attempted and not restore_report["restored_verified"]) or (
+        if (restore_after and write_attempted and not restore_report["restored_verified"]) or (
             reset_pin_attempted and not restore_report["reset_release_verified"]
         ):
             message = (

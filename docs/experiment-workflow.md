@@ -559,3 +559,23 @@ qualification fields and exclusion budgets, inspect representative family IDs
 as well as totals, then remove experiment selectors and validate the production
 binary. CIA request mismatches may be preserved baseline differences; report
 them explicitly instead of treating a passing no-regression contract as a match.
+
+### OneROM measurement sessions
+
+Keep the probe loaded between captures and experiments. Retain one original-ROM
+backup for the session; restore only when stopping. The user can restore manually
+on error. The live runner supports `session_backup=PATH, restore_after=False`
+for continuing runs and `restore_after=True` for the final run. Never replace the
+original backup with a probe image. Every run still verifies the programmed probe
+and releases reset. `experiment.py --hardware` treats its repeated captures as
+one measurement session: intermediate restoration is explicitly deferred and
+references carry the verified final session-restoration provenance.
+
+### Stable fields inside a conflicting cohort
+
+Use `python -m tools.field_stability RUN --fields NAME,NAME` to report independently
+repeated agreement per measured field, with at most two mismatch examples per
+field. It checks saved capture provenance and retains exact input qualification.
+The full report stays in `RUN/field-stability-diagnostic.json`. This can identify
+where a sequence first becomes unstable; it never turns a conflicting whole
+case into a match or changes exclusion/instability budgets.

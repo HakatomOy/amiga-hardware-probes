@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "reference_id": "collision-startup-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\collision-startup-hardware-v1\\hardware-1",
+  "test_rom_sha256": "b20767df0e05668db07816f3cd3bcb55b57c6d7ec3fd0c5fa79791facb192afa",
+  "source_id": "52ae573551164fac446069a90b4500b8b4a6f8643209145f3b9eff1c46101556",
+  "results_sha256": "e677371c01bb3db09bc008c56f445450d1462f9df40704ef7105057fcf82fdec",
+  "record_count": 96,
+  "metadata": {
+    "version": 1,
+    "source_id": "52ae573551164fac446069a90b4500b8b4a6f8643209145f3b9eff1c46101556",
+    "record_count": 96,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "e677371c01bb3db09bc008c56f445450d1462f9df40704ef7105057fcf82fdec"
+  },
+  "restoration": {
+    "backup_sha256": "a830b78a214ee5bbd1e78fca2c80e445d45493be90ba780048edf2adb69772cc",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "a830b78a214ee5bbd1e78fca2c80e445d45493be90ba780048edf2adb69772cc",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\collision-startup-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 100,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Added reads perturb the sequence deliberately; compare this ROM only. All downstream markers measured, not qualification. No trace alignment.",
+    "variants": "low2 main/planes-off/positive; bit3 RAM venue; phase launch padding0/1/2/6; four repeats",
+    "fields": {
+      "36": "pre-COPEN beam",
+      "24": "immediate post-COPJMP beam",
+      "38": "common-ROM input before venue jump"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 32,
+    "conflicting_cohorts": 8,
+    "reference_cohorts": 24,
+    "independently_repeated_cohorts": 24,
+    "candidate_cases_with_independent_repeats": 96,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock 68000, 512KiB chip/512KiB slow; silicon revisions unconfirmed. CLXDAT is a digital pixel witness, not an electrical pointer bus measurement. Exact write/read beam brackets are retained; no alignment. New input precedes enable/restart; output brackets are measured, not eligibility filters.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\collision-startup-hardware-v1\\reference-1"
+}

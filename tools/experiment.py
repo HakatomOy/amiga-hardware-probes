@@ -575,18 +575,24 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
             if count < 2:
                 raise ValueError('new hardware experiments require at least two independent runs')
             references = []
+            destinations = []
+            session_backup = out / 'hardware-1/live-before.bin'
             for index in range(count):
                 destination = out / f'hardware-{index+1}'
-                # The existing runner owns reset, live substitution and verified restoration.
+                stopping = index == count-1
                 with (out / f'hardware-{index+1}.log').open('w') as log, contextlib.redirect_stdout(log), contextlib.redirect_stderr(log):
                     run_onerom_live.collect_live(resolve(spec['hardware']['onerom']), romdir, destination,
-                                                 spec['hardware'].get('timeout_seconds', 240), None)
+                        spec['hardware'].get('timeout_seconds', 240), None,
+                        restore_after=stopping, session_backup=session_backup)
+                destinations.append(destination)
+                emit(out, 'hardware', dict(run=index+1, restoration='verified' if stopping else 'deferred-until-stop'), events)
+            session_restoration = read(destinations[-1] / 'restoration.json')
+            for index, destination in enumerate(destinations):
                 reference = out / f'reference-{index+1}'
                 save_reference.save(destination, reference,
-                                    'Repeatability computed below; inspect repeatability.json before versioning.',
-                                    spec['hardware']['limitations'])
+                    'Repeatability computed below; inspect repeatability.json before versioning.',
+                    spec['hardware']['limitations'], session_restoration=session_restoration)
                 references.append(reference)
-                emit(out, 'hardware', dict(run=index+1, restoration='verified'), events)
         if not references:
             raise ValueError('provide saved references or explicitly request --hardware')
         hardware_rows = []

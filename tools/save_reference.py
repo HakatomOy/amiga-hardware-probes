@@ -11,10 +11,11 @@ sys.path.insert(0, str(ROOT))
 import rom_results
 
 
-def save(capture, out, repeatability, limitations):
+def save(capture, out, repeatability, limitations, *, session_restoration=None):
     capture, out = Path(capture), Path(out)
     build = json.loads((capture / "build-manifest.json").read_text())
-    restore = json.loads((capture / "restoration.json").read_text())
+    restore = (dict(session_restoration, scope="session") if session_restoration is not None
+               else json.loads((capture / "restoration.json").read_text()))
     if not (restore.get("restored_verified") and restore.get("reset_release_verified")) or restore.get("errors"):
         raise ValueError("Hardware restoration not verified")
     data = (capture / "capture/results.bin").read_bytes()

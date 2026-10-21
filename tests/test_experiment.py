@@ -524,7 +524,10 @@ class ExperimentTests(unittest.TestCase):
         from tools import run_onerom_live
         self.spec['hardware'] = dict(onerom='fixture.exe', repeats=2, limitations='fixture')
         calls = []
-        def collect(onerom, romdir, out, timeout, serial):
+        restore_modes = []
+        def collect(onerom, romdir, out, timeout, serial, *, restore_after, session_backup):
+            restore_modes.append(restore_after)
+            self.assertEqual(session_backup, self.root/"physical/hardware-1/live-before.bin")
             self.assertEqual(romdir.name, 'rom')
             self.assertTrue((romdir/'a500-timing-rom.bin').exists())
             out.mkdir()
@@ -540,6 +543,7 @@ class ExperimentTests(unittest.TestCase):
             result = self.execute('physical', hardware=True, through='comparison')
             self.assertEqual(result['status'], 'review')
             self.assertEqual(physical.call_count, 2)
+            self.assertEqual(restore_modes, [False, True])
         report = e.read(self.root/'physical/comparison.json')
         self.assertTrue(report['repeatability']['packets_identical'])
         self.assertEqual(report['repeatability']['runs'], 2)

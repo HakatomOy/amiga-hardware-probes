@@ -21,7 +21,8 @@ Cargo commands must use Copperline's `tools/cargo_report.py` wrapper.
 Before a hardware run or patch, state the leading hypothesis, competitor,
 distinguishing test and implications of each outcome in the manifest. Investigate
 one mismatch family. Reuse saved measurements by default; `--hardware` explicitly
-requests new live runs and verified restoration. Version reviewed captures with
+requests new live runs. Keep the probe loaded between experiments; restore the
+original session ROM only when stopping. On error the user can restore manually. Version reviewed captures with
 the `archive` command; never commit ROM images, live backups or control tokens.
 
 Keep units, field meanings and qualification rules explicit. Never align away

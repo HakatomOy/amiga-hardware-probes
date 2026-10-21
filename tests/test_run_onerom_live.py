@@ -75,6 +75,30 @@ def make_romdir(root):
 
 
 class LiveOneROMTests(unittest.TestCase):
+    def test_session_defers_restore_and_keeps_original_backup_for_final_stop(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            romdir = make_romdir(root)
+            fake = FakeOneROM()
+            original = fake.memory
+            backup = root/'first/live-before.bin'
+            def fail_to_start(*args, **kwargs):
+                raise OSError('collector launch failure')
+            for name, restore in [('first', False), ('last', True)]:
+                with self.assertRaisesRegex(OSError, 'collector launch failure'):
+                    live.collect_live('onerom', romdir, root/name, runner=fake.run,
+                        popen_factory=fail_to_start, restore_after=restore, session_backup=backup)
+                if not restore:
+                    self.assertNotEqual(fake.memory, original)
+                    report=json.loads((root/name/'restoration.json').read_text())
+                    self.assertTrue(report['deferred'])
+                    self.assertFalse(report['restore_attempted'])
+                    self.assertTrue(report['reset_release_verified'])
+            self.assertEqual(fake.memory, original)
+            self.assertEqual((root/'last/live-before.bin').read_bytes(), original)
+            backup_reads=[c for c in fake.commands if 'peek' in c and str(backup) in c]
+            self.assertEqual(len(backup_reads), 1)
+
     def test_wrong_manifest_hash_fails_before_output_or_hardware(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
