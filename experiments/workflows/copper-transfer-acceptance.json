@@ -503,6 +503,25 @@
       ]
     },
     {
+      "name": "enable-boundary",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-enable-boundary.json",
+        "--out",
+        "{out}/enable-boundary",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
       "name": "collision-pointer",
       "tier": "neighbor",
       "argv": [

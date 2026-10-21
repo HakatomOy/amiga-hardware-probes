@@ -1,0 +1,35 @@
+{
+  "experiment": "copper-enable-boundary",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\enable-boundary-hardware-v2",
+  "identity": {
+    "binary_sha256": "9f1735443fd57d885eb175cb48fc3a823933d5b91b00ab881c7b7bfc026591f6",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "f8b4c75e898a55f8b16f64227cce510722fcf922309fbacf7e020549d1640c1e",
+    "source_id": "ba48a2b06083ddc6e2c2e43694ca25b13f00f56735fbe1937d15cc4cf29cdfa1"
+  },
+  "hypothesis": "Initial Copper request/first-word spacing, rather than the second COPJMP, causes the remaining RAM fetch differences.",
+  "competitor": "Inherited Copper state or CPU recognition causes the discrepancy; explicit disabled restart changes its pattern.",
+  "test": "192 cases: ROM/RAM execution, inherited/explicit disabled restart, off/WAIT/short active stream, both phases,pad0..3, repeats. Replace measured second COPJMP with NOOP; active first MOVE raises COPER then parks. Compare first RGA read, early IRQ, post-read beam, settled activity.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "only inherited state differs": "Investigate retained Copper word/restart state, not universal COPEN delay.",
+    "both states differ identically": "Constrain request/first-memory timing independent of prior state.",
+    "ROM/RAM differ": "Separate CPU fetch ownership from source forwarding.",
+    "control or input fails": "Repair probe before interpreting."
+  },
+  "next_question": "Does finite-stream WAIT tail release CPU/RGA too early, independently of cold first-word spacing? Compare identical first COPER with short versus padded NOOP tails.",
+  "references": [
+    "references/copper-enable-boundary-v1/run1",
+    "references/copper-enable-boundary-v1/run2"
+  ],
+  "evidence_fingerprint": "18e33b90d308179e598a58f6af1fe6496c3943b7ac94d4c44b177f4b5a040520",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "narrow: universal enable delay rejected by independent A500 evidence; no emulator acceptance",
+  "confirmed_facts": [
+    "192cases,96independentcohorts,two byte-identical packets,zero invalid/excluded/missing/unstable/conflicting; both restores verified",
+    "All off/WAIT controls match; active RAM32 and ROM8 differ; seed pairs have zero field differences",
+    "Cold spacing168/192 no new fields; lead-in156/192 introduces16newfields;combined156/192 also16newfields"
+  ],
+  "knowledge": "docs/copper-restart-access-2026-10-21.md"
+}

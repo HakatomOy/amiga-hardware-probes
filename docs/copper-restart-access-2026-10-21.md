@@ -1,73 +1,56 @@
-# Restart access and collision qualification
+# Copper restart and initial-enable investigation
 
-## Acceptance blocker
+## Confirmed evidence
 
-The transfer/reload/RGA candidate matches9462 focused cases, but collision
-qualification loses pointer22 and Copper28 cases. Original limits199/362 remain
-unchanged. No qualified collision value differs; the emulator is not accepted.
-Extra unchanged pointer captures in `references/pointer-collision-phase-coverage-v1`
-expand exact coverage to292/480, with zero conflicts. This does not waive timing
-qualification or justify a CPU exception.
+The transfer/reload/Init base matches9462 focused A500 cases. It remains
+unaccepted: original collision qualification falls to pointer259/480 and
+Copper411/800; limits199/362 excluded remain unchanged. No qualified collision
+value differs. Extra pointer phase captures expand coverage but do not waive gates.
 
-## Discriminating hardware evidence
+Hardware references (two restored runs each):
 
-- Kind92 (`references/copper-restart-access-v1`): all768 emulator inputs excluded
-  because the first marker is4 CCK later, even before Copper is enabled. This
-  is an unqualified diagnostic, not proof of a MOVEA or reload error.
-- Kind93 (`references/copper-restart-prefix-v1`):768/768 match, byte-identical
-  hardware repeats,384 independent cohorts. Input precedes the unknown prefix;
-  immediate MOVEA and register+twoNOPs, RGA reads/writes and both gate orders agree.
-- Kind94 (`references/copper-marker-copy-v1`):96/96 match. Memory-destination
-  VHPOSR marker and register+padding control agree inside the measured window.
-- Kind95 (`references/copper-restart-fetch-v1`):384 qualified, no invalid,
-  missing, excluded, unstable or conflicting cases;364 match,20 differ.
-  Identical banks execute from ROM or30000 chip RAM, with a common ROM input
-  before venue entry. Only RAM+gate-first+active cases are2 CCK late after
-  the strobe pair; every prefix-complete observation matches.
+| Capture | Result against base | What it establishes |
+|---|---|---|
+| `copper-restart-access-v1` (kind92) | All768 inputs excluded | Unqualified marker design; no MOVEA conclusion |
+| `copper-restart-prefix-v1` (kind93) | 768/768 | Prefix, both gate orders, RGA read/write controls agree |
+| `copper-marker-copy-v1` (kind94) | 96/96 | No generic memory-marker correction justified |
+| `copper-restart-fetch-v1` (kind95) | 364/384 | RAM+gate-first+active family; post-access2CCK late |
+| `copper-enable-boundary-v1` (kind96) | 152/192 | Differences persist without a second measured COPJMP |
 
-The first three tests reject generic MOVEA/marker corrections and a blanket
-read/write reload exception. Kind95 isolates chip-memory fetch arbitration.
-Exact builders are archived in `experiments/probe-sources/`; manifests are
-`experiments/workflows/copper-restart-{prefix,fetch}.json` and `copper-marker-copy.json`.
+Kind96 has96 independent repeated cohorts, byte-identical packets and zero
+invalid/missing/excluded/unstable/conflicting cases. ROM restoration was verified
+twice. Off/WAIT controls all match. Active RAM32 and ROM8 differ. Inherited and
+explicit disabled-restart pairs agree in every measured hardware field; this
+weakens stale-state explanations but does not electrically identify internal state.
 
-## Current hypothesis and rejected patches
+## Rejected patches and retained uncertainty
 
-A same-clock CPU-strobe barrier repairs none of the20 differences and regresses
-8 fetch controls plus16 ROM controls. A blanket pre-refresh read exemption
-repairs8 but regresses12 other fetch cases. Both were rejected.
-Trace `captures/copper-phase-20261020/restart-fetch-trace-v2` is byte-identical
-to its untraced packet. Case95,3,5646,0,2,0 requests RAM word30416 at42:E0,
-waits through E1/refresh and receives43:07, before COPJMP at43:0D.
-E0 is a Copper lockout reservation, not evidence of a pointer reload or RAM read.
+Same-clock strobe barriers and blanket pre-refresh read exemptions regress
+controls. E0 is a lockout reservation, not proof of a pointer reload or RAM read.
+A cold first-word two-CCK spacing rule repairs16 kind95 cases and16 kind96 cases
+without new measured fields, but leaves4 and24 respectively. A universal COPEN
+request delay introduces16 new kind96 fields; combining delay and spacing also
+regresses. No candidate is accepted. Temporary selectors, saved experimental
+state and the obsolete read-exemption test were removed from Copperline.
 
-Screen v1 (`captures/copper-phase-20261020/resource-screen-v1`) confirmed its
-baseline packet byte-identical. Tracking an actual pre-lockout word repaired8
-of20 fetch cases without new measured-field regressions; ROM768 and collision
-counts were preserved. An odd-clock COPEN latch had no effect. Neither passed.
+Trace packets reproduce their untraced parents exactly:
+`restart-fetch-trace-v2`, `cold-read-trace-v1`, `enable-boundary-trace-v1`
+under `captures/copper-phase-20261020/`. Detailed chronology, case IDs and
+screen matrices: [history](copper-restart-access-history-2026-10-21.md).
 
-Next uncertainty: bad cohorts start their first Copper word atE2; the current
-model immediately reads the second at0 across a227-clock line wrap. Healthy
-cohorts already fetched beforeE2. Screen v2 tests a full two-CCK spacing only
-for the first cold memory transfer, retaining already-primed wrap behavior.
-The competing explanation is the preceding actual-word read guard. Four modes
-isolate each and their combination against the same strict fetch, ROM and
-original collision contracts; no new hardware capture is needed. A result is
-accepted only after all qualification gates and broader regressions pass.
+## Next discriminating question
 
-Source: Copperline `src/bus.rs`, `src/bus/dma_slots.rs`,
-`src/bus/custom_regs.rs`. The selector is experimental and must be removed
-before final validation/commit. Recipes and source snapshots are in
-`experiments/screens/` and `experiments/patches/`.
-Main record: [Init investigation](init-resource-investigation-2026-10-21.md).
+Does the finite stream release CPU/RGA ownership too early during WAIT tail,
+separately from first-word spacing across wrap? Compare identical first COPER
+MOVE streams with short versus padded NOOP tails before WAIT, keeping entry,
+CPU venue and input markers unchanged. Unchanged early COPER with shifted CPU
+read differences supports release timing; identical differences support startup.
+Do not add another universal delay. Reuse existing captures for all unchanged tests.
 
-## Screen v2 result
-
-Baseline packet is byte-identical. Cold-first-word spacing alone repairs16/20
-fetch differences (380/384 match, zero new fields); remaining4 are phase1,
-pad3,RAM+gate-first+active, both RGA directions and repeats. The actual-word
-guard alone repairs8; combining it with spacing leaves12. Every mode preserves
-ROM768; none improves original collision qualification (pointer259/480,
-Copper411/800). No mode is accepted. Follow-up trace tests the remaining clock0
-COPEN-write boundary, verifying the diagnostic packet against mode2 first.
-Tool regression suite:337 passed. All captures remain restored; no fresh HW
-run was needed for these emulator screens.
+Builders: `build_copper_{restart_access,restart_fetch,marker_copy,enable_boundary}_rom.py`;
+exact snapshots: `experiments/probe-sources/`. Strict workflows and explicit
+counterfactual recipes: `experiments/workflows/`, `experiments/screens/`.
+Emulator sources: `src/bus{.rs,/dma_slots.rs,/custom_regs.rs}`, `src/chipset/copper.rs`.
+Post-screen clean core3676 passed,37 ignored,559 window tests filtered; fmt and
+339 probe-tool tests passed. Broader acceptance remains blocked; no emulator
+commit or speed claim. Main record: [Init investigation](init-resource-investigation-2026-10-21.md).

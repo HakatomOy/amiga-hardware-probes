@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "id": "copper-enable-boundary",
+  "hypothesis": "Initial Copper request/first-word spacing, rather than the second COPJMP, causes the remaining RAM fetch differences.",
+  "competitor": "Inherited Copper state or CPU recognition causes the discrepancy; explicit disabled restart changes its pattern.",
+  "test": "192 cases: ROM/RAM execution, inherited/explicit disabled restart, off/WAIT/short active stream, both phases,pad0..3, repeats. Replace measured second COPJMP with NOOP; active first MOVE raises COPER then parks. Compare first RGA read, early IRQ, post-read beam, settled activity.",
+  "outcomes": {
+    "only inherited state differs": "Investigate retained Copper word/restart state, not universal COPEN delay.",
+    "both states differ identically": "Constrain request/first-memory timing independent of prior state.",
+    "ROM/RAM differ": "Separate CPU fetch ownership from source forwarding.",
+    "control or input fails": "Repair probe before interpreting."
+  },
+  "next_question": "Does initial COPEN request behavior depend on pending-restart versus retained stream state?",
+  "investigation": "investigations/copper-enable-boundary.json",
+  "binary": "captures/copper-phase-20261020/body-final-candidate/emulator.exe",
+  "romdir": "build/copper-enable-boundary-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "f8b4c75e898a55f8b16f64227cce510722fcf922309fbacf7e020549d1640c1e",
+  "capture": {
+    "minimum_seconds": 160,
+    "expected_cases": 192,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "comparison": {
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Common ROM input before venue entry; exact raw beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "prefix_complete",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "First observer after immediate/register prefix, before any restart"
+      },
+      {
+        "name": "access_result",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "RAM/VHPOSR read result, or write source"
+      },
+      {
+        "name": "post_access",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "First beam observer after immediate access"
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "After fixed ROM DBRA settling loop"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite stream completion witness"
+      },
+      {
+        "name": "early_COPER",
+        "field": "icr",
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Initial stream activity before post-read observer"
+      }
+    ],
+    "alignment": "exact",
+    "min_matches": 192
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required. Identical banks copied to30000..30fff for both venues; input in common ROM before jumping to RAM/ROM. No blitter. Kind96 replaces measured COPJMP with NOOP; short stream stops after first COPER; bit13 explicitly seeds disabled restart before alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "references": [
+    "references/copper-enable-boundary-v1/run1",
+    "references/copper-enable-boundary-v1/run2"
+  ],
+  "baseline": "captures/copper-phase-20261020/enable-boundary-hardware-v2/candidate"
+}

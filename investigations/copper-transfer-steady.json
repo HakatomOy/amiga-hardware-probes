@@ -1,8 +1,8 @@
 {
   "experiment": "copper-transfer-steady",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-body-final-v1\\steady",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\lockout-read-controls\\steady",
   "identity": {
-    "binary_sha256": "9f1735443fd57d885eb175cb48fc3a823933d5b91b00ab881c7b7bfc026591f6",
+    "binary_sha256": "60965257559bed9fcfcdd7dee755637d4a54b2abd37b96e046f8a17a5a8f78a9",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "4533206fbf1d46b44be0ed3c47655a260dc602e1fd50892eae032a35300b6cf9",
     "source_id": "8f842b70bfcad67bd3f6b8230eb88b77be55e67f1e705e331bf588f50b72076b"
@@ -22,7 +22,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-steady-order-v2\\run2"
   ],
   "evidence_fingerprint": "8220e20498388111da77fb1ead30312bf39784e9bb2e0e8e34483b8029ba36ed",
-  "no_new_evidence": 6,
+  "no_new_evidence": 8,
   "validation": [
     {
       "name": "preflight",

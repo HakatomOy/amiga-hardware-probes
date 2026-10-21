@@ -1,8 +1,8 @@
 {
   "experiment": "copper-transfer-quiet",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\init-cpu-free-controls\\quiet",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\lockout-read-controls\\quiet",
   "identity": {
-    "binary_sha256": "eae94f484d31eba02f53fe3b53d72b83d721e2e09c2ea4d28958e9a5cefe1382",
+    "binary_sha256": "60965257559bed9fcfcdd7dee755637d4a54b2abd37b96e046f8a17a5a8f78a9",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "bff64216c98e6d86ea517dc01227c60293331ee76f42e5f2d0cc1a0f4ec940f1",
     "source_id": "c94b658e98d67ec8524eecf4b2a7ac1ca8396462e6665f23fb142107086568bc"
@@ -22,7 +22,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-quiet-v1\\run2"
   ],
   "evidence_fingerprint": "6e74ade54be10382ade585de3318668510ae7e0c3e891cf8848f0f271bd2d34a",
-  "no_new_evidence": 2,
+  "no_new_evidence": 4,
   "validation": [
     {
       "name": "preflight",

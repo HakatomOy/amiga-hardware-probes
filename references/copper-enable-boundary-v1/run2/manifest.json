@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "reference_id": "copper-enable-boundary-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\enable-boundary-hardware-v2\\hardware-2",
+  "test_rom_sha256": "f8b4c75e898a55f8b16f64227cce510722fcf922309fbacf7e020549d1640c1e",
+  "source_id": "ba48a2b06083ddc6e2c2e43694ca25b13f00f56735fbe1937d15cc4cf29cdfa1",
+  "results_sha256": "56b14002429aabc9345a8fc88c8f44fb992732ab8413e8a76f4d6c4ef3658850",
+  "record_count": 192,
+  "metadata": {
+    "version": 1,
+    "source_id": "ba48a2b06083ddc6e2c2e43694ca25b13f00f56735fbe1937d15cc4cf29cdfa1",
+    "record_count": 192,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "56b14002429aabc9345a8fc88c8f44fb992732ab8413e8a76f4d6c4ef3658850"
+  },
+  "restoration": {
+    "backup_sha256": "9e84ab9786e449ce6c889bc5224c5bcd02b8cb9e6cec2cf2d5e3c0524da67e90",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "9e84ab9786e449ce6c889bc5224c5bcd02b8cb9e6cec2cf2d5e3c0524da67e90",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 96,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "No measured COPJMP. Short active stream raises COPER then parks. Pending-restart and inherited-state controls; no blitter. Exact observations, no trace alignment.",
+    "variants": "bits9:8 off/WAIT/active; bit12 RAM venue; bit13 disabled restart seed",
+    "fields": {
+      "12": "common ROM input",
+      "18": "prefix-complete beam",
+      "16": "VHPOSR result",
+      "20": "post-early-IRQ beam",
+      "22": "early INTREQ",
+      "28": "settled INTREQ",
+      "30": "settled beam"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 96,
+    "independently_repeated_cohorts": 96,
+    "candidate_cases_with_independent_repeats": 192,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required. Identical banks copied to30000..30fff for both venues; input in common ROM before jumping to RAM/ROM. No blitter. Kind96 replaces measured COPJMP with NOOP; short stream stops after first COPER; bit13 explicitly seeds disabled restart before alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\enable-boundary-hardware-v2\\reference-2"
+}
