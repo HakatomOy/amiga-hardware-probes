@@ -1,0 +1,328 @@
+{
+  "version": 1,
+  "id": "init-resource-race",
+  "hypothesis": "Copper state changes Init/source-fetch progress independently of CPU status observation.",
+  "competitor": "Source ordering is preserved and only CPU read arbitration/visibility changes.",
+  "test": "Pair fixed source-write race and two status observations across Copper off,settledWAIT,active; real/inert,source/neighbor,priority and preseeded controls.",
+  "outcomes": {
+    "source data boundary changes": "Constrain startup resource ownership before changing read sampling.",
+    "source data unchanged,status beam changes": "Investigate CPU observation path rather than Init progress.",
+    "control failure": "Narrow or repair probe before interpretation."
+  },
+  "next_question": "Does the fetch boundary or just CPU observation depend on Copper state?",
+  "investigation": "investigations/init-resource-race.json",
+  "binary": "captures/copper-phase-20261020/strobe-end-candidate/emulator.exe",
+  "romdir": "build/init-resource-race-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "4a38ba6ca20ba7a72b2938e51f5adfa963072da9a8193514f67f3fda489fc6ca",
+  "capture": {
+    "minimum_seconds": 400,
+    "expected_cases": 600,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "end_beam",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "aux",
+        "unit": "word",
+        "meaning": "aux",
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "Inert destination remains zero",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "Preseeded positive control",
+        "where": {
+          "target": 6
+        },
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      },
+      {
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "Source-neighbor control",
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 24,
+            "equals": 16
+          }
+        },
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690
+        ]
+      },
+      {
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "Race spans both source outcomes",
+        "where": {
+          "target": 3,
+          "variant": {
+            "mask": 24,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          21845,
+          43690
+        ],
+        "allowed_values": [
+          21845,
+          43690
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper mode activity witness",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper mode activity witness",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper mode activity witness",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper mode activity witness",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper mode activity witness",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper mode activity witness",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/init-resource-race-v1/run1",
+    "references/init-resource-race-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "launch"
+      },
+      {
+        "name": "pre_COPER",
+        "field": "launch_ref",
+        "unit": "COPER bit",
+        "meaning": "pre_COPER",
+        "mask": 16
+      }
+    ],
+    "measurements": [
+      {
+        "name": "overwrite",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "overwrite"
+      },
+      {
+        "name": "status0",
+        "field": "end_ref",
+        "unit": "DMACONR bits",
+        "meaning": "status0"
+      },
+      {
+        "name": "status0_post",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "status0_post"
+      },
+      {
+        "name": "status1",
+        "field": "icr",
+        "unit": "DMACONR bits",
+        "meaning": "status1"
+      },
+      {
+        "name": "status1_post",
+        "field": "irq_beam",
+        "unit": "packed beam",
+        "meaning": "status1_post"
+      },
+      {
+        "name": "fetched_source",
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "fetched_source"
+      },
+      {
+        "name": "settled_irq",
+        "field": "saved_pc_offset",
+        "unit": "IRQ bits",
+        "meaning": "settled_irq",
+        "shift": 16,
+        "mask": 80
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "unit": "packed beam",
+        "meaning": "settled_beam",
+        "mask": 65535
+      },
+      {
+        "name": "written_word",
+        "field": "aux",
+        "unit": "word",
+        "meaning": "written_word"
+      }
+    ],
+    "min_matches": 400
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/copper-phase-20261020/init-resource-hardware-v1/candidate",
+  "purpose": "regression"
+}

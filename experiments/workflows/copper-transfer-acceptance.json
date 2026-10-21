@@ -388,6 +388,25 @@
       ]
     },
     {
+      "name": "init-resource",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/init-resource-race.json",
+        "--out",
+        "{out}/init-resource",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
       "name": "source-race",
       "tier": "neighbor",
       "argv": [

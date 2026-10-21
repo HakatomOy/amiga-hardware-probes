@@ -1,8 +1,8 @@
 {
   "experiment": "regression-handoff-neighbor",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\ir2-init-controls\\handoff-neighbor",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\restart-owner-controls\\handoff-neighbor",
   "identity": {
-    "binary_sha256": "e777d7a53209a88648ae4e1fbd6c6fe9e807196d4415bc7badba6a80194b822a",
+    "binary_sha256": "57011ad3ea61477c4edb4a086675f31701018b1407c9633ad16be6e2f498ba4c",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "7bae564b641f70ce0f5d346468d6f379146740a639663bc423b3a41cf1926737",
     "source_id": "39dcb22d25cdaed589a921d24c39260a94b4a5c45dd0a5c3f0fbbcfbcdf0714b"
@@ -20,7 +20,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-read-neighbor-v1-run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-read-neighbor-v1-run2"
   ],
-  "evidence_fingerprint": "5b3a554d35591c326d3be480b2eae3ab1480d43e28c1d8ba7f0ba1f535713da2",
+  "evidence_fingerprint": "7c2fa72d345de6686e13d1a9f94c6b2a38b767a3ae3b9daa76387b97915d25b3",
   "no_new_evidence": 0,
   "validation": [
     {
@@ -28,5 +28,5 @@
       "exit": 0
     }
   ],
-  "decision": "validation failed"
+  "decision": "review evidence"
 }

@@ -1,0 +1,42 @@
+{
+  "experiment": "init-resource-race",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\restart-owner-controls\\init-resource",
+  "identity": {
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "4a38ba6ca20ba7a72b2938e51f5adfa963072da9a8193514f67f3fda489fc6ca",
+    "source_id": "0f3ef10ec810ca25471fbacb94c12fc1736ddb60098e041ef1fc4e0a999ae4f5"
+  },
+  "hypothesis": "Copper state changes Init/source-fetch progress independently of CPU status observation.",
+  "competitor": "Source ordering is preserved and only CPU read arbitration/visibility changes.",
+  "test": "Pair fixed source-write race and two status observations across Copper off,settledWAIT,active; real/inert,source/neighbor,priority and preseeded controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "source data boundary changes": "Constrain startup resource ownership before changing read sampling.",
+    "source data unchanged,status beam changes": "Investigate CPU observation path rather than Init progress.",
+    "control failure": "Narrow or repair probe before interpretation."
+  },
+  "next_question": "Does holding only Init on CPU-owned clocks repair early status and beam observations while preserving source ordering and older suites?",
+  "references": [
+    "references/init-resource-race-v1/run1",
+    "references/init-resource-race-v1/run2"
+  ],
+  "evidence_fingerprint": "0b7bbaa3be00a5447ee74c43f622cd5916cc45ad5827505c9dc7d32e075b688a",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "validation failed",
+  "confirmed_facts": [
+    "600 HW rows,300 independently repeated cohorts;0 invalid/excluded/unstable/missing; both OneROM restores verified.",
+    "All200 off/WAIT/active cohorts have exact same launch; off and sleepingWAIT agree.",
+    "Reload ownership makes all600 fetched-source words and all inert cases match; complete matches532/600, but48 new fields block acceptance."
+  ],
+  "source_files": [
+    "../Copperline/src/chipset/copper.rs",
+    "../Copperline/src/bus/dma_slots.rs",
+    "build_init_resource_race_rom.py",
+    "tools/summarize_init_resource.py"
+  ],
+  "history": [
+    "docs/init-resource-investigation-2026-10-21.md"
+  ]
+}

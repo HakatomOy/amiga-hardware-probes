@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "reference_id": "init-resource-race-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\init-resource-hardware-v1\\hardware-1",
+  "test_rom_sha256": "4a38ba6ca20ba7a72b2938e51f5adfa963072da9a8193514f67f3fda489fc6ca",
+  "source_id": "0f3ef10ec810ca25471fbacb94c12fc1736ddb60098e041ef1fc4e0a999ae4f5",
+  "results_sha256": "55bd362daf96c8c303ffeb3e37f7fa26a7fa88e394dbf01d2daf499815a8fb49",
+  "record_count": 600,
+  "metadata": {
+    "version": 1,
+    "source_id": "0f3ef10ec810ca25471fbacb94c12fc1736ddb60098e041ef1fc4e0a999ae4f5",
+    "record_count": 600,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "55bd362daf96c8c303ffeb3e37f7fa26a7fa88e394dbf01d2daf499815a8fb49"
+  },
+  "restoration": {
+    "backup_sha256": "556924af4889f4e3d5b0618cccecc2f510da7e7816488002194ed562c1b9432e",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "556924af4889f4e3d5b0618cccecc2f510da7e7816488002194ed562c1b9432e",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 90,
+    "aligned": false,
+    "targets": [
+      "AD oldAAAA",
+      "AD preseeded5555 control"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "Same launch/strobe/write opcodes; observer selected before ROM alignment; exact launch qualification.",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Software ordering and status witnesses, not electrical edges. WAIT may restart at VBL; entry COPER must be confirmed before launch.",
+    "variants": "bit0 priority;bit3 inert start;bit4 unused-neighbor write;bits6:5 NOP0..3;bits9:8 Copper0=off,1=settledWAIT,2=active",
+    "hypothesis": "Startup source-fetch progress depends on Copper state, separately from CPU status observation.",
+    "competitor": "Source ordering is unchanged; differences belong to CPU read arbitration/visibility.",
+    "fields": {
+      "12": "launch beam",
+      "14": "prelaunch COPER witness",
+      "16": "overwrite value",
+      "18": "status0",
+      "20": "post-status0 beam",
+      "22": "status1",
+      "24": "post-status1 beam",
+      "26": "settled old/new destination",
+      "28": "settled IRQ",
+      "30": "settled beam",
+      "34": "written source/neighbor"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 300,
+    "independently_repeated_cohorts": 300,
+    "candidate_cases_with_independent_repeats": 600,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\init-resource-hardware-v1\\reference-1"
+}
