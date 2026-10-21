@@ -53,3 +53,13 @@ qualification losses; remaining CIA/legacy/broad stages have not run in that
 acceptance batch. Follow the [restart investigation](copper-restart-access-2026-10-21.md)
 before resuming acceptance or committing the emulator. Reuse archived hardware
 by default; the new live test resolves a specific reload uncertainty.
+
+## Latest validation boundary
+
+The clean internal-frame restart candidate passes core3679, strict Clippy/fmt,
+and reproduces all1664 selected startup/control packets exactly. Experimental
+broad screen26/28 contracts pass across23830 cases; original collision phase
+qualification still blocks acceptance. New960-case A500 collision diagnostic
+shows stable planes-off controls but81 conflicting active-DMA cohorts. See
+[controlled collision record](controlled-collision-investigation-2026-10-21.md).
+No Copperline commit yet; no hardware session remains active.

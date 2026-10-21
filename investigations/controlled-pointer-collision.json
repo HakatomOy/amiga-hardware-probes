@@ -1,0 +1,14 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\controlled-pointer-hardware-v1",
+  "hypothesis": "Existing launch marker is after Copper enable/restart; missing input-phase coverage obscures timing, rather than proving wrong collision values.",
+  "test": "ROM/RAM identical observer, pre-COPEN common-ROM marker, all downstream brackets measured;960 cases, two hardware packets. Inputs must precede event line44. No alignment.",
+  "smaller_reproducer": null,
+  "next_question": "Does controlled pre-enable input reveal a real collision timing error?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "e7e94e5af1c54503a44c046d1c2164f67d5a8c0d6e3099df3a261e5b44177a91",
+  "decision": "narrow",
+  "decision_reason": "All72 planes-off controls match.81 repeated cohorts conflict after a stable common-ROM input,80 in RAM and1 in ROM; all have active bitplane DMA. Do not fit or accept a timing patch. Next probe must bracket initial COPEN/COPJMP directly with pre-enable and immediate post-strobe observations before the line44 polling loop.",
+  "evidence": [
+    "captures/copper-phase-20261021/controlled-pointer-hardware-v1/evidence.json"
+  ]
+}

@@ -59,7 +59,10 @@ Frozen screen: `captures/copper-phase-20261021/frame-origin-validation-v1`;
 recipe/source snapshot: `experiments/screens/frame-origin-validation-v1.json`,
 `experiments/patches/frame-origin-validation-v1.patch`. Broader screen:
 `frame-origin-regression-v1`. Clean production source has no experiment selector;
-core tests are in progress. No emulator commit or final acceptance yet.
+core3679 passed,37 ignored,559 window tests filtered; strict Clippy/fmt passed.
+Production1664 packets reproduce frozen360 byte-for-byte. Source snapshot:
+`experiments/patches/frame-origin-production-v1.patch`. No emulator commit or
+final acceptance yet.
 Broad screen:26/28 contracts passed across23830 cases; only original collision
 qualification contracts fail. CIA aperture/clear preserve400/82 known mismatches
 respectively with zero new fields; these are not all-HW-matching suites.
@@ -74,6 +77,12 @@ Do not waive these gates; resolve with better controlled evidence.
 
 CIA aperture/clear regression manifests had empty reference lists; restored their
 existing versioned two-run A500 references so they can actually run. Probe-tool
-suite347 passed. No hardware run is active; all prior ROM restorations verified.
+suite349 passed. No hardware run is active; all prior ROM restorations verified.
 
 Main record: [Init investigation](init-resource-investigation-2026-10-21.md).
+
+New controlled collision HW diagnostic captured960 cases twice, with both
+restorations verified. All72 planes-off cases match, but81 input cohorts have
+conflicting downstream observations under active bitplane DMA. Do not fit those
+unstable observations. Next discriminator and evidence:
+[controlled collision record](controlled-collision-investigation-2026-10-21.md).

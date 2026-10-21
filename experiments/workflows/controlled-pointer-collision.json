@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "id": "controlled-pointer-collision",
+  "hypothesis": "Existing launch marker is after Copper enable/restart; missing input-phase coverage obscures timing, rather than proving wrong collision values.",
+  "competitor": "With a controlled pre-enable input, display fetch/read ordering still differs from A500.",
+  "test": "ROM/RAM identical observer, pre-COPEN common-ROM marker, all downstream brackets measured;960 cases, two hardware packets. Inputs must precede event line44. No alignment.",
+  "outcomes": {
+    "stable inputs and differing outputs": "Localize first bracket or collision-value divergence with a packet-verified trace.",
+    "input instability or failed controls": "Reject probe interpretation and refine input before another emulator patch.",
+    "all outputs match": "Constrain collision behavior independently; do not silently waive original qualification gates."
+  },
+  "next_question": "Does controlled pre-enable input reveal a real collision timing error?",
+  "investigation": "investigations/controlled-pointer-collision.json",
+  "binary": "captures/copper-phase-20261021/frame-origin-production-v1/emulator.exe",
+  "romdir": "build/controlled-pointer-collision-v3",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "baa48e2d374de0f478a0c5b196e84a989f448710f1f8ebebc1f27804ea1e17dd",
+  "capture": {
+    "minimum_seconds": 160,
+    "expected_cases": 960,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Both matching and nonmatching pixel witnesses must occur",
+        "require_values": [
+          0,
+          1
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 1
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 2
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 3
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Constant inactive/zero/positive control",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 1
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Settled constant control after a complete following scanline",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 2
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Settled constant control after a complete following scanline",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "where": {
+          "variant": {
+            "mask": 3,
+            "equals": 3
+          }
+        },
+        "unit": "CLXDAT bit0",
+        "meaning": "Settled constant control after a complete following scanline",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      },
+      {
+        "field": "second_icr_or_level",
+        "shift": 8,
+        "mask": 255,
+        "unit": "beam line",
+        "meaning": "Common-ROM input must precede Copper event line44",
+        "require_values": [
+          66
+        ],
+        "allowed_values": [
+          64,
+          65,
+          66,
+          67
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/controlled-pointer-collision-v1/run1",
+    "references/controlled-pointer-collision-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input_before_enable",
+        "field": "second_icr_or_level",
+        "unit": "packed beam",
+        "meaning": "Common-ROM input marker before COPEN/COPJMP"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Identical setup launch beam"
+      },
+      {
+        "name": "read_before",
+        "field": "irq_level",
+        "unit": "packed beam",
+        "meaning": "Before CLXDAT read"
+      },
+      {
+        "name": "read_after",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "After CLXDAT read"
+      },
+      {
+        "name": "settled_before",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "Settled collision read bracket"
+      },
+      {
+        "name": "settled_after",
+        "field": "saved_pc_offset",
+        "shift": 0,
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "Settled collision read bracket"
+      },
+      {
+        "name": "write_before",
+        "field": "launch_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket; zero for Copper"
+      },
+      {
+        "name": "write_after",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "CPU write bracket; zero for Copper"
+      },
+      {
+        "name": "collision",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "PF1/PF2 match"
+      },
+      {
+        "name": "second_collision",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Immediate read-to-clear control"
+      },
+      {
+        "name": "settled_collision",
+        "field": "end_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Following full line detects accepted pointer retargeting"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock 68000, 512KiB chip/512KiB slow; silicon revisions unconfirmed. CLXDAT is a digital pixel witness, not an electrical pointer bus measurement. Exact write/read beam brackets are retained; no alignment. New input precedes enable/restart; output brackets are measured, not eligibility filters."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}
