@@ -16,6 +16,7 @@ Hardware references (two restored runs each):
 | `copper-marker-copy-v1` (kind94) | 96/96 | No generic memory-marker correction justified |
 | `copper-restart-fetch-v1` (kind95) | 364/384 | RAM+gate-first+active family; post-access2CCK late |
 | `copper-enable-boundary-v1` (kind96) | 152/192 | Differences persist without a second measured COPJMP |
+| `copper-enable-tail-v1` (kind97) | 152/192 | Padding separates early release from late wrap cases |
 
 Kind96 has96 independent repeated cohorts, byte-identical packets and zero
 invalid/missing/excluded/unstable/conflicting cases. ROM restoration was verified
@@ -40,11 +41,15 @@ screen matrices: [history](copper-restart-access-history-2026-10-21.md).
 
 ## Next discriminating question
 
-Does the finite stream release CPU/RGA ownership too early during WAIT tail,
-separately from first-word spacing across wrap? Compare identical first COPER
-MOVE streams with short versus padded NOOP tails before WAIT, keeping entry,
-CPU venue and input markers unchanged. Unchanged early COPER with shifted CPU
-read differences supports release timing; identical differences support startup.
+Kind97 repeats are byte-identical,96 independent cohorts, both restores verified,
+no exclusions or conflicts. Off/WAIT controls match. Padding three NOOPs before
+the final WAIT removes some3/4-CCK-early RAM reads; wrap cases remain2-CCK-late.
+The leading hypothesis is two internal WAIT-tail RGA phases, including the final
+WAIT that currently stops at decode. Competing explanation: CPU grant/release
+recognition causes the early reads. Screen `wait-tail-resources-v1` isolates
+WAIT-tail ownership and cold first-word spacing against kinds95/96/97; unchanged
+mode must reproduce its parent packet. A repair without new fields supports the
+resource model; lost controls reject it. This screen is not broad acceptance.
 Do not add another universal delay. Reuse existing captures for all unchanged tests.
 
 Builders: `build_copper_{restart_access,restart_fetch,marker_copy,enable_boundary}_rom.py`;
@@ -52,5 +57,5 @@ exact snapshots: `experiments/probe-sources/`. Strict workflows and explicit
 counterfactual recipes: `experiments/workflows/`, `experiments/screens/`.
 Emulator sources: `src/bus{.rs,/dma_slots.rs,/custom_regs.rs}`, `src/chipset/copper.rs`.
 Post-screen clean core3676 passed,37 ignored,559 window tests filtered; fmt and
-339 probe-tool tests passed. Broader acceptance remains blocked; no emulator
+341 probe-tool tests passed. Broader acceptance remains blocked; no emulator
 commit or speed claim. Main record: [Init investigation](init-resource-investigation-2026-10-21.md).

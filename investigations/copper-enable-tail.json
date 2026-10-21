@@ -1,0 +1,28 @@
+{
+  "experiment": "copper-enable-tail",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\enable-tail-hardware-v1",
+  "identity": {
+    "binary_sha256": "9f1735443fd57d885eb175cb48fc3a823933d5b91b00ab881c7b7bfc026591f6",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "514c61b9ebcc2e4b31f191a33fd1aabc6388931822e5d27aa6e20eec27de6a9a",
+    "source_id": "8ed0f5c3d06b03e318879adc1ee0a91178cf6a036939c609994f8019fc345383"
+  },
+  "hypothesis": "Finite-stream WAIT tail releases CPU/RGA too early, separately from first-word spacing across wrap.",
+  "competitor": "Initial COPEN/first-word timing causes the mismatch independently of tail length.",
+  "test": "192 cases: short versus three-NOOP tail, same first COPER MOVE and CPU observer banks; active mode always seeds disabled restart. Pair ROM/RAM,off/WAIT/active,phase0/1,pad0..3,repeats. Compare early COPER and raw CPU read beams without alignment.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "tail-dependent post-MOVE divergence": "Constrain WAIT-tail or final-transfer release rather than blanket COPEN latency.",
+    "same divergence before either WAIT tail": "Constrain initial request or first word ownership.",
+    "off/WAIT controls or repeatability fail": "Repair the probe before interpreting."
+  },
+  "next_question": "Do read differences follow the WAIT tail when initial COPER and CPU instructions are unchanged?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\enable-tail-hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\enable-tail-hardware-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "43ce397a6f03dd71e454033dd6ae1d8ffd51a3a23bf3ecee56a6dabd004b8f3c",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence"
+}

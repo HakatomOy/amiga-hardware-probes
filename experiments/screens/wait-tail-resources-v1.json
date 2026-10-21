@@ -1,0 +1,30 @@
+{
+  "hypothesis": "Two WAIT internal tail phases retain RGA ownership even for the final WAIT; independently require full spacing after the first cold word.",
+  "competitor": "Release timing belongs to CPU grant recognition, or tail phases do not reserve RGA; cold spacing alone cannot explain early grants.",
+  "test": "Modes0 unchanged,1 tail ownership,2 cold spacing,3 both. Compare saved A500 restart fetch384, initial enable192 and paired tail192 before neighboring validation.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "0"
+    },
+    "1": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "1"
+    },
+    "2": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "2"
+    },
+    "3": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "3"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

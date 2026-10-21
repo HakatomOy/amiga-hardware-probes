@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "reference_id": "copper-enable-tail-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\enable-tail-hardware-v1\\hardware-1",
+  "test_rom_sha256": "514c61b9ebcc2e4b31f191a33fd1aabc6388931822e5d27aa6e20eec27de6a9a",
+  "source_id": "8ed0f5c3d06b03e318879adc1ee0a91178cf6a036939c609994f8019fc345383",
+  "results_sha256": "1493b9c9b8c0cbfffc3b2c4380d024c203fa1738e816b8e7ba97a2769d3dc820",
+  "record_count": 192,
+  "metadata": {
+    "version": 1,
+    "source_id": "8ed0f5c3d06b03e318879adc1ee0a91178cf6a036939c609994f8019fc345383",
+    "record_count": 192,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "1493b9c9b8c0cbfffc3b2c4380d024c203fa1738e816b8e7ba97a2769d3dc820"
+  },
+  "restoration": {
+    "backup_sha256": "30836ba9d363e3d0f69b0b9a729a99fb7d69b86c594301309efcda30bd11d6ca",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "30836ba9d363e3d0f69b0b9a729a99fb7d69b86c594301309efcda30bd11d6ca",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 97,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Same observer opcodes and first COPER MOVE for both tails. Active mode always seeds a disabled restart before alignment. No blitter or measured COPJMP; exact observations without alignment.",
+    "hypothesis": "Finite-stream WAIT tail releases CPU/RGA early, separately from initial fetch timing.",
+    "competitor": "Initial COPEN/first-word timing causes the same mismatch irrespective of tail length.",
+    "variants": "bits9:8 off/WAIT/active; bit12 RAM venue; bit13 three NOOPs before final WAIT",
+    "fields": {
+      "12": "common ROM input",
+      "18": "prefix-complete beam",
+      "16": "VHPOSR result",
+      "20": "post-early-IRQ beam",
+      "22": "early INTREQ",
+      "28": "settled INTREQ",
+      "30": "settled beam"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 96,
+    "independently_repeated_cohorts": 96,
+    "candidate_cases_with_independent_repeats": 192,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; exact silicon revisions unconfirmed. OneROM live substitution with restoration verification. Active first COPER is identical; bit13 adds3NOOPs before WAIT; both tails seed disabled restart before alignment. ROM/RAM CPU execution; no blitter. Software ordering observations, not electrical edges.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261021\\enable-tail-hardware-v1\\reference-1"
+}

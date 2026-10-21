@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "id": "copper-enable-tail",
+  "hypothesis": "Finite-stream WAIT tail releases CPU/RGA too early, separately from first-word spacing across wrap.",
+  "competitor": "Initial COPEN/first-word timing causes the mismatch independently of tail length.",
+  "test": "192 cases: short versus three-NOOP tail, same first COPER MOVE and CPU observer banks; active mode always seeds disabled restart. Pair ROM/RAM,off/WAIT/active,phase0/1,pad0..3,repeats. Compare early COPER and raw CPU read beams without alignment.",
+  "outcomes": {
+    "tail-dependent post-MOVE divergence": "Constrain WAIT-tail or final-transfer release rather than blanket COPEN latency.",
+    "same divergence before either WAIT tail": "Constrain initial request or first word ownership.",
+    "off/WAIT controls or repeatability fail": "Repair the probe before interpreting."
+  },
+  "next_question": "Do read differences follow the WAIT tail when initial COPER and CPU instructions are unchanged?",
+  "investigation": "investigations/copper-enable-tail.json",
+  "binary": "captures/copper-phase-20261020/body-final-candidate/emulator.exe",
+  "romdir": "build/copper-enable-tail-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "514c61b9ebcc2e4b31f191a33fd1aabc6388931822e5d27aa6e20eec27de6a9a",
+  "capture": {
+    "minimum_seconds": 160,
+    "expected_cases": 192,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "comparison": {
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Common ROM input before venue entry; exact raw beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "prefix_complete",
+        "field": "end_ref",
+        "unit": "packed beam",
+        "meaning": "First observer after immediate/register prefix, before any restart"
+      },
+      {
+        "name": "access_result",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "RAM/VHPOSR read result, or write source"
+      },
+      {
+        "name": "post_access",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "First beam observer after immediate access"
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "After fixed ROM DBRA settling loop"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite stream completion witness"
+      },
+      {
+        "name": "early_COPER",
+        "field": "icr",
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Initial stream activity before post-read observer"
+      }
+    ],
+    "alignment": "exact",
+    "min_matches": 192
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; exact silicon revisions unconfirmed. OneROM live substitution with restoration verification. Active first COPER is identical; bit13 adds3NOOPs before WAIT; both tails seed disabled restart before alignment. ROM/RAM CPU execution; no blitter. Software ordering observations, not electrical edges."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "references": [
+    "references/copper-enable-tail-v1/run1",
+    "references/copper-enable-tail-v1/run2"
+  ],
+  "baseline": "captures/copper-phase-20261021/enable-tail-hardware-v1/candidate"
+}

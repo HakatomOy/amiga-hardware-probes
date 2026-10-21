@@ -107,3 +107,22 @@ Hardware outcomes must pass controls/repeatability before interpretation.
 ## Held-out enable screen
 
 Kind96 baseline152/192; cold spacing168/192 without new fields; lead-in156/192 with16 new fields; combined156/192 with16 new fields. All original qualification limits retained.
+
+## Kind97 paired-tail A500 evidence
+
+`references/copper-enable-tail-v1`:192 qualified cases,96 independent cohorts,
+two byte-identical hardware packets; no invalid/missing/excluded/unstable/conflict,
+both restorations verified. Base152match40difference. Off/WAIT controls agree.
+Short versus three-NOOP tails retain identical first COPER and observer banks.
+ROM phase0pad0 first sample stays42E2; padded post-sample beams shift with the tail.
+RAM phase0pad0 short HW4311/base430D; padded HW4312/base4312.
+RAM phase0pad1 short HW4314/base4311; padded HW4314/base4314.
+RAM phase0pad2 short HW4314/base4315; padded HW4314/base4316.
+Thus early release and late startup form separate families; a universal delay
+cannot repair both. Exact compact cohort table can be regenerated from the
+versioned packets and `enable-tail-hardware-v1/cases.json`.
+
+Next counterfactual: WAIT-tail RGA ownership on both internal phases, including
+final WAIT (base stops immediately at decode), independently of cold first-word
+spacing. Recipe/patch `wait-tail-resources-v1`. Baseline must reproduce frozen
+kind95 packet exactly. No emulator patch accepted before held-out controls.
