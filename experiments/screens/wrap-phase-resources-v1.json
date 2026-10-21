@@ -1,0 +1,33 @@
+{
+  "hypothesis": "Word transfers cannot advance across the short-line even-to-even wrap without an intervening phase; a warm pipe may reserve a dummy slot. COPEN separately samples strictly after its write on a valid odd clock.",
+  "competitor": "Internal WAIT ownership or CPU recognition explains the mismatch; a next-odd enable gate or warm dummy reservation would regress held-out cases.",
+  "test": "Modes0 unchanged,2 cold spacing control,4 spacing on every word with warm dummy reservation,16 strict next-odd enable alone,20 both new mechanisms. WAIT-tail ownership is disabled in all variants; v1 rejected it because32 settling fields regressed.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "0"
+    },
+    "2": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "2"
+    },
+    "4": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "4"
+    },
+    "16": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "16"
+    },
+    "20": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "20"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

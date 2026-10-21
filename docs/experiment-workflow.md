@@ -533,3 +533,19 @@ on any failure. Ungrouped commands remain sequential; keep producer/consumer
 pairs such as legacy capture and packet comparison ungrouped. Never group live
 hardware operations. This reduces wall time and progress chatter without
 weakening field or qualification gates.
+
+### Single-case bus evidence
+
+Prefer a bounded profiler capture over whole-run diagnostic logs when exact DMA
+ownership or word transfers are uncertain. `run_rom.py --profile-case ID
+--profile-entry 0xffbf80 --verify-packet PARENT/results.bin` captures one frame
+beginning at a common observer entry visited once per trial. The runner skips
+previous entry hits, validates all six descriptor words, saves profiler slots,
+and requires the complete result packet to remain byte-identical. A missing
+entry, wrong descriptor, absent frame or changed packet fails qualification.
+
+Retrieve only the requested interval, for example:
+`python tools/profile_case_window.py RUN --beam 42:dc --cck 24 --limit 12`.
+Beam coordinates are hexadecimal, interval length is raw CCK, and no alignment
+is performed. The report includes owner counts, bounded exact records, omitted
+event count and the raw sidecar path. See `docs/copper-restart-access-2026-10-21.md`.

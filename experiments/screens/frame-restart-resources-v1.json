@@ -1,0 +1,30 @@
+{
+  "hypothesis": "Vertical blank while Copper DMA is disabled leaves a pending restart using live COP1LC, rather than an already-running preloaded PC. Restart phases require full two-clock separation across wrap.",
+  "competitor": "The PC preloads immediately while disabled; only COPEN/CPU recognition or ordinary word spacing explains the captures.",
+  "test": "Modes0 unchanged,32 disabled-frame pending restart,96 plus restart phase spacing,98 also cold first-word spacing. WAIT-tail ownership, strict COPEN gate and warm dummy word rules are disabled. Exact saved kind95/96/97 evidence; no hardware rerun.",
+  "variants": {
+    "0": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "0"
+    },
+    "32": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "32"
+    },
+    "96": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "96"
+    },
+    "98": {
+      "COPPERLINE_EXPERIMENT_WAIT_RESOURCES": "98"
+    }
+  },
+  "scenarios": {
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "fetch",
+    "packet": "captures/copper-phase-20261020/restart-fetch-hardware-v2/candidate/results.bin"
+  },
+  "rules": "No alignment or weakened fields/floors. Screen is not acceptance. Remove selector and unused experimental state before production validation/commit."
+}

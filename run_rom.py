@@ -33,8 +33,56 @@ def load_emulator_environment(path):
     return settings
 
 
-def run(binary,out,config=None,romdir=None,seconds=500,environment_json=None):
+def case_profile_spec(manifest, case, entry):
+    if case is None and entry is None:
+        return None
+    if case is None or entry is None:
+        raise ValueError('profile-case and profile-entry must be supplied together')
+    descriptor = tuple(int(word, 0) for word in case.split(','))
+    matches = [index for index, row in enumerate(manifest['trials']) if tuple(row) == descriptor]
+    if len(descriptor) != 6 or len(matches) != 1:
+        raise ValueError('profile-case must identify exactly one manifest trial')
+    if manifest['record_bytes'] != 40 or manifest['result_bytes'] != 64 + 40 * len(manifest['trials']):
+        raise ValueError('case profiling requires the checked 64-byte-header/40-byte-record layout')
+    return dict(case=list(descriptor), entry=entry, index=matches[0],
+                record_address=manifest['result_address'] + 64 + matches[0] * 40)
+
+
+def arm_case_profile(rpc, spec, out, seconds):
+    # The common entry executes once per manifest trial. Verify the descriptor
+    # after skipping earlier hits; never trust a hit count alone as case identity.
+    point = rpc('break.add', dict(kind='pc', addr=spec['entry'], ignore=spec['index']))
+    stopped = rpc('run_until', dict(seconds=seconds))
+    (out/'case-profile-entry-stop.json').write_text(json.dumps(stopped, indent=2)+'\n')
+    if stopped.get('pc') != spec['entry'] or stopped.get('reason') != 'breakpoint':
+        raise RuntimeError(f"selected profile case did not reach entry: reason={stopped.get('reason')}, pc={stopped.get('pc')}")
+    result = rpc('mem.read', dict(addr=spec['record_address'], len=12, encoding='base64'))
+    if list(struct.unpack('>6H', base64.b64decode(result['data']))) != spec['case']:
+        raise RuntimeError('profile entry record does not match selected trial')
+    rpc('break.remove', dict(id=point['id']))
+    rpc('profile.start', dict(path=str((out/'case-profile').resolve()), frames=1,
+                             slots=True, memory=False, screenshots='none', samples=False))
+    (out/'case-profile-selection.json').write_text(json.dumps(dict(spec, stop=stopped), indent=2)+'\n')
+
+
+def verify_packet_identity(actual, expected, out):
+    matched = actual.read_bytes() == expected.read_bytes()
+    report = dict(byte_identical=matched, actual_sha256=_sha256(actual),
+                  expected_sha256=_sha256(expected), expected_packet=str(expected.resolve()))
+    (out/'trace-verification.json').write_text(json.dumps(report, indent=2)+'\n')
+    if not matched:
+        raise RuntimeError('diagnostic packet differs from its parent; trace is not qualified')
+
+
+def run(binary,out,config=None,romdir=None,seconds=500,environment_json=None,
+        profile_case=None,profile_entry=None,verify_packet=None):
     romdir=romdir or ROOT/'build/rom'
+    manifest=json.loads((romdir/'manifest.json').read_text())
+    profile=case_profile_spec(manifest,profile_case,profile_entry)
+    if profile is not None and verify_packet is None:
+        raise ValueError('case profiling requires verify-packet to qualify diagnostic non-interference')
+    if verify_packet is not None and not verify_packet.is_file():
+        raise ValueError('verify-packet must name an existing immutable result packet')
     out.mkdir(parents=True,exist_ok=False)
     manifest_path=out/'build-manifest.json'
     manifest_path.write_bytes((romdir/'manifest.json').read_bytes())
@@ -78,6 +126,8 @@ def run(binary,out,config=None,romdir=None,seconds=500,environment_json=None):
             rpc('hello',dict(token=details['token']))
             started=time.monotonic()
             rpc('break.add',dict(kind='pc',addr=manifest['collection_done_pc']))
+            if profile is not None:
+                arm_case_profile(rpc,profile,out,seconds)
             stop=rpc('run_until',dict(seconds=seconds))
             (out/'stop.json').write_text(json.dumps(stop,indent=2))
             result=rpc('mem.read',dict(addr=manifest['result_address'],len=manifest['result_bytes'],encoding='base64'))
@@ -85,6 +135,13 @@ def run(binary,out,config=None,romdir=None,seconds=500,environment_json=None):
             data=base64.b64decode(result['data'])
             capture=out/'capture.bin';capture.write_bytes(data)
             rom_results.extract(capture,out,manifest=manifest_path)
+            if profile is not None:
+                status=rpc('profile.stop',{})
+                (out/'case-profile-status.json').write_text(json.dumps(status,indent=2)+'\n')
+                if not list((out/'case-profile').glob('slots-*.bin')):
+                    raise RuntimeError('case profile has no completed frame; select an earlier trial')
+            if verify_packet is not None:
+                verify_packet_identity(out/'results.bin',verify_packet,out)
             if 'line_c_bus_data_observer' in manifest:
                 addresses=manifest['line_c_bus_data_observer']['source_addresses']
                 lengths=manifest['line_c_bus_data_observer']['source_lengths']
@@ -183,4 +240,7 @@ if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--binary',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
     p.add_argument('--config',type=Path);p.add_argument('--romdir',type=Path);p.add_argument('--seconds',type=float,default=500)
     p.add_argument('--environment-json',type=Path)
-    a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None,a.romdir.resolve() if a.romdir else None,a.seconds,a.environment_json)
+    p.add_argument('--profile-case',help='Exact six-field trial ID; capture one frame beginning at its entry')
+    p.add_argument('--profile-entry',type=lambda value:int(value,0),help='Common entry PC visited exactly once per trial')
+    p.add_argument('--verify-packet',type=Path,help='Require byte-identical results versus this frozen packet')
+    a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None,a.romdir.resolve() if a.romdir else None,a.seconds,a.environment_json,a.profile_case,a.profile_entry,a.verify_packet)

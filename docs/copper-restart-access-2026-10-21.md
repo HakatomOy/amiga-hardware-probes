@@ -39,23 +39,28 @@ Trace packets reproduce their untraced parents exactly:
 under `captures/copper-phase-20261020/`. Detailed chronology, case IDs and
 screen matrices: [history](copper-restart-access-history-2026-10-21.md).
 
-## Next discriminating question
+## Current discriminator
 
-Kind97 repeats are byte-identical,96 independent cohorts, both restores verified,
-no exclusions or conflicts. Off/WAIT controls match. Padding three NOOPs before
-the final WAIT removes some3/4-CCK-early RAM reads; wrap cases remain2-CCK-late.
-The leading hypothesis is two internal WAIT-tail RGA phases, including the final
-WAIT that currently stops at decode. Competing explanation: CPU grant/release
-recognition causes the early reads. Screen `wait-tail-resources-v1` isolates
-WAIT-tail ownership and cold first-word spacing against kinds95/96/97; unchanged
-mode must reproduce its parent packet. A repair without new fields supports the
-resource model; lost controls reject it. This screen is not broad acceptance.
-Do not add another universal delay. Reuse existing captures for all unchanged tests.
+Universal WAIT-tail ownership was rejected: it regresses32 kind95 settling
+fields. Full wrap word spacing improves kind97 to178/192 without new fields;
+strictly-next-odd COPEN fixes384/384 kind95 but regresses8 kind96 fields. Neither
+is accepted. The packet-qualified one-case profiler now supplies exact bus slots,
+replacing inferred fetch locations; see the linked history and workflow commands.
+
+Leading hypothesis: vertical blank with DMA disabled must leave a pending
+Copper address reload, rather than a preloaded running PC. Full restart phases
+may also need two-clock separation across wrap. Competing explanation: initial
+CPU/COPEN recognition, with the existing preloaded PC correct. Screen
+`frame-restart-resources-v1` tests modes0,32 pending restart,96 also restart
+spacing,98 also cold spacing against all three saved hardware sets. Enabled-DMA
+frame-start calibration is preserved. Baseline must reproduce its parent packet.
+Any new field or qualification regression rejects a candidate; strict neighbor
+and broad acceptance still follow a promising screen. No live HW run is active.
 
 Builders: `build_copper_{restart_access,restart_fetch,marker_copy,enable_boundary}_rom.py`;
 exact snapshots: `experiments/probe-sources/`. Strict workflows and explicit
 counterfactual recipes: `experiments/workflows/`, `experiments/screens/`.
 Emulator sources: `src/bus{.rs,/dma_slots.rs,/custom_regs.rs}`, `src/chipset/copper.rs`.
 Post-screen clean core3676 passed,37 ignored,559 window tests filtered; fmt and
-341 probe-tool tests passed. Broader acceptance remains blocked; no emulator
+345 probe-tool tests passed. Broader acceptance remains blocked; no emulator
 commit or speed claim. Main record: [Init investigation](init-resource-investigation-2026-10-21.md).

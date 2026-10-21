@@ -126,3 +126,49 @@ Next counterfactual: WAIT-tail RGA ownership on both internal phases, including
 final WAIT (base stops immediately at decode), independently of cold first-word
 spacing. Recipe/patch `wait-tail-resources-v1`. Baseline must reproduce frozen
 kind95 packet exactly. No emulator patch accepted before held-out controls.
+
+## WAIT-tail counterfactual rejected
+
+`wait-tail-screen-v1`: mode0 reproduces the parent kind95 packet exactly.
+Two internal RGA tail slots plus cold spacing reaches184/192 kind96 and180/192
+kind97, but regresses4 and2 previously measured fields respectively. Kind95
+falls to332/384, with32 new settling-beam fields (typically4CCK later). Therefore
+universally reserving WAIT tails is not an acceptable explanation. Cold-only
+control reproduces380/384,168/192,168/192 across kinds95/96/97 with no new fields.
+
+Next revised hypothesis: missing odd phase across short-line E2-to0. Advance no
+word on that immediate next even clock; a warm request pipe can still reserve a
+dummy slot, while the cold first word has not established that reservation.
+This targets the early release only at wrap, leaving normal-line WAIT tails
+free. Local WinUAE `custom.cpp:generate_copper` independently separates odd-phase
+request progression from even-phase allocation and handles even-to-even dummy
+requests; it is corroboration, not HW proof. A separate strictly-next-odd COPEN
+sample tests remaining clock0-granted enables. Earlier odd-latch experiment
+consumed the same odd clock as the CPU word-End write, not the following one.
+Recipe/patch: `wrap-phase-resources-v1`, modes0/2/4/16/20, unchanged strict gates.
+
+## Wrap/gate screen and targeted profile
+
+`wrap-phase-screen-v1`: baseline packet byte-identical. Mode4 all-word spacing
+with a warm dummy reservation gives380/384,168/192,178/192 for kinds95/96/97,
+zero new fields. Mode16 strictly-next-odd COPEN fixes384/384 kind95 but regresses
+8 kind96 and4 kind97 fields. Mode20 combined regresses20 kind95 fields. No
+universal enable delay or gap rule accepted.
+
+A packet-qualified single-case profiler now captures full bus slots using a
+common observer entry once per trial, skip-count plus exact descriptor check,
+and full packet equality afterward. `enable-rom-case-profile-v3` matches the
+parent byte-for-byte. Case96,3,1550,0,0,0: COPEN grantC4; IR1C8,IR2CC,WAIT1D0,
+WAIT2D4; CPU NOOPD8,VHPOSRDC yields42E1 versus hardware42E2. Slots show bitplanes
+throughD7. This rejects reasoning that assumed undocumented fetch locations.
+The first register-conditioned profile failed because the control parser treats
+string A4 as a hexadecimal number before recognizing a register; the tool uses
+verified hit-count selection instead. No emulator debugger patch was made.
+
+Next source-backed hypothesis: `start_pending_copper_frame_if_due` and
+`Copper::frame_start` preload a running PC while DMA is disabled. A real pending
+address reload on enable could change the whole first-fetch/stop sequence,
+explaining short probe and long restart data together. Screen modes32 pending
+restart,96 also full restart phase spacing,98 also cold spacing against0; recipe
+and exact patch `frame-restart-resources-v1`. DMA-enabled frame starts retain
+existing calibration; dormant LC writes preserve the pending live-address load.
