@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\collision-pointer-phase-hardware-v1",
+  "hypothesis": "New reload ownership changes polling-phase cohorts that old sparse references do not cover; same-bracket CLXDAT remains correct.",
+  "test": "Repeat unchanged pointer-collision-v2 ROM twice, preserve every original capture, compare only exact raw launch/write/read/settled brackets. Merge evidence only after checking cross-run conflicts.",
+  "smaller_reproducer": null,
+  "next_question": "Are qualification losses missing physical phase cohorts or a same-bracket collision regression?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "80a461b72b96fd6183015a25c03d8f5e414963a205239008476ed32e727ba185",
+  "decision": "validation failed"
+}

@@ -14,6 +14,22 @@ def row(mode, source=0xaaaa, launch=0x42c0):
 
 
 class InitResourceTests(unittest.TestCase):
+    def test_launch_sweep_retains_controls_and_all_launches(self):
+        rows = probe.trials(launch_sweep=True)
+        self.assertEqual(len(rows), 606)
+        self.assertEqual(len(set(rows)), len(rows))
+        races = [r for r in rows if r[1] == 3 and not r[2] & 16]
+        self.assertEqual({(r[3], r[4]) for r in races},
+                         {(phase, pad) for phase in range(2) for pad in range(8)})
+        for item in rows:
+            self.assertIn(item[:-1] + (1 - item[-1],), rows)
+        for mode in range(3):
+            for inert in (0, 8):
+                self.assertEqual(sum(r[2] >> 8 == mode and r[2] & 8 == inert
+                                     for r in races), 96)
+            self.assertEqual(sum(r[1] == 3 and r[2] & 16 and r[2] >> 8 == mode
+                                 for r in rows), 2)
+
     def test_controls_repeat_pairs_and_modes(self):
         rows = probe.trials()
         self.assertEqual(len(rows), 600)

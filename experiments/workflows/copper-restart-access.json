@@ -1,0 +1,226 @@
+{
+  "version": 1,
+  "id": "copper-restart-access",
+  "hypothesis": "Restart reload conflicts with CPU writes differently from reads, especially when COPEN precedes the strobe.",
+  "competitor": "Reload reserves all CPU accesses uniformly; collision qualification changes are launch-phase coverage only.",
+  "test": "Immediately access chip RAM read/write or RGA VHPOSRread/NOOPwrite after identical COPJMP/COPEN opcodes, in both gate orders; off/WAIT/active, phases0/1,pads0..7; no blitter.",
+  "outcomes": {
+    "read/write boundaries differ from model": "Correct reload resource or strobe sampling using fixed-window evidence.",
+    "all exact-launch timing matches": "Investigate collision polling-phase coverage rather than inventing a read exception.",
+    "activity or data controls fail": "Repair probe before interpretation."
+  },
+  "next_question": "Does reload arbitration differ by immediate CPU access kind or gate order?",
+  "investigation": "investigations/copper-restart-access.json",
+  "binary": "captures/copper-phase-20261020/body-final-candidate/emulator.exe",
+  "romdir": "build/copper-restart-access-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "dc98bde9ee29190e69feeb49c71d5831a3062b04721f1177f347b0d8681376d4",
+  "capture": {
+    "minimum_seconds": 520,
+    "expected_cases": 768,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 256
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "shift": 0,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Copper activity control",
+        "where": {
+          "variant": {
+            "mask": 768,
+            "equals": 512
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "Chip RAM read sees seededAAAA",
+        "where": {
+          "variant": {
+            "mask": 96,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "Write source remains5555",
+        "where": {
+          "variant": {
+            "mask": 32,
+            "equals": 32
+          }
+        },
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "comparison": {
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-strobe launch; no alignment"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "access_result",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "RAM/VHPOSR read result, or write source"
+      },
+      {
+        "name": "post_access",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "First beam observer after immediate access"
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "mask": 65535,
+        "unit": "packed beam",
+        "meaning": "After fixed ROM DBRA settling loop"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite stream completion witness"
+      }
+    ],
+    "alignment": "exact"
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Reuse operator-confirmed clean power session after128-case control passed twice. Live substitution with verified restoration; software observations,no electrical edge claims. No blit is launched. Identical opcode banks selected before launch; source and activity controls required."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

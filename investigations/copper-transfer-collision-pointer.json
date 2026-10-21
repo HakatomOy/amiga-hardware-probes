@@ -1,12 +1,12 @@
 {
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\collision-pointer",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-body-final-v1\\collision-pointer",
   "hypothesis": "The live scan confuses the render-write anchor with the absolute2H pixel comparator, and CLXDAT must latch before pixels clocked in its granted slot.",
   "test": "Use2H minus DIW framebuffer-origin for collision cursor only, sample CLXDAT at word start, preserve all other reads, CPU/DMA clocks and pixel rendering. Replay both saved sweeps and the independent paired aperture before broad validation.",
   "smaller_reproducer": null,
   "next_question": "Does start-of-slot sampling remove the remaining early family?",
-  "no_new_evidence": 1,
-  "evidence_fingerprint": "dc6a5901e0397bcdc63501a6c7d9a407d2ea2ea3d87d9e85ceb70217a4e7924b",
-  "decision": "review evidence",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "38e99a61cf799ac58d928c59adbb8aecd8d775b0d70013d9c5291d4d47955287",
+  "decision": "validation failed",
   "experiment": "copper-transfer-collision-pointer",
   "identity": {
     "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",

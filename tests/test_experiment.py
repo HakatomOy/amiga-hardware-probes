@@ -117,6 +117,17 @@ class ExperimentTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             e.check_coverage(rows[:1] + rows[2:], contract)
 
+    def test_missing_coverage_identifies_empty_control_cohort(self):
+        contract = dict(coverage=[dict(field='irq_level', unit='word',
+            meaning='Source-neighbor control', where=dict(target=3, variant=dict(mask=24, equals=16)),
+            require_values=[0xaaaa])])
+        with self.assertRaises(ValueError) as caught:
+            e.check_coverage([row(target=3, variant=0, irq_level=0xaaaa)], contract)
+        message = str(caught.exception)
+        self.assertIn('Source-neighbor control', message)
+        self.assertIn('selected_cases=0', message)
+        self.assertIn('"equals": 16', message)
+
     def test_independent_repeats_require_overlapping_qualified_cohorts(self):
         first = row(launch_beam=10)
         other_phase = row(launch_beam=11)

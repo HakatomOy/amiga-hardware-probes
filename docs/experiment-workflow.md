@@ -372,6 +372,11 @@ For swept variants, coverage selectors can use
 `"variant": {"mask": 3, "equals": 2}` to test control bits independently of
 sweep bits. `allowed_values` enforces constant controls; merely requiring one
 correct value would allow a mixture of correct and broken controls to pass.
+Coverage failures identify the control meaning, selector and selected-case
+count. Check these first: an empty neighbor/control cohort is a probe-design
+omission, not evidence that a source race never crossed its timing boundary.
+Retain the missing control or revise the planned experiment explicitly before
+another preflight; do not remove a requirement merely to enable hardware.
 
 Coverage controls are checked on every reference packet as well as emulator
 preflight. Passing emulator controls cannot establish that the physical witness

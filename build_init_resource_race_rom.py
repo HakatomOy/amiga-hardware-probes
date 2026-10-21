@@ -7,15 +7,21 @@ import build_handoff_stride_rom as stride
 import build_irq_stage_rom as base
 
 
-def trials():
+def trials(launch_sweep=False):
+    priorities = (1,) if launch_sweep else range(2)
+    nops = (0, 1, 3) if launch_sweep else range(4)
+    launches = [(phase, pad) for phase in range(2) for pad in range(8)] if launch_sweep else ((0, 3), (0, 4), (1, 3))
     rows = [(90, 3, 6 | priority | inert | neighbor | (n << 5) | (mode << 8),
              phase, pad, repeat)
-            for mode in range(3) for priority in range(2) for inert in (0, 8)
-            for neighbor in (0, 16) for n in range(4)
-            for phase, pad in ((0, 3), (0, 4), (1, 3)) for repeat in range(2)]
+            for mode in range(3) for priority in priorities for inert in (0, 8)
+            for neighbor in ((0,) if launch_sweep else (0, 16)) for n in nops
+            for phase, pad in launches for repeat in range(2)]
     rows += [(90, 6, 6 | priority | neighbor | (mode << 8), 0, 4, repeat)
              for mode in range(3) for priority in range(2)
              for neighbor in (0, 16) for repeat in range(2)]
+    if launch_sweep:
+        rows += [(90, 3, 7 | 16 | (mode << 8), 0, 4, repeat)
+                 for mode in range(3) for repeat in range(2)]
     return rows
 
 
@@ -121,9 +127,12 @@ if __name__ == '__main__':
     parser.add_argument('--vasm', required=True)
     parser.add_argument('--wsl', action='store_true')
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--launch-sweep', action='store_true',
+                        help='Sweep both launch phases and padding0..7; priority-set source races, NOP0/1/3, with inert and preseed controls')
     args = parser.parse_args()
-    base.build(args.vasm, args.wsl, args.out, rows=trials(), transform=transform,
-               profile=dict(kind=90, targets=['AD oldAAAA', 'AD preseeded5555 control'],
+    base.build(args.vasm, args.wsl, args.out, rows=trials(args.launch_sweep), transform=transform,
+               profile=dict(kind=90, launch_sweep=args.launch_sweep,
+                            targets=['AD oldAAAA', 'AD preseeded5555 control'],
                             variants='bit0 priority;bit3 inert start;bit4 unused-neighbor write;bits6:5 NOP0..3;bits9:8 Copper0=off,1=settledWAIT,2=active',
                             hypothesis='Startup source-fetch progress depends on Copper state, separately from CPU status observation.',
                             competitor='Source ordering is unchanged; differences belong to CPU read arbitration/visibility.',

@@ -313,7 +313,7 @@
         "meaning": "written_word"
       }
     ],
-    "min_matches": 400
+    "min_matches": 600
   },
   "hardware": {
     "onerom": "../OneROM/onerom.exe",

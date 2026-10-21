@@ -200,13 +200,16 @@ def check_coverage(rows,contract):
             (r[k] & v['mask'] == v['equals']) if isinstance(v, dict) else r[k] == v
             for k,v in rule.get('where',{}).items())]
         distribution=Counter(value(r,rule) for r in selected)
+        context = (f"{str(rule.get('meaning', rule['field']))[:120]}; "
+                   f"selected_cases={len(selected)}; "
+                   f"where={json.dumps(rule.get('where', {}), sort_keys=True)[:240]}")
         unexpected = set(distribution) - set(rule.get('allowed_values', distribution))
         if unexpected:
-            raise ValueError(f"capture coverage control {rule['field']} has unexpected values {sorted(unexpected)}")
+            raise ValueError(f"capture coverage control {rule['field']} has unexpected values {sorted(unexpected)}; {context}")
         required=rule['require_values']
         missing=[x for x in required if x not in distribution]
         if missing:
-            raise ValueError(f"capture coverage missing {rule['field']} values {missing}; revise the observer or coverage contract")
+            raise ValueError(f"capture coverage missing {rule['field']} values {missing}; {context}; revise the observer or coverage contract")
         report.append(dict(field=rule['field'],unit=rule['unit'],selected_cases=len(selected),
                            where=rule.get('where',{}),required_counts={x:distribution[x] for x in required}))
     return report

@@ -1,6 +1,6 @@
 {
   "experiment": "copper-transfer-collision-copper",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\collision-copper",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-body-final-v1\\collision-copper",
   "identity": {
     "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
@@ -20,8 +20,8 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run2"
   ],
-  "evidence_fingerprint": "90e1df591949c31a170ecfe28071a2b9b6e0285c7814d6adb9ac2abc86026e7b",
-  "no_new_evidence": 1,
+  "evidence_fingerprint": "dc879f5af736b72f18fbba10776712e31282f3cdde6520ccbf34c35337083e8d",
+  "no_new_evidence": 0,
   "validation": [],
-  "decision": "review evidence"
+  "decision": "validation failed"
 }

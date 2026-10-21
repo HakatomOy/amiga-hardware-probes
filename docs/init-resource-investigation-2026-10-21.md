@@ -1,66 +1,55 @@
-# Init resource investigation
+# Init and Copper/CPU investigation
 
-## Question and controls
+## Confirmed hardware evidence
 
-Separate blitter source-fetch ordering from CPU status observation before
-changing Init again. Kind90 pairs identical critical opcodes across Copper
-off, a settled sleeping WAIT and an actively restarted finite stream. Source
-overwrite/unused-neighbor, real/inert BLTSIZE, BLTPRI, NOP0..3, neighboring
-launch slots and preseeded-source controls total600 cases. COPER witnesses
-prove WAIT entry and finite active-stream completion.
+A500 was power-cycled before this session. OneROM restores were verified after
+all live runs. Hardware remains authoritative; no trace alignment is applied.
 
-## Confirmed hardware facts
+- `references/init-resource-race-v1`:600 qualified cases,300 independently
+  repeated cohorts; measured fields stable although raw packets differ.
+- `references/init-resource-launch-sweep-v1`:606 qualified cases,303 independently
+  repeated cohorts; two byte-identical packets, zero invalid, excluded, missing
+  or unstable results. ROM SHA256:
+  `a32cc59c177a6bb85d7692cec189851de566f671f841ccd65637fa543cf3262f`.
+  Exact builder: `experiments/probe-sources/init-resource-launch-sweep-v1.py`.
 
-`references/init-resource-race-v1/run1` and `run2` cover300 independently
-repeated cohorts and all600 rows, with zero invalid, excluded, unstable or
-missing results. Packets differ in unmeasured raw bits, so do not call them
-byte-identical. Both OneROM restorations verified. All200 cross-mode launch
-cohorts have identical launch beams; no alignment is applied.
+Both probes pair Copper off, sleeping WAIT and finite active streams, identical
+CPU opcodes, source races, inert starts, neighbor and preseed controls. The sweep
+covers both launch phases and padding0..7 with NOP0/1/3.
 
-Off and sleeping-WAIT observations agree. Hardware changes fetched source
-between modes in24/48 real source-race cohorts; the current word-End candidate
-predicts only4. It matches400/600 complete cases; all200 active-mode rows
-differ, including inert starts. Therefore Init alone cannot explain this family.
-`tools/summarize_init_resource.py` reports grouped source/status observations.
+## Supported correction
 
-## Ownership hypothesis
+Classic CPU words transfer before their tail. Copper's second restart phase
+owns a DMA slot for pointer reload. Normal bus-free body phases, including the
+first D math bubble, must respect the pre-refresh RGA reservation already
+required by Init. StartDelay, memory transfers and internal terminal phases
+retain distinct rules. Keep the completion predictor consistent with execution.
 
-The byte-identical emulator trace shows case90,3,526,0,4,0 granting the inert
-CPU write at42:D0 while the Copper completes its second restart phase there.
-The CPU source overwrite follows atD9; hardware's later observations are6 CCK
-later. Test reserving the reload phase against CPU/blitter, while leaving the
-first restart phase free. Distinguish it from a global Init/read delay using
-the inert controls and existing source/register suites.
+The launch sweep separates this from CPU-write blocking: all fetched sources
+already matched, while64 status mismatches executed math at E1 before refresh.
+Fourteen further differences included inappropriate post-refresh Init holds.
+Removing write holds and reserving bus-free body phases repairs both groups.
 
-An audit also corrects a historical conclusion: the earlier `reserve-candidate`
-changed Init's class to Bus but left `current_slot_needs_bus()` false. No owner
-then advanced Init. Its destination-control failure rejects that implementation,
-not a correctly asserted Init reservation. Any genuine reservation must keep
-request, grant, sequencer advancement, CPU yielding and completion prediction
-consistent. Do not repeat the stalled implementation.
+## Rejected models and evidence
 
-## Evidence paths and next check
+Blanket CPU-write Init holds lose152 register witnesses. Restricting that hold
+to the preceding Copper second word still fails78/606 sweep cases. No CPU
+write-direction field remains. The old Init-as-Bus experiment failed because it
+never asserted the bus request; it does not refute a correctly asserted request.
+Full chronology: [experiment history](init-resource-experiment-history-2026-10-21.md).
 
-Full files: `captures/copper-phase-20261020/init-resource-hardware-v1`,
-`init-resource-preflight-v1`, and `init-resource-trace-v2` (packet identity
-verified). Builder: `build_init_resource_race_rom.py`; exact archived source:
-`experiments/probe-sources/init-resource-race-v1.py`.
+## Validation and next action
 
-Next: replay the restart-ownership candidate against kind90 and the previously
-repaired quiet/access/register cases. Fix inert ownership before attributing
-remaining real-start differences to Init. No emulator acceptance yet.
+`captures/copper-phase-20261020/body-turnaround-controls` matches all3894 focused
+cases: access1024, register768, onset384, original resource600, sweep606 and
+handoff512, without exclusions or new measured-field regressions. This includes
+new hardware evidence and preserved earlier suites; it is not yet broad acceptance.
 
-## Reload reservation result
-
-The reload-ownership candidate preserves quiet512/512, access1024/1024 and
-register768/768. Handoff neighbors improve392 to472 matches with zero new
-fields. Kind90 improves400 to532: every fetched source matches and every inert
-case matches. Remaining68 differences are status0 and later beam observations,
-with48 new fields in16 real, priority-set, zero-NOP cases. It is not accepted.
-
-Next discriminating change: hold only Init during a CPU-owned clock, without
-delaying the CPU grant. Leave StartDelay and all body bus-free rules unchanged.
-The earlier broad CPU-freeze screen changed all BusFree phases and therefore
-does not reject this narrower resource distinction. Compare kind90 status/data,
-kind89, kinds79/80 and handoff neighbors before broader acceptance. No BBUSY,
-IRQ-latency or trace-alignment constant changes.
+Source: Copperline `src/bus/dma_slots.rs`, `src/chipset/blitter.rs`,
+`src/chipset/copper.rs`, `src/cpu.rs`, `src/bus.rs` and named bus tests.
+The final binary preserves all9462 focused cases. Standalone core3676, strict
+Clippy, format and331 probe-tool tests pass. Full acceptance stops at collision
+qualification losses; remaining CIA/legacy/broad stages have not run in that
+acceptance batch. Follow the [restart investigation](copper-restart-access-2026-10-21.md)
+before resuming acceptance or committing the emulator. Reuse archived hardware
+by default; the new live test resolves a specific reload uncertainty.

@@ -1,6 +1,7 @@
 {
   "version": 1,
   "id": "copper-transfer-quiet",
+  "purpose": "regression",
   "hypothesis": "Restart phases and pre-refresh request arbitration combine with granted-transfer RAM and DMACON visibility; no uniform clock shift.",
   "competitor": "These phase changes overfit quiet/source races and fail steady WAIT,display pressure,or neighbors.",
   "test": "Require old/new Copper ordering repairs with zero new measured fields or qualification errors,then run independent neighboring and broad gates.",

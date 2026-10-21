@@ -113,7 +113,8 @@
       }
     ],
     "max_excluded": 0,
-    "max_unstable": 0
+    "max_unstable": 0,
+    "min_matches": 512
   },
   "baseline": "captures/handoff-focus-20261019/read-neighbor-baseline-v1",
   "references": [

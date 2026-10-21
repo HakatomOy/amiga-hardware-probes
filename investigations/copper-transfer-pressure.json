@@ -1,8 +1,8 @@
 {
   "experiment": "copper-transfer-pressure",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\pressure",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-body-final-v1\\pressure",
   "identity": {
-    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
+    "binary_sha256": "9f1735443fd57d885eb175cb48fc3a823933d5b91b00ab881c7b7bfc026591f6",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "5bee2901d3bcee79e34d8e51f3f2b99d6542d6d49c961bc0c015f1f5c1f3822b",
     "source_id": "c6ae2bae618a402f7877ecf379a77d9d1b753aeef3f020d3de3e01253e555955"
@@ -22,7 +22,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-order-v1\\run2"
   ],
   "evidence_fingerprint": "80fe4c18ec50a9c41b98f64f757bbaec5267edc5178ca23fd0790d2d0a58e878",
-  "no_new_evidence": 5,
+  "no_new_evidence": 6,
   "validation": [
     {
       "name": "preflight",

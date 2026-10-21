@@ -1,11 +1,11 @@
 {
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1",
-  "hypothesis": "Copper samples COPEN at the transferred word while other DMACON consumers retain their phase; this preserves ordering repairs and restores collision qualification.",
-  "test": "Preserve the repaired quiet,pressure,opcode,steady andhandoff matrices; restore281/199 pointer collision qualification; require zero new measured fields or qualification errors across all held-out gates.",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-body-final-v1",
+  "hypothesis": "Classic CPU words transfer before their tail; Copper reload owns its DMA slot; normal bus-free body phases respect the Copper/refresh RGA turnaround.",
+  "test": "Preserve every repaired ordering, source and Init case, including the new606-case launch sweep; retain zero-new-field and qualification gates on all held-out suites.",
   "smaller_reproducer": null,
-  "next_question": "Design a smaller arbitration reproducer that separates CPU read grants from blitter Init progress; neither arbitrary fetch-phase overlap model generalizes.",
+  "next_question": "Does the complete transfer, reload and RGA model preserve the full hardware regression suite?",
   "no_new_evidence": 0,
-  "evidence_fingerprint": "a4d08515cddd5668e59aa6ddeccf6362512ba23fc4b0790f9266ea3f6acb7c71",
+  "evidence_fingerprint": "ca5c0759bec38926837a8e7ed16ece0f84c550d59a8c10363f3c1f9caacbd756",
   "decision": "validation failed",
   "confirmed_facts": [
     "Word-End CPU COPJMP repairs four masked beam samples and retains collision qualification.",

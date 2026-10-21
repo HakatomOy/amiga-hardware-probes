@@ -1,15 +1,16 @@
 {
   "version": 1,
   "id": "copper-transfer-acceptance",
-  "hypothesis": "Copper samples COPEN at the transferred word while other DMACON consumers retain their phase; this preserves ordering repairs and restores collision qualification.",
-  "competitor": "The ordering repair requires moving all DMA consumers or loses independent bus/CIA/collision controls.",
-  "test": "Preserve the repaired quiet,pressure,opcode,steady andhandoff matrices; restore281/199 pointer collision qualification; require zero new measured fields or qualification errors across all held-out gates.",
+  "purpose": "regression",
+  "hypothesis": "Classic CPU words transfer before their tail; Copper reload owns its DMA slot; normal bus-free body phases respect the Copper/refresh RGA turnaround.",
+  "competitor": "These distinctions overfit startup or lose independent source, collision, bus or CIA evidence.",
+  "test": "Preserve every repaired ordering, source and Init case, including the new606-case launch sweep; retain zero-new-field and qualification gates on all held-out suites.",
   "outcomes": {
     "quietCopper also differs in data": "Retain general request/data phase model.",
     "quiet matches while six-plane differs": "Constrain next fix to contention/line-end sequencing;do not globally shift DMA data.",
     "controls/qualification fail": "Narrow witness before interpretation."
   },
-  "next_question": "Does the transfer-phase correction generalize across quiet,contended and settled-WAIT captures?",
+  "next_question": "Does the complete transfer, reload and RGA model preserve the full hardware regression suite?",
   "investigation": "investigations/copper-transfer-acceptance.json",
   "binary": "../Copperline/target/ci/copperline.exe",
   "romdir": "build/copper-cpu-quiet-v1",
@@ -398,6 +399,25 @@
         "experiments/workflows/init-resource-race.json",
         "--out",
         "{out}/init-resource",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "init-launch-sweep",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/init-resource-launch-sweep.json",
+        "--out",
+        "{out}/init-launch-sweep",
         "--binary",
         "{binary}",
         "--config",
