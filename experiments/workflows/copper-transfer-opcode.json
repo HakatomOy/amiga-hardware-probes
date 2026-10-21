@@ -240,7 +240,8 @@
         "unit": "INTREQ bits",
         "meaning": "0=oldNOP;4=newINTREQ opcode fetched"
       }
-    ]
+    ],
+    "min_matches": 512
   },
   "hardware": {
     "onerom": "../OneROM/onerom.exe",

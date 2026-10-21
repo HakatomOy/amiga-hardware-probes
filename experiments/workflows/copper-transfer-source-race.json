@@ -225,7 +225,8 @@
         "unit": "word",
         "meaning": "Selected CPU-written source/neighbor word after settling"
       }
-    ]
+    ],
+    "min_matches": 2304
   },
   "hardware": {
     "onerom": "../OneROM/onerom.exe",

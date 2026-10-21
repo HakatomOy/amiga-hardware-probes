@@ -40,6 +40,23 @@ def packet(counter=10, complete=1, status=0, kind=0):
 
 
 class ExperimentTests(unittest.TestCase):
+    def test_preservation_floor_rejects_loss_of_recent_repairs(self):
+        spec = {'comparison': {'min_matches': 2}}
+        report = dict(counts={'matches': 1}, delta={'repaired_fields': {'counter': 10}})
+        with self.assertRaisesRegex(ValueError, 'preservation floor'):
+            e.require_repairs(spec, report)
+        report['counts']['matches'] = 2
+        e.require_repairs(spec, report)
+
+    def test_preservation_floor_is_validated(self):
+        limit = self.spec['capture']['expected_cases']
+        self.spec['comparison']['min_matches'] = limit
+        e.validate_spec(self.spec)
+        for invalid in (-1, limit + 1, True, '1'):
+            self.spec['comparison']['min_matches'] = invalid
+            with self.assertRaisesRegex(ValueError, 'min_matches'):
+                e.validate_spec(self.spec)
+
     def test_counterfactual_must_repair_its_declared_field_before_validation(self):
         self.spec['comparison']['required_field_repairs'] = {'counter': 1}
         calls = []

@@ -247,7 +247,8 @@
     ],
     "required_field_repairs": {
       "Copper_order": 1
-    }
+    },
+    "min_matches": 192
   },
   "hardware": {
     "onerom": "../OneROM/onerom.exe",

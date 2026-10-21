@@ -1,6 +1,6 @@
 {
   "experiment": "handoff-busy-onset",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\ir1-init-controls\\busy-onset",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\ir2-init-controls\\busy-onset",
   "identity": {
     "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
@@ -21,7 +21,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\busy-onset-hardware-v1\\reference-1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\busy-onset-hardware-v1\\reference-2"
   ],
-  "evidence_fingerprint": "8187b343155361144bf11da2542bbda29908e69163e04221e2a825ed273ec897",
+  "evidence_fingerprint": "af89175c6ac0c39a441430c0e275fb568a130d696b2417a9f63ec690a519925d",
   "no_new_evidence": 0,
   "validation": [],
   "decision": "validation failed"

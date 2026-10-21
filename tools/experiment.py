@@ -109,6 +109,9 @@ def validate_spec(spec):
     comparison = spec['comparison']
     if comparison.get('alignment') != 'exact' or not comparison.get('measurements'):
         raise ValueError('explicit measurements and exact alignment required')
+    floor = comparison.get('min_matches', 0)
+    if type(floor) is not int or not 0 <= floor <= capture['expected_cases']:
+        raise ValueError('min_matches must be an integer within the expected case count')
     required = comparison.get('required_field_repairs', {})
     names = {f.get('name',f['field']) for f in comparison['measurements']}
     if (not isinstance(required, dict)
@@ -318,6 +321,11 @@ def delta(before, after, names=()):
 
 
 def require_repairs(spec, report):
+    floor = spec['comparison'].get('min_matches', 0)
+    matches = report.get('counts', {}).get('matches', 0)
+    if matches < floor:
+        raise ValueError(f'preservation floor not met: matches={matches}, required={floor}; '
+                         'broader validation not run')
     repairs = report.get('delta', {}).get('repaired_fields', {})
     unmet = {name: dict(required=count, observed=repairs.get(name, 0))
              for name,count in spec['comparison'].get('required_field_repairs', {}).items()

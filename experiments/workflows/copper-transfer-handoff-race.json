@@ -271,7 +271,8 @@
         "unit": "COPER bit",
         "meaning": "Finite Copper activity witness"
       }
-    ]
+    ],
+    "min_matches": 1536
   },
   "hardware": {
     "onerom": "../OneROM/onerom.exe",

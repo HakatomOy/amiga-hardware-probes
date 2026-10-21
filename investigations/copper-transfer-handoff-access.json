@@ -1,11 +1,11 @@
 {
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\rga-init-controls\\handoff-access",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\ir2-init-controls\\handoff-access",
   "hypothesis": "The transfer-phase correction generalizes to independent CPU/Copper and blitter witnesses.",
   "test": "Reuse exact archived HW cohorts and reject any new fields,missing records,or qualification losses.",
   "smaller_reproducer": null,
   "next_question": "Does the shared bus-phase correction preserve the held-out handoff-access cohort?",
   "no_new_evidence": 0,
-  "evidence_fingerprint": "16630854e680ab1564d2babd3d870fdca47ae14aec939e94ea49213efc89d099",
+  "evidence_fingerprint": "647dea34e88ce120cf6910ba9b0c97439bf3e1fb365c618b07f10df2ebdc0d77",
   "decision": "validation failed",
   "experiment": "copper-transfer-handoff-access",
   "identity": {

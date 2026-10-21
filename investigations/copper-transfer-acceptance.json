@@ -3,17 +3,23 @@
   "hypothesis": "Copper samples COPEN at the transferred word while other DMACON consumers retain their phase; this preserves ordering repairs and restores collision qualification.",
   "test": "Preserve the repaired quiet,pressure,opcode,steady andhandoff matrices; restore281/199 pointer collision qualification; require zero new measured fields or qualification errors across all held-out gates.",
   "smaller_reproducer": null,
-  "next_question": "Does the transfer-phase correction generalize across quiet,contended and settled-WAIT captures?",
+  "next_question": "Design a smaller arbitration reproducer that separates CPU read grants from blitter Init progress; neither arbitrary fetch-phase overlap model generalizes.",
   "no_new_evidence": 0,
   "evidence_fingerprint": "a4d08515cddd5668e59aa6ddeccf6362512ba23fc4b0790f9266ea3f6acb7c71",
   "decision": "validation failed",
   "confirmed_facts": [
-    "Transfer plus Init free-clock rule matches quiet512,pressure512,opcode512,steady192,kind781536 andkind791024 captured cases;no qualification loss.",
-    "Held-out kind80 register witness rejects this candidate:696/768 match;72differences,132 newly wrong beam fields. No-start and memory-witness controls all match.",
-    "Init reservation counterfactual fails irq_beam destination control and is rejected before comparison.",
-    "Verified kind80 trace shows unused A phase stalls on CPU grant in nice mode but advances on the same nasty-mode grant;test CPU-ownership clock rules and pre-refresh Init in a single explicitly experimental sweep."
+    "Word-End CPU COPJMP repairs four masked beam samples and retains collision qualification.",
+    "Clean power epoch:128 control and384 busy-onset cases each two byte-identical HW runs; all four OneROM restorations verified.",
+    "Current candidate repairs7360 primary cases but still regresses16kind60 poll fields and22kind89 fields; no emulator acceptance."
   ],
   "history": [
     "docs/copper-transfer-phase-2026-10-20.md"
-  ]
+  ],
+  "rejected_hypotheses": [
+    "early_busy_drop: Fails independent busy-word controls; does not repair extra polls.",
+    "custom_RGA_Init_interlock: Repairs16 polls but112 new kind79 fields and8 kind60 fields.",
+    "Init_IR1_overlap: 16 new kind79 fields,136 kind80 fields,6 kind89 fields.",
+    "Init_IR2_overlap: 16 new kind79 fields,4 kind60 fields,6 kind89 fields; kind80 loses56 repaired matches."
+  ],
+  "emulator_acceptance": "Not accepted; no Copperline commit. Unsupported Init experiments reverted; use frozen binaries for evidence."
 }

@@ -59,6 +59,12 @@ For a counterfactual that must change a specific observation, declare e.g.
 baseline. A no-effect result then stops before validation; `resume` cannot bypass
 the requirement. Use this for a stated repair hypothesis, not preservation suites.
 
+Use `comparison.min_matches` to freeze an established preservation floor. This
+also protects recent repairs when a suite's older baseline still contains
+differences. A candidate below the floor fails before broader validation, even
+if it improves that older baseline. Retain field/qualification checks as well;
+aggregate counts cannot establish that the same cases still match.
+
 File caches, retention and existing result locations are documented in
 [result storage](result-storage.md). A report cache hit saves analysis work; it
 does not make a previously rejected experiment acceptable. At a natural boundary,

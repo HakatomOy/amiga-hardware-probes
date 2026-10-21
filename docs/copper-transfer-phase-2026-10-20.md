@@ -174,3 +174,24 @@ and BZERO where HW has data. Next hypothesis: Init may share Copper IR1's
 memory fetch, but not IR2's register/data phase. Test live and cloned completion
 scheduling together against kind60,79,80,89 and all held-out gates. Alternative:
 a separate CPU read/arbitration delay; do not change IRQ latency or BBUSY drop.
+
+## Rejected Init fetch-phase models
+
+Both phase models repair poll fields but fail independent controls. Allowing
+IR1 overlap leaves16 new kind79 fields,136 kind80 fields and6 kind89 fields.
+Allowing IR2 leaves16 new kind79 fields,4 kind60 fields and6 kind89 fields;
+kind80 has712 matches instead of the previously repaired768. Reject both and
+remove their production code and prototype tests. Frozen candidate binaries,
+source logs and four-suite reports remain in `ir1-init-controls` and
+`ir2-init-controls` under the investigation capture directory.
+
+The old-baseline delta alone did not reject kind80's lost recent repairs.
+The primary preservation suites now declare `comparison.min_matches` equal
+to their complete qualified matrices, in addition to unchanged field and
+qualification gates. A712/768 result cannot pass as preservation. Floor
+validation and rejection tests cover this rule; `run` and `resume` share it.
+
+Current production working tree is restored to word-End COPJMP with Init
+excluded from Copper clocks. It remains unaccepted:16 extra poll fields in
+kind60 and22 new fields in kind89 require a smaller arbitration reproducer.
+No Init model or emulator timing change has been committed from this task.
