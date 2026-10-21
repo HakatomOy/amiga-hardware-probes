@@ -1,8 +1,8 @@
 {
   "experiment": "regression-handoff-focus",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1\\handoff-focus",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\handoff-focus",
   "identity": {
-    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "eb3badf88bbc517b2f78154f9ee416c22033fa60b7147c425a20a320b2edfabd",
     "source_id": "3dce7f26ef2f7a2578d6044d570ee8ded2523c7113e695fd371ca6094c7ac8c3"
@@ -21,7 +21,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-focus-v1-run2"
   ],
   "evidence_fingerprint": "95b9486be32bdb33c42311e53807dd20b9eea9d29f4df13fb58abb1d8bde6dcf",
-  "no_new_evidence": 5,
+  "no_new_evidence": 9,
   "validation": [
     {
       "name": "preflight",

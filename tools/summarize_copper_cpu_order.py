@@ -12,40 +12,9 @@ from tools import experiment as e
 
 
 def index_trace(lines, rows, selected):
-    if rows and rows[0]['kind'] == 83:
-        return index_independent_streams(lines, rows, selected)
-    current = None
-    index = 0
-    result = {}
-    for number, line in enumerate(lines, 1):
-        if line.startswith('CPUBUS kind=custom addr=00dff1fe '):
-            if index >= len(rows):
-                raise ValueError('extra inert start')
-            row = rows[index]
-            index += 1
-            case = ','.join(map(str,e.key(row)))
-            if case in selected:
-                current = dict(case=case, address=0x6002+(row['target']//3)*16,
-                               start=dict(line=number,text=line.strip()))
-                result[case] = current
-            else:
-                current = None
-        if current is None:
-            continue
-        if line.startswith('CPUBUS kind=write ') and 'write' not in current:
-            match = re.search(r'addr=([0-9a-f]+)',line)
-            if match and int(match[1],16) == current['address']:
-                current['write'] = dict(line=number,text=line.strip())
-        if line.startswith('COPPROBE MOVE') and 'reg=09c ' in line:
-            if 'val=8002' in line or 'val=8004' in line:
-                current.setdefault('fetch',dict(line=number,text=line.strip()))
-            if 'val=8010' in line:
-                current = None
-    if index != len(rows) or set(result) != set(selected):
-        raise ValueError('trace/descriptor coverage differs')
-    if any('write' not in case or 'fetch' not in case for case in result.values()):
-        raise ValueError('selected write/fetch not present before completion marker')
-    return finish_index(result)
+    # Request/grant changes can move a fetch before the CPU witness even in
+    # display-pressure experiments. Bind streams independently in both suites.
+    return index_independent_streams(lines, rows, selected)
 
 
 def finish_index(result):
@@ -113,6 +82,8 @@ def main():
                         help='screen grant/return visibility on all MOVE8 Copper cases; not fix validation')
     parser.add_argument('--all-instructions', action='store_true',
                         help='include every selected instruction position in the phase screen')
+    parser.add_argument('--screen-enable-phase', action='store_true',
+                        help='screen COPEN transfer versus tail using captured grant parity; not patch validation')
     args = parser.parse_args()
     trace, run = args.trace_run,args.run
     if not e.read(trace/'trace-verification.json')['byte_identical']:
@@ -128,7 +99,7 @@ def main():
     cases = e.read(run/'cases.json')
     selected = {key for key,case in cases.items() if case['status']=='mismatches'
                 and case['expected'][index] != case['actual'][index]}
-    if args.screen_write_phases:
+    if args.screen_write_phases or args.screen_enable_phase:
         selected = {key for key,case in cases.items() if case['status'] in ('matches','mismatches')
                     and (args.all_instructions or case['case'][1] == 6)
                     and (case['case'][2] & 6) == 6}
@@ -142,6 +113,11 @@ def main():
     if args.screen_write_phases:
         output['phase_screen'] = screen_phases(result,cases,index)
         e.write(trace/'write-phase-screen.json',output['phase_screen'])
+    if args.screen_enable_phase:
+        with (trace/'run.log').open() as stream:
+            enables = index_enables(stream, rows, selected)
+        output['enable_phase_screen'] = screen_enable_phases(result, enables, cases, index)
+        e.write(trace/'enable-phase-screen.json', output['enable_phase_screen'])
     print(json.dumps(output))
 
 
@@ -192,6 +168,59 @@ def screen_phases(indexed, cases, field):
         results.append(dict(write_visible_CCK_after_grant=offset,**counts))
     return dict(cases=len(indexed),results=results,
                 limitation='Counterfactual data visibility only, fixed observed emulator grants/fetches. No time alignment; not patch validation.')
+
+
+def index_enables(lines, rows, selected):
+    """Bind the COPEN grant after COPJMP to its subsequent CPU launch witness."""
+    result = {}
+    index = 0
+    strobe = False
+    enable = None
+    for line in lines:
+        if line.startswith('CPUBUS kind=custom addr=00dff088 '):
+            strobe = True
+        if strobe and line.startswith('CPUBUS kind=custom addr=00dff096 '):
+            match = re.search(r' v=([0-9a-f]+) h=([0-9a-f]+)', line)
+            if not match:
+                raise ValueError('COPEN grant position missing')
+            enable = int(match[2], 16)
+            strobe = False
+        if line.startswith('CPUBUS kind=custom addr=00dff1fe '):
+            if index >= len(rows):
+                raise ValueError('extra CPU witness')
+            key = ','.join(map(str, e.key(rows[index])))
+            if key in selected:
+                if enable is None:
+                    raise ValueError('COPEN grant missing; include 0xdff088 and 0xdff096 diagnostics')
+                result[key] = enable
+            enable = None
+            index += 1
+    if index != len(rows) or set(result) != selected:
+        raise ValueError('COPEN/CPU descriptor coverage differs')
+    return result
+
+
+def screen_enable_phases(indexed, enables, cases, field):
+    # A restart tail advances on even Copper clocks. Moving COPEN from grant+2
+    # to grant+1 exposes one earlier phase only when the grant is odd.
+    results = []
+    for early_enable in (False, True):
+        for write_offset in (1, 2):
+            counts = Counter(matches=0, mismatches=0, repairs=0, regressions=0)
+            for key, detail in indexed.items():
+                actual, expected = cases[key]['actual'][field], cases[key]['expected'][field]
+                delta = detail['fetch_minus_cpu_grant_cck']
+                if actual != (4 if delta >= 2 else 2):
+                    raise ValueError('return-phase model does not reproduce captured flags')
+                delta -= 2 * (enables[key] & 1) if early_enable else 0
+                predicted = 4 if delta >= write_offset else 2
+                counts['matches' if predicted == expected else 'mismatches'] += 1
+                counts['repairs'] += actual != expected and predicted == expected
+                counts['regressions'] += actual == expected and predicted != expected
+            results.append(dict(COPEN_at_transfer=early_enable,
+                                write_visible_CCK_after_grant=write_offset, **counts))
+    return dict(cases=len(indexed), results=results,
+                limitation='Fixed-grant counterfactual for two-phase restart only; no alignment; not patch validation.')
 
 
 if __name__=='__main__':

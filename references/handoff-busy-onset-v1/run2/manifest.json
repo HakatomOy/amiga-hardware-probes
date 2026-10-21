@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "reference_id": "handoff-busy-onset-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\busy-onset-hardware-v1\\hardware-2",
+  "test_rom_sha256": "8676f885de7cb37d73110301d9e05dd04d2cac315f1a72472870a9f8a0efc9b5",
+  "source_id": "133a88996874dff5bdfa7497c30681111a4627c26c142c7c8e176fa968ffe39a",
+  "results_sha256": "a13bb383c29f80caf979d40e409e8f5d2feba0b0f673cb87ef45c0d1f187c7ad",
+  "record_count": 384,
+  "metadata": {
+    "version": 1,
+    "source_id": "133a88996874dff5bdfa7497c30681111a4627c26c142c7c8e176fa968ffe39a",
+    "record_count": 384,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "a13bb383c29f80caf979d40e409e8f5d2feba0b0f673cb87ef45c0d1f187c7ad"
+  },
+  "restoration": {
+    "backup_sha256": "e3274c921f0cf2cd0ed1a3acdef96598ee26daabb9539862c45ed876c3f6dee0",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "e3274c921f0cf2cd0ed1a3acdef96598ee26daabb9539862c45ed876c3f6dee0",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 89,
+    "aligned": false,
+    "targets": [
+      "AD1",
+      "AD16"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "Exact kind60 prefix and first DMACONR opcode; no event alignment.",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Software samples combine bus arbitration and visibility; no electrical edge inference.",
+    "hypothesis": "First clear poll may precede busy assertion rather than follow completion.",
+    "competitor": "Init/RGA arbitration delays the CPU observer until completion.",
+    "variants": "Same low5 bits as kind60: BLTPRI,DMA,no-start,chip/ROM first read.",
+    "fields": {
+      "12": "launch beam",
+      "14": "status0",
+      "16": "first chip/ROM read",
+      "18": "status1",
+      "20": "post-status1 beam",
+      "22": "early last destination",
+      "24": "status2",
+      "26": "settled last destination",
+      "28": "settled INTREQR",
+      "30": "settled beam",
+      "34": "post-status2 beam"
+    },
+    "qualification": "Exact launch beam; settled D=AAAA for real and0 for inert; COPER in Copper modes.",
+    "interpretation": "A clear-to-busy transition in AD16 supports delayed assertion; clear plus settled D supports completion."
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 192,
+    "independently_repeated_cohorts": 192,
+    "candidate_cases_with_independent_repeats": 384,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment. New power epoch operator-confirmed2026-10-21; known-good128-case control must pass twice before this run.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\busy-onset-hardware-v1\\reference-2"
+}

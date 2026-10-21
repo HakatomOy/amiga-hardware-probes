@@ -1,0 +1,33 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\rga-init-controls\\handoff-access",
+  "hypothesis": "The transfer-phase correction generalizes to independent CPU/Copper and blitter witnesses.",
+  "test": "Reuse exact archived HW cohorts and reject any new fields,missing records,or qualification losses.",
+  "smaller_reproducer": null,
+  "next_question": "Does the shared bus-phase correction preserve the held-out handoff-access cohort?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "16630854e680ab1564d2babd3d870fdca47ae14aec939e94ea49213efc89d099",
+  "decision": "validation failed",
+  "experiment": "copper-transfer-handoff-access",
+  "identity": {
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "68fab965ad2f72937d6381564237f98d27d0ac028ac2204024bc0620cd146450",
+    "source_id": "505b70bd9baafaca7b3e74aa14faeb9b27c585a3896c37a35ff4f507af586d54"
+  },
+  "competitor": "It trades newly wrong data or timing for the focused repairs.",
+  "outcomes": {
+    "old/new destination boundary differs": "First A-fetch/CPU ordering is wrong; inspect request/grant sequencing before completion.",
+    "destination ordering matches but status or beams differ": "Keep completion/status or CPU observation in scope; do not move source fetch.",
+    "control destination or stored word wrong": "Reject capture before inference."
+  },
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-copper-access-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-copper-access-v1\\run2"
+  ],
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ]
+}

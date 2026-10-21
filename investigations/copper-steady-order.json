@@ -1,0 +1,42 @@
+{
+  "experiment": "copper-steady-order",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\steady-hardware-v2",
+  "identity": {
+    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "4533206fbf1d46b44be0ed3c47655a260dc602e1fd50892eae032a35300b6cf9",
+    "source_id": "8f842b70bfcad67bd3f6b8230eb88b77be55e67f1e705e331bf588f50b72076b"
+  },
+  "hypothesis": "The quiet ordering differences originate in local COPJMP/COPEN startup, rather than steady Copper fetch/store ordering.",
+  "competitor": "Ordinary CPU store/Copper fetch ordering differs even when Copper has long been enabled and is released by a fixed WAIT.",
+  "test": "Pair immediate startup with an already enabled WAIT42a0 stream; sweep MOVE0/4/8,NOP0..7 and EXG phase. Require completion,stored8004 and both old/new outcomes in each mode before HW.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "settled WAIT agrees while immediate differs": "Constrain fix to CPU restart/DMA enable sequencing.",
+    "settled WAIT also differs": "Retain steady bus/data ordering;compare exact cohorts without alignment.",
+    "coverage or repeated reference qualification fails": "Revise observer before inferring delay."
+  },
+  "next_question": "Does settled WAIT release retain the quiet old/new race discrepancy?",
+  "references": [
+    "references/copper-steady-order-v2/run1",
+    "references/copper-steady-order-v2/run2"
+  ],
+  "evidence_fingerprint": "8bffcdbee14c0a1705df3b7007380ed1fa9af295910ea47c7540a868843b78e2",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "192 exact-qualified independently repeated rows;174 matches and18 differences against accepted dec76065 production binary. Zero excluded,missing,invalid or unstable rows.",
+    "Immediate restart:82/96 cases match. Settled WAIT:92/96 match;four data-order errors survive without local COPJMP/COPEN. Startup alone is insufficient.",
+    "Both HW packets byte-identical;both OneROM restorations verified.",
+    "Transfer-phase candidate repairs all192 cases but fails active-Copper blitter neighbors;not accepted."
+  ],
+  "source_files": [
+    "build_copper_steady_order_rom.py",
+    "../Copperline/src/cpu.rs",
+    "../Copperline/src/bus.rs"
+  ],
+  "history": [
+    "docs/copper-transfer-phase-2026-10-20.md"
+  ]
+}

@@ -1,8 +1,8 @@
 {
   "experiment": "regression-bus-completion",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1\\bus-completion",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\bus-completion",
   "identity": {
-    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "479ab051537f69e6d15fea3ac78b85ec6475e11ac51de2abc516263bc8cdc0eb",
     "source_id": "2decdfed026414ef1f365f611689381cc76d3ecea4af4d6d1a672a3883859e7c"
@@ -20,7 +20,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\bus-marker-completion-v3-run1"
   ],
   "evidence_fingerprint": "a1c646567340937ff6a437648f32b56caa94778632bbedd9c9e8e1b401c49a09",
-  "no_new_evidence": 3,
+  "no_new_evidence": 6,
   "validation": [
     {
       "name": "preflight",

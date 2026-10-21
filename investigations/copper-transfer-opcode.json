@@ -1,0 +1,33 @@
+{
+  "experiment": "copper-transfer-opcode",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\opcode",
+  "identity": {
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "501ffbb39f9be5cc3c92dd4282eff8155e496c00cd60b101d8c8cc8bc9578d64",
+    "source_id": "8e7d6cd9628ea0476e8af16891cda3bbc0cefb4db91873275bdcfafac41debfb"
+  },
+  "hypothesis": "The transfer-phase correction generalizes to independent CPU/Copper and blitter witnesses.",
+  "competitor": "It trades newly wrong data or timing for the focused repairs.",
+  "test": "Reuse exact archived HW cohorts and reject any new fields,missing records,or qualification losses.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "both IR1 and IR2 require later DMA data sampling": "Supports shared Copper memory data phase;validate a causal pipeline model,not time alignment.",
+    "only IR2 differs": "Retain instruction decode/data-specific or CPU visibility explanations.",
+    "activity/control failure": "Reject capture."
+  },
+  "next_question": "Does the shared bus-phase correction preserve the held-out opcode cohort?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-opcode-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-opcode-v1\\run2"
+  ],
+  "evidence_fingerprint": "1879970552e9546627b002a46f10284b60c5977d362d465fb581c5dda4678ac4",
+  "no_new_evidence": 6,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

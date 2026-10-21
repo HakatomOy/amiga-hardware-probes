@@ -8,6 +8,22 @@ command `cwd` defaults to the repository root. Python requires3.9+.
 
 ## Start with a decision packet
 
+### Hardware recovery and session controls
+
+If a probe leaves BBUSY stuck, times out, or stops repeating, preserve the
+suspect packet and stop the batch. Before the next live session, power-cycle
+the A500 (power off, wait a few seconds, restart); do not treat a warm reset
+as evidence that the previous peripheral state was cleared. Power cycling
+requires the operator; never claim it happened without confirmation.
+
+Record the recovery and session boundary with the capture metadata. Replay a
+small known-good blitter control twice and require completion and agreement
+before collecting new references. If it still fails, revise the hypothesis or
+isolate the setup instead of repeatedly running the same experiment. Keep
+pre-recovery failures separate from qualified references. A power cycle is a
+recovery/control step, not a reason to discard a repeatable hardware mismatch
+or recapture an unchanged trustworthy baseline for every emulator patch.
+
 New `run` and `resume` comparisons write `evidence.json` and return its path.
 Read this packet before opening cases or logs:
 
@@ -463,3 +479,29 @@ matching build profile with `--profile`, plus `--before`, `--after`, `--config`,
 `--rom`, `--out`, and optionally `--seconds 2 --repeats 5`. It returns median/spread
 of whole-process wall time. CI results include startup and do not establish
 release performance; production speed claims need comparable release binaries.
+
+
+### Explicit emulator environments and counterfactual sweeps
+
+Inherited `COPPERLINE_*` variables are stripped from normal captures. Declare
+`capture.environment_json` when a run deliberately needs emulator flags. The
+runner validates string-valued emulator keys, freezes that file, and includes
+its content hash in capture identity and replay-cache keys. The capture retains
+`emulator-environment.json`; changed settings cannot reuse an old packet.
+
+For a bounded counterfactual sweep, compile once, declare every variant's
+settings explicitly, and return only comparison counts/deltas. Require the
+unmodified control to reproduce its frozen parent packet byte-for-byte. Keep
+experimental source patches and settings beside the report. A sweep is a
+screen, not acceptance: remove experimental branches, rebuild the chosen
+behavior, then run focused, neighboring and broad gates on that clean binary.
+See `experiments/counterfactuals/screen-blitter-clocks.py` for an archived example.
+
+
+Adjacent validation commands may declare the same `parallel_group` within one
+tier when they use independent inputs and output directories. The runner caps
+concurrency at three, retains every result, and stops before subsequent batches
+on any failure. Ungrouped commands remain sequential; keep producer/consumer
+pairs such as legacy capture and packet comparison ungrouped. Never group live
+hardware operations. This reduces wall time and progress chatter without
+weakening field or qualification gates.

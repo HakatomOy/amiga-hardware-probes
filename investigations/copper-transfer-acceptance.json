@@ -1,0 +1,19 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1",
+  "hypothesis": "Copper samples COPEN at the transferred word while other DMACON consumers retain their phase; this preserves ordering repairs and restores collision qualification.",
+  "test": "Preserve the repaired quiet,pressure,opcode,steady andhandoff matrices; restore281/199 pointer collision qualification; require zero new measured fields or qualification errors across all held-out gates.",
+  "smaller_reproducer": null,
+  "next_question": "Does the transfer-phase correction generalize across quiet,contended and settled-WAIT captures?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "a4d08515cddd5668e59aa6ddeccf6362512ba23fc4b0790f9266ea3f6acb7c71",
+  "decision": "validation failed",
+  "confirmed_facts": [
+    "Transfer plus Init free-clock rule matches quiet512,pressure512,opcode512,steady192,kind781536 andkind791024 captured cases;no qualification loss.",
+    "Held-out kind80 register witness rejects this candidate:696/768 match;72differences,132 newly wrong beam fields. No-start and memory-witness controls all match.",
+    "Init reservation counterfactual fails irq_beam destination control and is rejected before comparison.",
+    "Verified kind80 trace shows unused A phase stalls on CPU grant in nice mode but advances on the same nasty-mode grant;test CPU-ownership clock rules and pre-refresh Init in a single explicitly experimental sweep."
+  ],
+  "history": [
+    "docs/copper-transfer-phase-2026-10-20.md"
+  ]
+}

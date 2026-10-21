@@ -1,0 +1,33 @@
+{
+  "experiment": "copper-transfer-source-race",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\source-race",
+  "identity": {
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "073460b6638e860d9390e3dbd2516efa1cffcc9a3edc57cbf87da9efe267553a",
+    "source_id": "f9c5d11ba25325b0ad07870a11211c4228bfdb48f509d65fdd0046e50cd98364"
+  },
+  "hypothesis": "The first A-source transfer is misplaced relative to the CPU under display DMA.",
+  "competitor": "Source ordering is correct; the remaining mismatch comes from completion or status observation.",
+  "test": "Fixed5555 CPU overwrite of first A word versus unused neighbor after one-word AD; D-only,no-start,preseeded5555 positive controls; no/four/six planes,normal/nasty,NOP0..3,neighboring launches.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "old/new destination boundary differs": "First A-fetch/CPU ordering is wrong; inspect request/grant sequencing before completion.",
+    "destination ordering matches but status or beams differ": "Keep completion/status or CPU observation in scope; do not move source fetch.",
+    "control destination or stored word wrong": "Reject capture before inference."
+  },
+  "next_question": "Does the blitter fetch A before or after the CPU overwrite,relative to the model?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-race-v1\\run2"
+  ],
+  "evidence_fingerprint": "d13feed2ec74ae32d6badebb4890033f8e8304909c608edd05e7ede63a7196e7",
+  "no_new_evidence": 3,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

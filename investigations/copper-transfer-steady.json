@@ -1,0 +1,33 @@
+{
+  "experiment": "copper-transfer-steady",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\steady",
+  "identity": {
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "4533206fbf1d46b44be0ed3c47655a260dc602e1fd50892eae032a35300b6cf9",
+    "source_id": "8f842b70bfcad67bd3f6b8230eb88b77be55e67f1e705e331bf588f50b72076b"
+  },
+  "hypothesis": "Restart phases and pre-refresh request arbitration combine with granted-transfer RAM and DMACON visibility; no uniform clock shift.",
+  "competitor": "These phase changes overfit quiet/source races and fail steady WAIT,display pressure,or neighbors.",
+  "test": "Require old/new Copper ordering repairs with zero new measured fields or qualification errors,then run independent neighboring and broad gates.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "settled WAIT agrees while immediate differs": "Constrain fix to CPU restart/DMA enable sequencing.",
+    "settled WAIT also differs": "Retain steady bus/data ordering;compare exact cohorts without alignment.",
+    "coverage or repeated reference qualification fails": "Revise observer before inferring delay."
+  },
+  "next_question": "Does the transfer-phase correction generalize across quiet,contended and settled-WAIT captures?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-steady-order-v2\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-steady-order-v2\\run2"
+  ],
+  "evidence_fingerprint": "8220e20498388111da77fb1ead30312bf39784e9bb2e0e8e34483b8029ba36ed",
+  "no_new_evidence": 5,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "reference_id": "copper-steady-order-v2-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\steady-hardware-v2\\hardware-2",
+  "test_rom_sha256": "4533206fbf1d46b44be0ed3c47655a260dc602e1fd50892eae032a35300b6cf9",
+  "source_id": "8f842b70bfcad67bd3f6b8230eb88b77be55e67f1e705e331bf588f50b72076b",
+  "results_sha256": "04bf1689bb0e20d4b4df32fc140884d1ee47ce1d06ece9400d61dad9be5870a1",
+  "record_count": 192,
+  "metadata": {
+    "version": 1,
+    "source_id": "8f842b70bfcad67bd3f6b8230eb88b77be55e67f1e705e331bf588f50b72076b",
+    "record_count": 192,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "04bf1689bb0e20d4b4df32fc140884d1ee47ce1d06ece9400d61dad9be5870a1"
+  },
+  "restoration": {
+    "backup_sha256": "a5f1378e11fdce429480ce4221e7871f2e6c0b3d6fa167d25f4c8ce8ae415b43",
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "a5f1378e11fdce429480ce4221e7871f2e6c0b3d6fa167d25f4c8ce8ae415b43",
+    "restored_verified": true,
+    "write_attempted": true
+  },
+  "observation_profile": {
+    "kind": 88,
+    "aligned": false,
+    "targets": [
+      "MOVE0",
+      "MOVE4",
+      "MOVE8"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "CCK beam brackets and INTREQ bits; exact cohorts, no alignment",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Software discrimination of startup versus steady execution; not physical request/data edges.",
+    "variants": "bit4: settled WAIT versus immediate restart; bits7:5:NOP0..7; no display DMA/blitter",
+    "copper": "WAIT $42a1,$fffe at5ffc in settled mode, then unchanged32-MOVE burst at6000; COPER completion"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 96,
+    "independently_repeated_cohorts": 96,
+    "candidate_cases_with_independent_repeats": 192,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\steady-hardware-v2\\reference-2"
+}

@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "id": "handoff-busy-onset",
+  "hypothesis": "The first clear BBUSY sample can precede busy assertion under Copper pressure.",
+  "competitor": "The first clear sample follows completion, with CPU observation delayed by arbitration.",
+  "test": "Preserve kind60 launch and first status opcode; capture three fixed status samples and early/settled destinations, using one/16-word real/inert controls.",
+  "outcomes": {
+    "clear-to-busy in real16-word control": "Supports delayed assertion; do not infer completion from first clear.",
+    "all busy until final destination settles": "Supports completion/observation explanation.",
+    "failed settled/activity control": "Stop and narrow; do not infer timing."
+  },
+  "next_question": "Is first clear before assertion or after completion?",
+  "investigation": "investigations/handoff-busy-onset.json",
+  "binary": "captures/collision-aperture-20261020/pointer-pixel-v1/emulator.exe",
+  "romdir": "build/handoff-busy-onset-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "8676f885de7cb37d73110301d9e05dd04d2cac315f1a72472870a9f8a0efc9b5",
+  "capture": {
+    "minimum_seconds": 240,
+    "expected_cases": 384,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "Settled AD destination",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          43690
+        ],
+        "allowed_values": [
+          43690
+        ]
+      },
+      {
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "Settled AD destination",
+        "where": {
+          "variant": {
+            "mask": 8,
+            "equals": 8
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite Copper activity witness",
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/handoff-busy-onset-v1/run1",
+    "references/handoff-busy-onset-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-write beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0",
+        "field": "launch_ref",
+        "unit": "DMACONR bits",
+        "meaning": "status0"
+      },
+      {
+        "name": "first_read",
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "first_read"
+      },
+      {
+        "name": "status1",
+        "field": "end_ref",
+        "unit": "DMACONR bits",
+        "meaning": "status1"
+      },
+      {
+        "name": "status1_post",
+        "field": "counter",
+        "unit": "packed beam",
+        "meaning": "status1_post"
+      },
+      {
+        "name": "early_last_D",
+        "field": "icr",
+        "unit": "word",
+        "meaning": "early_last_D"
+      },
+      {
+        "name": "status2",
+        "field": "irq_beam",
+        "unit": "DMACONR bits",
+        "meaning": "status2"
+      },
+      {
+        "name": "settled_D",
+        "field": "irq_level",
+        "unit": "word",
+        "meaning": "settled_D"
+      },
+      {
+        "name": "settled_irq",
+        "field": "saved_pc_offset",
+        "unit": "INTREQ bits",
+        "meaning": "settled_irq",
+        "shift": 16,
+        "mask": 80
+      },
+      {
+        "name": "settled_beam",
+        "field": "saved_pc_offset",
+        "unit": "packed beam",
+        "meaning": "settled_beam",
+        "mask": 65535
+      },
+      {
+        "name": "status2_post",
+        "field": "aux",
+        "unit": "packed beam",
+        "meaning": "status2_post"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment. New power epoch operator-confirmed2026-10-21; known-good128-case control must pass twice before this run."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/copper-phase-20261020/busy-onset-hardware-v1/candidate",
+  "purpose": "regression"
+}

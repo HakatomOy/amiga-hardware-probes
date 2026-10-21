@@ -1,0 +1,36 @@
+{
+  "experiment": "copper-cpu-restart-screen",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\jump-grant-quiet",
+  "identity": {
+    "binary_sha256": "973a9c6abb848d25f2c4efcccad5126472e1a4ca740ecb63ba11dcec39b0e72e",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "bff64216c98e6d86ea517dc01227c60293331ee76f42e5f2d0cc1a0f4ec940f1",
+    "source_id": "c94b658e98d67ec8524eecf4b2a7ac1ca8396462e6665f23fb142107086568bc"
+  },
+  "hypothesis": "CPU COPJMP omits the two access-parity restart phases modeled for Copper-issued COPJMP.",
+  "competitor": "Ordinary CPU write visibility or Copper data latching causes the race independently of restart.",
+  "test": "Replay quiet and display-pressure captured races with only CPU restart phases changed. Reject any new field or qualification regression.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "repair without regressions": "Continue paired display-pressure and neighbor validation.",
+    "regression or unchanged family": "Reject this restart-only model; isolate restart from steady stream."
+  },
+  "next_question": "Does restart explain the quiet ordering errors without trading contended errors?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-quiet-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-cpu-quiet-v1\\run2"
+  ],
+  "evidence_fingerprint": "eee3d5a627c3f9b1aa7abcebe71a237643b310ed508918ae36cfadb64c3e3429",
+  "no_new_evidence": 1,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "decision_reason": "Restart-only repair fixes16quiet ordering cases but paired display-pressure gate introduces8new fields;candidate is rejected pending shared grant model.",
+  "evidence": [
+    "captures/copper-phase-20261020/jump-pressure/comparison.json"
+  ]
+}

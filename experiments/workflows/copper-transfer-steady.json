@@ -1,0 +1,262 @@
+{
+  "version": 1,
+  "id": "copper-transfer-steady",
+  "hypothesis": "Restart phases and pre-refresh request arbitration combine with granted-transfer RAM and DMACON visibility; no uniform clock shift.",
+  "competitor": "These phase changes overfit quiet/source races and fail steady WAIT,display pressure,or neighbors.",
+  "test": "Require old/new Copper ordering repairs with zero new measured fields or qualification errors,then run independent neighboring and broad gates.",
+  "outcomes": {
+    "settled WAIT agrees while immediate differs": "Constrain fix to CPU restart/DMA enable sequencing.",
+    "settled WAIT also differs": "Retain steady bus/data ordering;compare exact cohorts without alignment.",
+    "coverage or repeated reference qualification fails": "Revise observer before inferring delay."
+  },
+  "next_question": "Does the transfer-phase correction generalize across quiet,contended and settled-WAIT captures?",
+  "investigation": "investigations/copper-transfer-steady.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/copper-steady-order-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "4533206fbf1d46b44be0ed3c47655a260dc602e1fd50892eae032a35300b6cf9",
+  "capture": {
+    "minimum_seconds": 60,
+    "expected_cases": 192,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "unit": "word",
+        "meaning": "CPU wrote8004 at selected Copper data word",
+        "require_values": [
+          32772
+        ],
+        "allowed_values": [
+          32772
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "CPU wrote8004 at selected Copper data word",
+        "require_values": [
+          32772
+        ],
+        "allowed_values": [
+          32772
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "unit": "word",
+        "meaning": "No active blitter in any case",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "INTREQ bits",
+        "meaning": "Exactly old DSKBLK or new SOFT when Copper enabled;neither otherwise",
+        "require_values": [
+          2,
+          4
+        ],
+        "allowed_values": [
+          2,
+          4
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 16,
+            "equals": 0
+          }
+        },
+        "unit": "INTREQ data bits",
+        "meaning": "Both old and new fetches observed in immediate startup mode",
+        "require_values": [
+          2,
+          4
+        ],
+        "allowed_values": [
+          2,
+          4
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 16,
+            "equals": 16
+          }
+        },
+        "unit": "INTREQ data bits",
+        "meaning": "Both old and new fetches observed in settled WAIT mode",
+        "require_values": [
+          2,
+          4
+        ],
+        "allowed_values": [
+          2,
+          4
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-steady-order-v2/run1",
+    "references/copper-steady-order-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Fixed5555 CPU overwrite value, not a register read"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "written_word",
+        "field": "aux",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Selected CPU-written source/neighbor word after settling"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite Copper activity witness"
+      },
+      {
+        "name": "Copper_order",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "unit": "INTREQ bits",
+        "meaning": "2=old Copper fetch;4=new Copper fetch;0=disabled"
+      }
+    ],
+    "required_field_repairs": {
+      "Copper_order": 1
+    }
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 240,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": [],
+  "baseline": "captures/copper-phase-20261020/steady-hardware-v2/candidate",
+  "purpose": "regression"
+}

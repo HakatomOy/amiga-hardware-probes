@@ -1,8 +1,8 @@
 {
   "experiment": "cpu-operand-regression",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1\\operand-neighbor",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\operand-neighbor",
   "identity": {
-    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "ead12d28a322a0ad9827d8b608a25c0d0e605a30d660ae0dc23cb85f59e25d3c",
     "source_id": "117b52385d2074747730b245f57bc46c94ce5003d5cb72c9fb8a649650cc27fb"
@@ -22,7 +22,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cpu-operand-v2\\run2"
   ],
   "evidence_fingerprint": "2a0b743b572c468f7ccb2ca0866da6be2f817d4c54127e95ca96ea4fd14e6ee5",
-  "no_new_evidence": 8,
+  "no_new_evidence": 11,
   "validation": [
     {
       "name": "preflight",

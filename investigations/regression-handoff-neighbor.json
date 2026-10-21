@@ -1,6 +1,6 @@
 {
   "experiment": "regression-handoff-neighbor",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-aperture-20261020\\pointer-pixel-v1\\handoff-neighbor",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\rga-init-controls\\handoff-neighbor",
   "identity": {
     "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
@@ -20,13 +20,13 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-read-neighbor-v1-run1",
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\handoff-read-neighbor-v1-run2"
   ],
-  "evidence_fingerprint": "1080722ac32091379790bfac4b7a7cbee4851b78a61644a24bfce57eb51117ad",
-  "no_new_evidence": 3,
+  "evidence_fingerprint": "48827ae69ba94c976deb5daf485a17badfb7e4806a48d30c0633d7576b1c125e",
+  "no_new_evidence": 0,
   "validation": [
     {
       "name": "preflight",
       "exit": 0
     }
   ],
-  "decision": "review evidence"
+  "decision": "validation failed"
 }

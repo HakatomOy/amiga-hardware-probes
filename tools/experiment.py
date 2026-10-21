@@ -3,6 +3,7 @@
 import argparse
 import contextlib
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from itertools import zip_longest
 import glob
 import hashlib
@@ -23,6 +24,29 @@ from tools import evidence
 
 DESCRIPTOR = rom_results.FIELDS[:6]
 TIERS = ('focused', 'neighbor', 'broad')
+
+
+def validation_batches(commands):
+    """Only explicitly grouped, adjacent commands of one tier may overlap."""
+    batch = []
+    for command in commands:
+        group = command.get('parallel_group')
+        if batch and (not group or group != batch[0].get('parallel_group')
+                      or command['tier'] != batch[0]['tier']):
+            yield batch
+            batch = []
+        if group and '--hardware' in command['argv']:
+            raise ValueError('live hardware validation cannot run in parallel')
+        batch.append(command)
+    if batch:
+        yield batch
+
+
+def run_validation_batch(batch, out, variables, cache):
+    if len(batch) == 1:
+        return [command_run(batch[0], out, variables, cache)]
+    with ThreadPoolExecutor(max_workers=min(3, len(batch))) as executor:
+        return list(executor.map(lambda command: command_run(command, out, variables, cache), batch))
 
 
 def read(path):
@@ -486,6 +510,14 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
         capture_cmd = dict(name='preflight', argv=['{python}', '{root}/run_rom.py', '--binary', '{binary}',
                            '--config', '{config}', '--romdir', '{romdir}', '--out', '{out}/candidate',
                            '--seconds', str(seconds)], timeout_seconds=spec['capture'].get('timeout_seconds', 900))
+        environment = spec['capture'].get('environment_json')
+        if environment:
+            from run_rom import load_emulator_environment
+            settings = load_emulator_environment(resolve(environment))
+            frozen_environment = out / 'emulator-environment.json'
+            write(frozen_environment, settings)
+            summary['identity']['environment_sha256'] = digest(frozen_environment.read_bytes())
+            capture_cmd['argv'].extend(['--environment-json', str(frozen_environment)])
         replay_contract = replay_fingerprint(summary['identity'], seconds,
                           fingerprints(spec.get('replay_inputs', []), variables))
         replay_key = digest(json.dumps(replay_contract, sort_keys=True).encode())
@@ -599,15 +631,17 @@ def run(spec_path, out, hardware=False, events=False, through='broad', overrides
                 or report['counts']['unstable_reference'] > spec['comparison'].get('max_unstable', 0)):
             raise ValueError('qualification/instability exceeds declared budget; revise experiment or preserve constraint')
         require_repairs(spec, report)
-        for command in spec.get('validation', []):
-            if through == 'comparison' or TIERS.index(command['tier']) > TIERS.index(through):
+        for batch in validation_batches(spec.get('validation', [])):
+            if through == 'comparison' or TIERS.index(batch[0]['tier']) > TIERS.index(through):
                 break
-            result = command_run(command, out, variables, cache)
-            summary['commands'].append(dict(tier=command['tier'], **result))
-            emit(out, 'validation', dict(tier=command['tier'], name=result['name'],
-                                        exit=result['exit'], reused=result['reused']), events)
-            if result['exit']:
-                raise ValueError(f"{result['name']} failed: {result.get('excerpt', '')}")
+            results = run_validation_batch(batch, out, variables, cache)
+            for command, result in zip(batch, results):
+                summary['commands'].append(dict(tier=command['tier'], **result))
+                emit(out, 'validation', dict(tier=command['tier'], name=result['name'],
+                                            exit=result['exit'], reused=result['reused']), events)
+            failed = next((result for result in results if result['exit']), None)
+            if failed:
+                raise ValueError(f"{failed['name']} failed: {failed.get('excerpt', '')}")
         fingerprint = digest(json.dumps(dict(groups=report['groups'], counts=report['counts'],
                                              delta=changes, references=hashes), sort_keys=True).encode())
         no_new = record.get('evidence_fingerprint') == fingerprint

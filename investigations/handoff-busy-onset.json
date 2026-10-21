@@ -1,0 +1,28 @@
+{
+  "experiment": "handoff-busy-onset",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\ir1-init-controls\\busy-onset",
+  "identity": {
+    "binary_sha256": "3f14db728f858508cdf81a0adf75a1b18647589874744e95a6c6143fdac5f895",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "8676f885de7cb37d73110301d9e05dd04d2cac315f1a72472870a9f8a0efc9b5",
+    "source_id": "133a88996874dff5bdfa7497c30681111a4627c26c142c7c8e176fa968ffe39a"
+  },
+  "hypothesis": "The first clear BBUSY sample can precede busy assertion under Copper pressure.",
+  "competitor": "The first clear sample follows completion, with CPU observation delayed by arbitration.",
+  "test": "Preserve kind60 launch and first status opcode; capture three fixed status samples and early/settled destinations, using one/16-word real/inert controls.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "clear-to-busy in real16-word control": "Supports delayed assertion; do not infer completion from first clear.",
+    "all busy until final destination settles": "Supports completion/observation explanation.",
+    "failed settled/activity control": "Stop and narrow; do not infer timing."
+  },
+  "next_question": "Is first clear before assertion or after completion?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\busy-onset-hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\busy-onset-hardware-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "8187b343155361144bf11da2542bbda29908e69163e04221e2a825ed273ec897",
+  "no_new_evidence": 0,
+  "validation": [],
+  "decision": "validation failed"
+}

@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\jump-grant-pressure",
+  "hypothesis": "CPU COPJMP restart phases and the upcoming Copper/refresh request guard are both missing; fixing only one trades data-order errors.",
+  "test": "Pair quiet and display-pressure reference replays; require zero new fields or qualification regressions. No CPU RAM visibility shift.",
+  "smaller_reproducer": null,
+  "next_question": "Does restart explain the quiet ordering errors without trading contended errors?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "56e7e99fc1bfc77e8e35e2d0d504ec7e2ca69ea7dfaef66f810fc2163d150dc6",
+  "decision": "validation failed"
+}

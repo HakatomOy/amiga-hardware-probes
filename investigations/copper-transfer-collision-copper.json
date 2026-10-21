@@ -1,0 +1,27 @@
+{
+  "experiment": "copper-transfer-collision-copper",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\acceptance-end-v1\\collision-copper",
+  "identity": {
+    "binary_sha256": "33e1b83fac242d6f0b619b1fc98766ebcb37ea4e8927e7d5c04dbdafe9ff0d14",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "adc7db8a28fda1034d820e576c5f3c6ef4201ca237b8de66af0a2c5128e8394f",
+    "source_id": "834af823af2b3b253542af941006a52509b466095661e3d906788ebea38d5e7c"
+  },
+  "hypothesis": "The live scan confuses the render-write anchor with the absolute2H pixel comparator, and CLXDAT must latch before pixels clocked in its granted slot.",
+  "competitor": "The captured pixel or pointer data itself is early; correcting coordinates and sampling would regress neighboring hardware cases.",
+  "test": "Use2H minus DIW framebuffer-origin for collision cursor only, sample CLXDAT at word start, preserve all other reads, CPU/DMA clocks and pixel rendering. Replay both saved sweeps and the independent paired aperture before broad validation.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "all residuals repair without new fields": "Replay independent apertures then full neighbors and broad checks.",
+    "regressions or no improvement": "Reject phase-only change; isolate pixel output."
+  },
+  "next_question": "Does start-of-slot sampling remove the remaining early family?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\copper-dma-collision-v3\\run2"
+  ],
+  "evidence_fingerprint": "90e1df591949c31a170ecfe28071a2b9b6e0285c7814d6adb9ac2abc86026e7b",
+  "no_new_evidence": 1,
+  "validation": [],
+  "decision": "review evidence"
+}

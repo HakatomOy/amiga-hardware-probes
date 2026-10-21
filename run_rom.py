@@ -24,7 +24,16 @@ def _write_invocation(out,binary,command,binary_sha256,wall_seconds):
         raise RuntimeError('Emulator binary changed during the run; capture rejected '
                            '(see invocation.json binary_changed_during_run).')
 
-def run(binary,out,config=None,romdir=None,seconds=500):
+def load_emulator_environment(path):
+    settings = json.loads(Path(path).read_text(encoding='utf-8'))
+    if not isinstance(settings, dict) or any(
+            not isinstance(key, str) or not key.startswith('COPPERLINE_')
+            or not isinstance(value, str) for key, value in settings.items()):
+        raise ValueError('emulator environment must map COPPERLINE_* keys to strings')
+    return settings
+
+
+def run(binary,out,config=None,romdir=None,seconds=500,environment_json=None):
     romdir=romdir or ROOT/'build/rom'
     out.mkdir(parents=True,exist_ok=False)
     manifest_path=out/'build-manifest.json'
@@ -37,6 +46,10 @@ def run(binary,out,config=None,romdir=None,seconds=500):
     if config: command+=['--config',str(config)]
     command.append(str(romdir/'a500-timing-rom.bin'))
     env={k:v for k,v in os.environ.items() if not k.startswith('COPPERLINE_')}
+    if environment_json is not None:
+        settings = load_emulator_environment(environment_json)
+        env.update(settings)
+        (out/'emulator-environment.json').write_text(json.dumps(settings,indent=2)+'\n')
     with (out/'run.log').open('w') as log:
         proc,binary_sha256=_popen_with_binary_hash(
             binary,command,cwd=out,env=env,stdout=log,stderr=subprocess.STDOUT)
@@ -168,4 +181,6 @@ def run(binary,out,config=None,romdir=None,seconds=500):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--binary',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
-    p.add_argument('--config',type=Path);p.add_argument('--romdir',type=Path);p.add_argument('--seconds',type=float,default=500);a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None,a.romdir.resolve() if a.romdir else None,a.seconds)
+    p.add_argument('--config',type=Path);p.add_argument('--romdir',type=Path);p.add_argument('--seconds',type=float,default=500)
+    p.add_argument('--environment-json',type=Path)
+    a=p.parse_args();run(a.binary.resolve(),a.out.resolve(),a.config.resolve() if a.config else None,a.romdir.resolve() if a.romdir else None,a.seconds,a.environment_json)

@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\copper-phase-20261020\\jump-pressure",
+  "hypothesis": "CPU COPJMP omits the two access-parity restart phases modeled for Copper-issued COPJMP.",
+  "test": "Replay quiet and display-pressure captured races with only CPU restart phases changed. Reject any new field or qualification regression.",
+  "smaller_reproducer": null,
+  "next_question": "Does restart explain the quiet ordering errors without trading contended errors?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "4562808c75770df8509f5fa8c9561fb42e0ad7c9e3b88d797a7b82d1f059b4ed",
+  "decision": "validation failed"
+}

@@ -10,10 +10,36 @@ import build_copper_cpu_order_rom as order
 import build_copper_cpu_opcode_rom as opcode
 import build_copper_cpu_quiet_rom as quiet
 from tools.verify_copper_overlap import analyze
-from tools.summarize_copper_cpu_order import index_trace, screen_phases, early_flags
+from tools.summarize_copper_cpu_order import (
+    index_trace, screen_phases, early_flags, index_enables, screen_enable_phases,
+)
 
 
 class CopperRaceTests(unittest.TestCase):
+    def test_enable_screen_distinguishes_parity_and_reports_tradeoffs(self):
+        indexed = {k: dict(fetch_minus_cpu_grant_cck=1) for k in ('even', 'odd')}
+        cases = dict(even=dict(expected=[4], actual=[2]), odd=dict(expected=[2], actual=[2]))
+        results = screen_enable_phases(indexed, dict(even=0x80, odd=0x81), cases, 0)['results']
+        self.assertEqual((results[0]['repairs'], results[0]['regressions']), (1, 1))
+        self.assertEqual((results[2]['repairs'], results[2]['regressions']), (1, 0))
+        self.assertEqual(results[2]['mismatches'], 0)
+        cases['even']['actual'] = [4]
+        with self.assertRaisesRegex(ValueError, 'does not reproduce'):
+            screen_enable_phases(indexed, dict(even=0x80, odd=0x81), cases, 0)
+
+    def test_enable_index_requires_strobe_and_exact_descriptor_coverage(self):
+        import rom_results
+        row = dict(zip(rom_results.FIELDS[:6], (83, 3, 14, 0, 0, 0)))
+        key = '83,3,14,0,0,0'
+        lines = ['CPUBUS kind=custom addr=00dff088 v=042 h=80',
+                 'CPUBUS kind=custom addr=00dff096 v=042 h=89',
+                 'CPUBUS kind=custom addr=00dff1fe v=042 h=a1']
+        self.assertEqual(index_enables(lines, [row], {key}), {key: 0x89})
+        with self.assertRaisesRegex(ValueError, 'COPEN grant missing'):
+            index_enables(lines[1:], [row], {key})
+        with self.assertRaisesRegex(ValueError, 'descriptor coverage'):
+            index_enables(lines[:-1], [row], {key})
+
     def test_quiet_trace_keeps_fetch_before_cpu_witness_and_write_after_completion(self):
         import rom_results
         row = dict(zip(rom_results.FIELDS[:6], (83, 0, 6, 0, 0, 0)))
@@ -80,6 +106,19 @@ class CopperRaceTests(unittest.TestCase):
         self.assertEqual(result['81,6,46,0,0,0']['fetch_minus_cpu_grant_cck'],1)
         with self.assertRaisesRegex(ValueError,'write/fetch'):
             index_trace([lines[0],lines[1],lines[3]],[row],{'81,6,46,0,0,0'})
+
+    def test_display_pressure_fetch_may_precede_cpu_witness(self):
+        import rom_results
+        row = dict(zip(rom_results.FIELDS[:6], (81,0,14,0,0,0)))
+        lines = ['COPPROBE MOVE v=042 h=e0 reg=09c val=8002',
+                 'CPUBUS kind=custom addr=00dff1fe v=043 h=07',
+                 'CPUBUS kind=write addr=00006002 v=043 h=0b',
+                 'COPPROBE MOVE v=043 h=64 reg=09c val=8010']
+        key = '81,0,14,0,0,0'
+        self.assertEqual(index_trace(lines, [row], {key})[key]
+                         ['fetch_minus_cpu_grant_cck'], -14)
+        with self.assertRaisesRegex(ValueError, 'descriptor coverage'):
+            index_trace(lines[:-1], [row], {key})
 
     def test_direct_copper_ordering_has_no_blitter_and_prepared_old_new_words(self):
         rows = order.trials()
