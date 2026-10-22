@@ -1,12 +1,12 @@
 {
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\final-known-failures",
   "hypothesis": "DPF changes odd/even match combination for sprite-playfield collisions; PF-PF behavior must be measured separately.",
   "test": "512 cases: paired DPF bit, four plane patterns, four enabled-plane masks, four desired patterns, sprite0 on/off, two repeats. Two independent A500 packets. Settled scanline44, no Copper or blitter.",
   "smaller_reproducer": null,
   "next_question": "Which settled collision bits differ solely because DPF is enabled?",
   "no_new_evidence": 0,
-  "evidence_fingerprint": "5ff9ddaf7d60abe70283fe94b08a12eced106c2214d2a616dab0bc6d8ea5a8d1",
-  "decision": "patch",
+  "evidence_fingerprint": "5bc09a501dbb7cea3c2394b8d5d2f0fde5f26e73d271cf15c7b95d8217026db6",
+  "decision": "validation failed",
   "experiment": "playfield-modes",
   "identity": {
     "binary_sha256": "67e9ec734a0c5d657fe904c78ec6b63c24c6c28a747ae2772267412a1d5b7bec",
@@ -25,8 +25,8 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\reference-2"
   ],
   "validation": [],
-  "decision_reason": "512 independently repeated observations are stable.24 paired sprite-PF1 mode differences agree with existing matcher. PF-PF has328 disagreements: live readback uses visible opacity and DPF gating instead of CLXCON matches; zero BPLDAT and constant DMA samples account for all hardware PF-PF results. Add consensus fixture and correct only that live DMA path.",
+  "decision_reason": "Reject match-mask-only candidate:424/512 matches,88 missing zero assertions,20 field regressions. Keep active paired sprite tests and explicitly ignored PF-PF known-failure tests.32-case read burst is stable but HW/CPU read brackets differ, so do not align sample indexes or fit a delay. Next experiment must record individual read beam brackets before a timing patch.",
   "evidence": [
-    "captures/playfield-modes-20261022/hardware-v1/field-stability-diagnostic.json"
+    "captures/playfield-modes-20261022/neighbors-v1/patched-paired-modes/evidence.json"
   ]
 }

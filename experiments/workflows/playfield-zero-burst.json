@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "id": "playfield-zero-burst",
+  "hypothesis": "PF-PF zero matches occur before visible fetched data, outside the current DIW-only collision scan.",
+  "competitor": "The zero event occurs later at the end of the shifted data; expanding the start range would be incorrect.",
+  "test": "32 cases, six destructive reads around line44 DDF/DIW start, CLXCON0040/C3, data0/3, both DPF modes,four repeats. Record exact burst brackets; no alignment.",
+  "outcomes": {
+    "early burst sees zero match": "Constrain start-of-line comparison before visible fetched samples.",
+    "only later settled probe sees zero match": "Constrain end-of-data/hold behavior instead of widening early scanning.",
+    "repeat or positive control fails": "Refine probe before patch."
+  },
+  "next_question": "When does a zero-required plane match compared with all-ones pixel data?",
+  "investigation": "investigations/playfield-zero-burst.json",
+  "binary": "captures/playfield-modes-20261022/neighbors-v1/emulator.exe",
+  "romdir": "build/playfield-zero-burst-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "c782993fab7a63d1d42a343fff6f0b928bc89450f6e62b9d8276e3e024585be1",
+  "capture": {
+    "minimum_seconds": 30,
+    "expected_cases": 32,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/playfield-zero-burst-v1/run1",
+    "references/playfield-zero-burst-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "sample0",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Destructive read burst sample"
+      },
+      {
+        "name": "sample1",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Destructive read burst sample"
+      },
+      {
+        "name": "sample2",
+        "field": "end_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Destructive read burst sample"
+      },
+      {
+        "name": "sample3",
+        "field": "end_ref",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Destructive read burst sample"
+      },
+      {
+        "name": "sample4",
+        "field": "irq_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Destructive read burst sample"
+      },
+      {
+        "name": "sample5",
+        "field": "second_counter_or_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Destructive read burst sample"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

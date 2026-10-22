@@ -1,0 +1,559 @@
+diff --git a/docs/internals/chipset.md b/docs/internals/chipset.md
+index a92d0d12..12c8f59b 100644
+--- a/docs/internals/chipset.md
++++ b/docs/internals/chipset.md
+@@ -503,3 +503,22 @@ Deliberate non-goals, recorded so they are not re-investigated: A2024 /
+ UHRES dual-scan display (a one-time "not emulated" warning is kept),
+ genlock ZD output beyond register storage, and AGA "double CAS"
+ memory-timing fidelity beyond what `timing-test/` measurements justify.
++
++### A500 single/dual playfield collision checks
++
++Live CLXDAT bit0 compares the CLXCON-enabled odd/even plane matches; it does
++not require visible nonzero pixels or dual-playfield mode. Zero-valued samples
++can satisfy a zero match value, and disabled match planes do not constrain it.
++Sprite?PF1 matching differs: single-playfield mode also requires the even-plane
++match, while dual-playfield mode permits the odd match independently. The paired
++A500 matrix found no corresponding mode difference in sprite?PF2 or bit0.
++
++The consensus fixture `src/bus/tests/data/a500_playfield_modes.csv` comes from
++two independent512-case runs on a PAL A500, two repeats per condition. It covers
++two lores planes, four constant data patterns, four CLXCON enable masks and
++four desired values, sprite0 on/off, and DPF off/on. The probe begins with zero
++BPLDAT before constant DMA output. Source and full references are versioned in
++`amiga-hardware-probes/references/playfield-modes-v1`; ROM SHA256 is
++`3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765`.
++This pins collision logic for those conditions, not all sprite, AGA, or early
++DMA timing behavior.
+diff --git a/src/bus.rs b/src/bus.rs
+index 1a0758e8..ca855869 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -12169,9 +12169,6 @@ fn live_bitplane_collision_bits_in_range(
+ 
+     for x in x_start..x_stop {
+         let control = control_replay.control_for_x(x);
+-        if control.bplcon0 & 0x0400 == 0 {
+-            continue;
+-        }
+         let Some(collision) = live_bitplane_collision_pixel_at(
+             row,
+             control.agnus_revision,
+@@ -12188,7 +12185,7 @@ fn live_bitplane_collision_bits_in_range(
+         ) else {
+             continue;
+         };
+-        if collision.pf1 && collision.pf2 {
++        if collision.pf1_match && collision.pf2_match {
+             return 1;
+         }
+     }
+@@ -12197,7 +12194,9 @@ fn live_bitplane_collision_bits_in_range(
+ 
+ #[derive(Clone, Copy, Default)]
+ struct LivePlayfieldCollisionPixel {
++    #[cfg(test)]
+     pf1: bool,
++    #[cfg(test)]
+     pf2: bool,
+     pf1_match: bool,
+     pf2_match: bool,
+@@ -12879,7 +12878,9 @@ fn live_playfield_collision_pixel(
+     let odd_match_raw = live_clxcon_planes_match(idx, clxcon, clxcon2, 0);
+     let odd_match = odd_match_raw && (dual_playfield || even_match);
+     LivePlayfieldCollisionPixel {
++        #[cfg(test)]
+         pf1: dual_playfield && idx & 0b010101 != 0,
++        #[cfg(test)]
+         pf2: if dual_playfield {
+             idx & 0b101010 != 0
+         } else {
+diff --git a/src/bus/collisions.rs b/src/bus/collisions.rs
+index 15ca2f55..04201f70 100644
+--- a/src/bus/collisions.rs
++++ b/src/bus/collisions.rs
+@@ -224,9 +224,13 @@ impl Bus {
+                 .iter()
+                 .any(|source| live_sprite_source_may_overlap_x_range(source, x_start, x_stop))
+         };
+-        let needs_dual_playfield_collision =
+-            self.live_playfield_collision_may_have_dual_playfield() && self.denise.clxdat & 1 == 0;
+-        if !has_overlapping_sprite_source && !needs_dual_playfield_collision {
++        let needs_playfield_collision = self.current_frame_bitplane_rows[fb_y]
++            .as_ref()
++            .unwrap()
++            .nplanes
++            >= 2
++            && self.denise.clxdat & 1 == 0;
++        if !has_overlapping_sprite_source && !needs_playfield_collision {
+             return;
+         }
+         self.ensure_current_collision_control_index();
+@@ -258,9 +262,7 @@ impl Bus {
+             control_index,
+             vpos as i32,
+         );
+-        let needs_dual_playfield_collision = needs_dual_playfield_collision
+-            && control_replay.dual_playfield_in_range(x_start, x_stop);
+-        if !has_overlapping_sprite_source && !needs_dual_playfield_collision {
++        if !has_overlapping_sprite_source && !needs_playfield_collision {
+             return;
+         }
+         let sprite_display_enable_x =
+@@ -268,7 +270,7 @@ impl Bus {
+         let clxdat = {
+             let row = self.current_frame_bitplane_rows[fb_y].as_ref().unwrap();
+             let mut bits = 0;
+-            if needs_dual_playfield_collision {
++            if needs_playfield_collision {
+                 bits |= live_bitplane_collision_bits_in_range(
+                     row,
+                     &control_replay,
+diff --git a/src/bus/tests.rs b/src/bus/tests.rs
+index 0550a78f..0a314b41 100644
+--- a/src/bus/tests.rs
++++ b/src/bus/tests.rs
+@@ -10142,6 +10142,7 @@ fn bitplane_dma_capture_accumulates_live_dual_playfield_clxdat() {
+     bus.denise.ddfstrt = 0x0038;
+     bus.denise.ddfstop = 0x0038;
+     bus.denise.bplcon0 = 0x2400;
++    bus.denise.clxcon = 0x00c3; // Require only the two fetched planes.
+     bus.denise.bplpt[0] = 0x0100;
+     bus.denise.bplpt[1] = 0x0200;
+     bus.display_dma_bplpt[0] = 0x0100;
+@@ -10723,6 +10724,7 @@ fn bpldat_writes_update_latched_planes_for_live_playfield_clxdat() {
+         bus.denise.ddfstrt = 0x0038;
+         bus.denise.ddfstop = 0x0040;
+         bus.denise.bplcon0 = 0x7400;
++        bus.denise.clxcon = 0x0861; // Match plane1 and the manually written plane6.
+         for plane in 0..4 {
+             let ptr = 0x0100 + plane * 0x40;
+             bus.denise.bplpt[plane] = ptr as u32;
+@@ -10750,7 +10752,7 @@ fn bpldat_writes_update_latched_planes_for_live_playfield_clxdat() {
+ }
+ 
+ #[test]
+-fn same_line_bplcon0_dual_playfield_enable_does_not_retime_earlier_live_clxdat() {
++fn same_line_bplcon0_dual_playfield_enable_preserves_pf_pf_collision() {
+     let clxdat_after_row_capture = |initial_bplcon0, enable_hpos: Option<u32>| {
+         let mut bus = empty_bus();
+         bus.agnus.dmacon = DMACON_DMAEN | DMACON_BPLEN;
+@@ -10761,6 +10763,7 @@ fn same_line_bplcon0_dual_playfield_enable_does_not_retime_earlier_live_clxdat()
+         bus.denise.ddfstrt = 0x0038;
+         bus.denise.ddfstop = 0x0040;
+         bus.denise.bplcon0 = initial_bplcon0;
++        bus.denise.clxcon = 0x00c3; // Require both fetched planes, not absent planes.
+         bus.denise.bplpt[0] = 0x0100;
+         bus.denise.bplpt[1] = 0x0200;
+         bus.display_dma_bplpt[0] = 0x0100;
+@@ -10783,7 +10786,8 @@ fn same_line_bplcon0_dual_playfield_enable_does_not_retime_earlier_live_clxdat()
+     };
+ 
+     assert_eq!(clxdat_after_row_capture(0x2400, None), 0x8001);
+-    assert_eq!(clxdat_after_row_capture(0x2000, Some(0x40)), 0x8000);
++    // A500 mode pairs confirm bit0 does not require DPF.
++    assert_eq!(clxdat_after_row_capture(0x2000, Some(0x40)), 0x8001);
+ }
+ 
+ #[test]
+@@ -13338,6 +13342,7 @@ fn clxdat_uses_absolute_pixel_clock_and_transfer_start() {
+     bus.denise.ddfstrt = 0x0038;
+     bus.denise.ddfstop = 0x0038;
+     bus.denise.bplcon0 = 0x2400;
++    bus.denise.clxcon = 0x00c3; // Require only the two fetched planes.
+     for (plane, addr) in [(0, 0x100), (1, 0x200)] {
+         bus.denise.bplpt[plane] = addr;
+         bus.display_dma_bplpt[plane] = addr;
+@@ -15560,3 +15565,5 @@ fn bitplane_pointer_half_writes_lose_only_to_the_selected_dma_counter_window() {
+         }
+     }
+ }
++
++mod playfield_modes;
+diff --git a/src/bus/tests/data/a500_playfield_modes.csv b/src/bus/tests/data/a500_playfield_modes.csv
+new file mode 100644
+index 00000000..8321e2d5
+--- /dev/null
++++ b/src/bus/tests/data/a500_playfield_modes.csv
+@@ -0,0 +1,262 @@
++# A500 PAL, stock68000, 512KiB chip/512KiB slow; two HW runs, two repeats.
++# ROM 3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765
++# Source references/playfield-modes-v1; CLXDAT masked to bits0/1/5.
++# target=CLXCON enable-mask*4+desired; pixel=constant BPL1/BPL2; sprite0 on/off; DPF.
++# BPLDAT starts zero; constant DMA data follows.
++target,pixel,sprite,dual,clxdat
++0,0,0,0,1
++0,0,0,1,1
++0,0,1,0,35
++0,0,1,1,35
++0,1,0,0,1
++0,1,0,1,1
++0,1,1,0,35
++0,1,1,1,35
++0,2,0,0,1
++0,2,0,1,1
++0,2,1,0,35
++0,2,1,1,35
++0,3,0,0,1
++0,3,0,1,1
++0,3,1,0,35
++0,3,1,1,35
++1,0,0,0,1
++1,0,0,1,1
++1,0,1,0,35
++1,0,1,1,35
++1,1,0,0,1
++1,1,0,1,1
++1,1,1,0,35
++1,1,1,1,35
++1,2,0,0,1
++1,2,0,1,1
++1,2,1,0,35
++1,2,1,1,35
++1,3,0,0,1
++1,3,0,1,1
++1,3,1,0,35
++1,3,1,1,35
++2,0,0,0,1
++2,0,0,1,1
++2,0,1,0,35
++2,0,1,1,35
++2,1,0,0,1
++2,1,0,1,1
++2,1,1,0,35
++2,1,1,1,35
++2,2,0,0,1
++2,2,0,1,1
++2,2,1,0,35
++2,2,1,1,35
++2,3,0,0,1
++2,3,0,1,1
++2,3,1,0,35
++2,3,1,1,35
++3,0,0,0,1
++3,0,0,1,1
++3,0,1,0,35
++3,0,1,1,35
++3,1,0,0,1
++3,1,0,1,1
++3,1,1,0,35
++3,1,1,1,35
++3,2,0,0,1
++3,2,0,1,1
++3,2,1,0,35
++3,2,1,1,35
++3,3,0,0,1
++3,3,0,1,1
++3,3,1,0,35
++3,3,1,1,35
++4,0,0,0,1
++4,0,0,1,1
++4,0,1,0,35
++4,0,1,1,35
++4,1,0,0,1
++4,1,0,1,1
++4,1,1,0,33
++4,1,1,1,33
++4,2,0,0,1
++4,2,0,1,1
++4,2,1,0,35
++4,2,1,1,35
++4,3,0,0,1
++4,3,0,1,1
++4,3,1,0,33
++4,3,1,1,33
++5,0,0,0,0
++5,0,0,1,0
++5,0,1,0,32
++5,0,1,1,32
++5,1,0,0,1
++5,1,0,1,1
++5,1,1,0,35
++5,1,1,1,35
++5,2,0,0,0
++5,2,0,1,0
++5,2,1,0,32
++5,2,1,1,32
++5,3,0,0,1
++5,3,0,1,1
++5,3,1,0,35
++5,3,1,1,35
++6,0,0,0,1
++6,0,0,1,1
++6,0,1,0,35
++6,0,1,1,35
++6,1,0,0,1
++6,1,0,1,1
++6,1,1,0,33
++6,1,1,1,33
++6,2,0,0,1
++6,2,0,1,1
++6,2,1,0,35
++6,2,1,1,35
++6,3,0,0,1
++6,3,0,1,1
++6,3,1,0,33
++6,3,1,1,33
++7,0,0,0,0
++7,0,0,1,0
++7,0,1,0,32
++7,0,1,1,32
++7,1,0,0,1
++7,1,0,1,1
++7,1,1,0,35
++7,1,1,1,35
++7,2,0,0,0
++7,2,0,1,0
++7,2,1,0,32
++7,2,1,1,32
++7,3,0,0,1
++7,3,0,1,1
++7,3,1,0,35
++7,3,1,1,35
++8,0,0,0,1
++8,0,0,1,1
++8,0,1,0,35
++8,0,1,1,35
++8,1,0,0,1
++8,1,0,1,1
++8,1,1,0,35
++8,1,1,1,35
++8,2,0,0,1
++8,2,0,1,1
++8,2,1,0,1
++8,2,1,1,3
++8,3,0,0,1
++8,3,0,1,1
++8,3,1,0,1
++8,3,1,1,3
++9,0,0,0,1
++9,0,0,1,1
++9,0,1,0,35
++9,0,1,1,35
++9,1,0,0,1
++9,1,0,1,1
++9,1,1,0,35
++9,1,1,1,35
++9,2,0,0,1
++9,2,0,1,1
++9,2,1,0,1
++9,2,1,1,3
++9,3,0,0,1
++9,3,0,1,1
++9,3,1,0,1
++9,3,1,1,3
++10,0,0,0,0
++10,0,0,1,0
++10,0,1,0,0
++10,0,1,1,2
++10,1,0,0,0
++10,1,0,1,0
++10,1,1,0,0
++10,1,1,1,2
++10,2,0,0,1
++10,2,0,1,1
++10,2,1,0,35
++10,2,1,1,35
++10,3,0,0,1
++10,3,0,1,1
++10,3,1,0,35
++10,3,1,1,35
++11,0,0,0,0
++11,0,0,1,0
++11,0,1,0,0
++11,0,1,1,2
++11,1,0,0,0
++11,1,0,1,0
++11,1,1,0,0
++11,1,1,1,2
++11,2,0,0,1
++11,2,0,1,1
++11,2,1,0,35
++11,2,1,1,35
++11,3,0,0,1
++11,3,0,1,1
++11,3,1,0,35
++11,3,1,1,35
++12,0,0,0,1
++12,0,0,1,1
++12,0,1,0,35
++12,0,1,1,35
++12,1,0,0,1
++12,1,0,1,1
++12,1,1,0,33
++12,1,1,1,33
++12,2,0,0,1
++12,2,0,1,1
++12,2,1,0,1
++12,2,1,1,3
++12,3,0,0,1
++12,3,0,1,1
++12,3,1,0,1
++12,3,1,1,1
++13,0,0,0,0
++13,0,0,1,0
++13,0,1,0,32
++13,0,1,1,32
++13,1,0,0,1
++13,1,0,1,1
++13,1,1,0,35
++13,1,1,1,35
++13,2,0,0,0
++13,2,0,1,0
++13,2,1,0,0
++13,2,1,1,0
++13,3,0,0,0
++13,3,0,1,0
++13,3,1,0,0
++13,3,1,1,2
++14,0,0,0,0
++14,0,0,1,0
++14,0,1,0,0
++14,0,1,1,2
++14,1,0,0,0
++14,1,0,1,0
++14,1,1,0,0
++14,1,1,1,0
++14,2,0,0,1
++14,2,0,1,1
++14,2,1,0,35
++14,2,1,1,35
++14,3,0,0,0
++14,3,0,1,0
++14,3,1,0,32
++14,3,1,1,32
++15,0,0,0,0
++15,0,0,1,0
++15,0,1,0,0
++15,0,1,1,0
++15,1,0,0,0
++15,1,0,1,0
++15,1,1,0,0
++15,1,1,1,2
++15,2,0,0,0
++15,2,0,1,0
++15,2,1,0,32
++15,2,1,1,32
++15,3,0,0,1
++15,3,0,1,1
++15,3,1,0,35
++15,3,1,1,35
+diff --git a/src/bus/tests/playfield_modes.rs b/src/bus/tests/playfield_modes.rs
+new file mode 100644
+index 00000000..66f3a4c6
+--- /dev/null
++++ b/src/bus/tests/playfield_modes.rs
+@@ -0,0 +1,113 @@
++// A500 measurements: amiga-hardware-probes/references/playfield-modes-v1.
++// ROM 3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765.
++use super::*;
++
++fn hardware_cases() -> impl Iterator<Item = [u16; 5]> {
++    include_str!("data/a500_playfield_modes.csv")
++        .lines()
++        .filter(|line| !line.starts_with('#') && !line.starts_with("target,"))
++        .map(|line| {
++            let values: Vec<u16> = line.split(',').map(|v| v.parse().unwrap()).collect();
++            values.try_into().unwrap()
++        })
++}
++
++#[test]
++fn a500_paired_single_dual_sprite_playfield_truth_table() {
++    let mut count = 0;
++    for [target, pixel, sprite, dual, expected] in hardware_cases() {
++        let clxcon = ((target >> 2) << 6) | (target & 3);
++        let collision =
++            super::super::live_playfield_collision_pixel(pixel as u8, clxcon, 0, dual != 0);
++        let actual = if sprite != 0 {
++            u16::from(collision.pf1_match) * 2 + u16::from(collision.pf2_match) * 32
++        } else {
++            0
++        };
++        assert_eq!(
++            actual,
++            expected & 0x22,
++            "target={target} pixel={pixel} sprite={sprite} DPF={dual}"
++        );
++        count += 1;
++    }
++    assert_eq!(count, 256);
++}
++
++#[test]
++fn a500_paired_single_dual_pf_pf_uses_match_masks_including_zero_pixels() {
++    for [target, pixel, sprite, dual, expected] in hardware_cases() {
++        // The probe clears BPLDAT before constant DMA data arrives. Capture
++        // both the initial zero sample and the constant fetched sample.
++        let row = CapturedBitplaneRow {
++            nplanes: 2,
++            words_per_row: 2,
++            fetch_origin_cck: None,
++            planes: std::array::from_fn(|plane| {
++                if plane < 2 {
++                    vec![0, if pixel & (1 << plane) != 0 { 0xffff } else { 0 }]
++                } else {
++                    vec![0; 2]
++                }
++            }),
++        };
++        let clxcon = ((target >> 2) << 6) | (target & 3);
++        let control = LiveCollisionControl::from_current(
++            AgnusRevision::Ocs,
++            0x2200 | (dual * 0x0400),
++            0,
++            0,
++            clxcon,
++            0,
++            0x2c81,
++            0x2dc1,
++            DiwHigh::ocs_implicit(),
++            0x0038,
++            [0; 8],
++        );
++        let replay = LiveCollisionLineReplay::from_index(
++            control,
++            RenderRegisterSnapshot::default(),
++            &BeamEventIndex::from_register_writes(&[]),
++            RENDER_VISIBLE_START_VPOS as i32,
++        );
++        assert_eq!(
++            live_bitplane_collision_bits(&row, &replay, RENDER_VISIBLE_START_VPOS as i32),
++            expected & 1,
++            "target={target} pixel={pixel} sprite={sprite} DPF={dual}",
++        );
++    }
++}
++
++#[test]
++fn a500_single_and_dual_live_readback_respects_zero_and_nonzero_match_values() {
++    for dual in [false, true] {
++        for (pixel, desired, expected) in [(3, 3, 1), (3, 1, 0), (0, 0, 1), (0, 3, 0)] {
++            let mut bus = empty_bus();
++            bus.agnus.dmacon = DMACON_DMAEN | DMACON_BPLEN;
++            bus.agnus.vpos = 0x2c;
++            bus.agnus.hpos = 0x3a;
++            bus.denise.diwstrt = 0x2c81;
++            bus.denise.diwstop = 0x2dc1;
++            bus.denise.ddfstrt = 0x0038;
++            bus.denise.ddfstop = 0x0038;
++            bus.denise.bplcon0 = if dual { 0x2600 } else { 0x2200 };
++            bus.denise.clxcon = 0x00c0 | desired;
++            for (plane, address) in [(0, 0x100), (1, 0x200)] {
++                bus.denise.bplpt[plane] = address as u32;
++                bus.display_dma_bplpt[plane] = address as u32;
++                write_chip_word(
++                    &mut bus,
++                    address,
++                    if pixel & (1 << plane) != 0 { 0xffff } else { 0 },
++                );
++            }
++            advance_collision_fixture_observation(&mut bus, 12);
++            assert_eq!(
++                bus.custom_read(0x00e, 2) & 1,
++                expected,
++                "DPF={dual} pixel={pixel} desired={desired}"
++            );
++        }
++    }
++}

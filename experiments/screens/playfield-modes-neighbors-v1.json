@@ -1,0 +1,20 @@
+{
+  "hypothesis": "PF-PF match correction repairs the new mode matrix without changing earlier C3 pointer/Copper timing captures.",
+  "competitor": "The changed collision path perturbs previously constrained collision values or timing.",
+  "test": "Strict paired512 repairs plus unchanged quiet baseline and original pointer480/Copper800 contracts. Byte-compare old neighbor packets separately; keep existing qualification failures visible.",
+  "variants": {
+    "patched": {}
+  },
+  "scenarios": {
+    "quiet": "experiments/workflows/copper-transfer-quiet.json",
+    "paired-modes": "experiments/workflows/playfield-modes.json",
+    "pointer": "experiments/workflows/copper-transfer-collision-pointer.json",
+    "copper": "experiments/workflows/copper-transfer-collision-copper.json"
+  },
+  "baseline": {
+    "variant": "patched",
+    "scenario": "quiet",
+    "packet": "captures/copper-phase-20261021/frame-origin-regression-v1/360-quiet/candidate/results.bin"
+  },
+  "rules": "No alignment, changed exclusions or field weakening. Existing Init qualification blockers are not accepted by this screen."
+}

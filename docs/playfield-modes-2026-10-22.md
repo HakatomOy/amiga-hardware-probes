@@ -43,8 +43,9 @@ Builder: `build_playfield_modes_rom.py`; exact entry snapshot:
 
 Copperline fixture `src/bus/tests/data/a500_playfield_modes.csv` contains256
 unique consensus observations, derived from both hardware runs and both repeats.
-New tests exercise live PF?PF and sprite matching separately. A scoped live
-PF?PF correction is under validation; existing Init changes remain separate.
+New tests exercise live PF?PF and sprite matching separately. The active Copperline test pins the sprite matching truth table. Two PF?PF tests
+are explicitly ignored as known failures; the strict ROM replay stays enabled.
+No collision implementation change is accepted; prior Init work remains separate.
 
 ## Reproduction and timing scope
 
@@ -63,3 +64,31 @@ The versioned pre-fix Copperline packet in
 reproducible without committing an emulator executable or ROM image. The strict
 workflow requires512 matches and no invalid/excluded/unstable cases and is added
 to the main timing acceptance suite's neighbor checks.
+
+## Rejected correction and follow-up
+
+The match-mask-only candidate passed core3682 but replay matched424/512,
+leaving88 missing zero assertions and introducing20 field regressions. Earlier
+C3 pointer/Copper packets are unchanged; their original qualification blockers
+remain. Source counterfactual: `experiments/patches/playfield-modes-rejected-match-only.patch`.
+It is **rejected**, not part of the Copperline commit.
+
+`references/playfield-zero-burst-v1/{run1,run2}` contains a focused32-case follow-up,
+CLXCON0040/C3, zero/all-ones planes, both DPF modes, four repeats. Six destructive
+reads bracket fetch/display start. All compared observations are independently
+repeatable, with no excluded/missing/invalid cases. The A500 zero match is seen
+near that boundary, not solely at the late settled read. However, HW burst
+brackets are4423..4451 or4427..4455 versus Copperline442A..4459; sample indexes
+must not be aligned or treated as identical grant times. Individual beam/read
+brackets are the next discriminator before a display-phase or bus fix.
+Zero-burst ROM SHA256:
+`c782993fab7a63d1d42a343fff6f0b928bc89450f6e62b9d8276e3e024585be1`.
+The measurement used the frozen rejected candidate and records that fact through
+its binary hash; it does not qualify that candidate. Both measurement sessions
+restored the original ROM once at their stop, with no restoration between repeats.
+
+Final test-only state preserves the original emulator behavior: replay again
+reports184 matches/328 PF?PF mismatches, zero newly regressed fields, zero
+qualification changes, and no invalid/excluded/conflicting captures. The active
+sprite matcher test validates256 consensus rows; two known-failing PF?PF tests
+are ignored with explicit reasons. No rejected implementation is committed.
