@@ -1,0 +1,32 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1",
+  "hypothesis": "DPF changes odd/even match combination for sprite-playfield collisions; PF-PF behavior must be measured separately.",
+  "test": "512 cases: paired DPF bit, four plane patterns, four enabled-plane masks, four desired patterns, sprite0 on/off, two repeats. Two independent A500 packets. Settled scanline44, no Copper or blitter.",
+  "smaller_reproducer": null,
+  "next_question": "Which settled collision bits differ solely because DPF is enabled?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "5ff9ddaf7d60abe70283fe94b08a12eced106c2214d2a616dab0bc6d8ea5a8d1",
+  "decision": "patch",
+  "experiment": "playfield-modes",
+  "identity": {
+    "binary_sha256": "67e9ec734a0c5d657fe904c78ec6b63c24c6c28a747ae2772267412a1d5b7bec",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765",
+    "source_id": "2c0569e6eae8535288b419c2c489d84ce53e264a662f991716d8790eb7d0b6a0"
+  },
+  "competitor": "Mode differences are only visual or timing-dependent; settled CLXDAT bits match for identical plane data and masks.",
+  "outcomes": {
+    "stable mode-dependent bits": "Pin each measured collision bit in Copperline regression tests.",
+    "stable identical bits": "Record mode independence for this specific bit/path; do not generalize to other collision paths.",
+    "sprite controls or repeats fail": "Repair measurement before deriving emulator expectations."
+  },
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\reference-2"
+  ],
+  "validation": [],
+  "decision_reason": "512 independently repeated observations are stable.24 paired sprite-PF1 mode differences agree with existing matcher. PF-PF has328 disagreements: live readback uses visible opacity and DPF gating instead of CLXCON matches; zero BPLDAT and constant DMA samples account for all hardware PF-PF results. Add consensus fixture and correct only that live DMA path.",
+  "evidence": [
+    "captures/playfield-modes-20261022/hardware-v1/field-stability-diagnostic.json"
+  ]
+}

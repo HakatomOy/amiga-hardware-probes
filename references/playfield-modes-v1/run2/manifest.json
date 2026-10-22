@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "reference_id": "playfield-modes-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\hardware-2",
+  "test_rom_sha256": "3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765",
+  "source_id": "2c0569e6eae8535288b419c2c489d84ce53e264a662f991716d8790eb7d0b6a0",
+  "results_sha256": "67f71972f03011e756df7ff24112be90c832ee9a5ecd8a21bac89ad446d9d797",
+  "record_count": 512,
+  "metadata": {
+    "version": 1,
+    "source_id": "2c0569e6eae8535288b419c2c489d84ce53e264a662f991716d8790eb7d0b6a0",
+    "record_count": 512,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "67f71972f03011e756df7ff24112be90c832ee9a5ecd8a21bac89ad446d9d797"
+  },
+  "restoration": {
+    "backup_sha256": "9dc14671113ee181c75f694fa9d2559bf2e140516fc2370178aefc03917a98c3",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "9dc14671113ee181c75f694fa9d2559bf2e140516fc2370178aefc03917a98c3",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 101,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Settled two-plane lores, manual sprite0, sprite DMA disabled; mask CLXDAT bits0/1/5 separately. Paired DPF changes only one BPLCON0 bit; no Copper or blitter. No timing alignment.",
+    "variants": "bit0 DPF; bit1 sprite0 opaque; target mask*4+desired; phase constant plane bits",
+    "fields": {
+      "12": "common input",
+      "14": "pre-clear beam",
+      "20": "CLXDAT sample",
+      "22": "immediate second CLXDAT",
+      "24": "BPLCON0 programmed value",
+      "26": "pre-read beam",
+      "34": "post-read beam",
+      "36": "CLXCON programmed value"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 256,
+    "independently_repeated_cohorts": 256,
+    "candidate_cases_with_independent_repeats": 512,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\reference-2"
+}

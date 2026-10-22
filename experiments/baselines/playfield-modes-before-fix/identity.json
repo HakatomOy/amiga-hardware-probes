@@ -1,0 +1,7 @@
+{
+  "rom_sha256": "3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765",
+  "binary_sha256": "67e9ec734a0c5d657fe904c78ec6b63c24c6c28a747ae2772267412a1d5b7bec",
+  "results_sha256": "d005888b59bb52a89c79af242e8a461a9982b18e059fbb5d53239be21d2ccaba",
+  "source_patch": "experiments/patches/frame-origin-production-v1.patch",
+  "description": "Pre-fix Copperline packet; no ROM image or executable.512cases,328 PF-PF mismatches, all sprite observations match."
+}

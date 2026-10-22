@@ -313,6 +313,25 @@
       "parallel_group": "focused"
     },
     {
+      "name": "paired-playfield-modes",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/playfield-modes.json",
+        "--out",
+        "{out}/paired-playfield-modes",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
       "name": "handoff-race",
       "tier": "neighbor",
       "argv": [

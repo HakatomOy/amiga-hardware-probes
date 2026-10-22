@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "id": "playfield-modes",
+  "hypothesis": "DPF changes odd/even match combination for sprite-playfield collisions; PF-PF behavior must be measured separately.",
+  "competitor": "Mode differences are only visual or timing-dependent; settled CLXDAT bits match for identical plane data and masks.",
+  "test": "512 cases: paired DPF bit, four plane patterns, four enabled-plane masks, four desired patterns, sprite0 on/off, two repeats. Two independent A500 packets. Settled scanline44, no Copper or blitter.",
+  "outcomes": {
+    "stable mode-dependent bits": "Pin each measured collision bit in Copperline regression tests.",
+    "stable identical bits": "Record mode independence for this specific bit/path; do not generalize to other collision paths.",
+    "sprite controls or repeats fail": "Repair measurement before deriving emulator expectations."
+  },
+  "next_question": "Which settled collision bits differ solely because DPF is enabled?",
+  "investigation": "investigations/playfield-modes.json",
+  "binary": "captures/copper-phase-20261021/frame-origin-production-v1/emulator.exe",
+  "romdir": "build/playfield-modes-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765",
+  "capture": {
+    "minimum_seconds": 120,
+    "expected_cases": 512,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 65535,
+        "unit": "BPLCON0 value",
+        "meaning": "Both programmed playfield modes",
+        "require_values": [
+          8704,
+          9728
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 34,
+        "unit": "sprite-playfield bits",
+        "meaning": "Sprite0 witness spans odd/even matches",
+        "require_values": [
+          0,
+          2,
+          32,
+          34
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 34,
+        "unit": "sprite-playfield bits",
+        "meaning": "Transparent sprite negative control",
+        "where": {
+          "variant": {
+            "mask": 2,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/playfield-modes-v1/run1",
+    "references/playfield-modes-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Common observer entry before DMA enable"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "pf_pf",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Odd/even playfield collision"
+      },
+      {
+        "name": "sprite_pf1",
+        "field": "counter",
+        "mask": 2,
+        "unit": "CLXDAT bit1",
+        "meaning": "Sprite pair0 versus odd playfield match"
+      },
+      {
+        "name": "sprite_pf2",
+        "field": "counter",
+        "mask": 32,
+        "unit": "CLXDAT bit5",
+        "meaning": "Sprite pair0 versus even playfield match"
+      },
+      {
+        "name": "second_sample",
+        "field": "icr",
+        "mask": 35,
+        "unit": "CLXDAT bits0/1/5",
+        "meaning": "Immediate clear/reaccumulation sample"
+      }
+    ],
+    "min_matches": 512,
+    "required_field_repairs": {
+      "pf_pf": 328
+    }
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "regression",
+  "baseline": "experiments/baselines/playfield-modes-before-fix"
+}
