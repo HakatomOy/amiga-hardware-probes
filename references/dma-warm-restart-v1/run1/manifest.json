@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-warm-restart-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\warm-restart-hardware-v1\\hardware-1",
+  "test_rom_sha256": "cc832b787e473e8fbc6400799ea9545f54b64760642c2dbc02c9de161167ceb2",
+  "source_id": "bbb69d3db9da4b084a65b64e79d2eadaa724fa2f11705f6d9fec0c747472ef5a",
+  "results_sha256": "e5aaad424af40af477e9189df4f493d6321c7b4bb8bb2d3c6c9cd06fd907dba6",
+  "record_count": 96,
+  "metadata": {
+    "version": 1,
+    "source_id": "bbb69d3db9da4b084a65b64e79d2eadaa724fa2f11705f6d9fec0c747472ef5a",
+    "record_count": 96,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "e5aaad424af40af477e9189df4f493d6321c7b4bb8bb2d3c6c9cd06fd907dba6"
+  },
+  "restoration": {
+    "backup_sha256": "f00765d23249cea9b316fb92e18081bddbb50628afb19638d7ec91a392ffcce5",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "f00765d23249cea9b316fb92e18081bddbb50628afb19638d7ec91a392ffcce5",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\warm-restart-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 112,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "96 ROM-only cases. Warm Copper first fetches at line40 and waits for43:40 before measured enable on line42. Same immediate write forms; only pre-enable beam qualifies. No alignment of outputs.",
+    "variants": "bit0 COPEN; bit1 COPJMP; bit2 pre-enable Copper at line40",
+    "fields": {
+      "12": "pre-enable beam",
+      "24": "post-write beam",
+      "16": "INTREQR completion bit2"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 4,
+    "conflicting_cohorts": 1,
+    "reference_cohorts": 24,
+    "independently_repeated_cohorts": 24,
+    "candidate_cases_with_independent_repeats": 96,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\warm-restart-hardware-v1\\reference-1"
+}

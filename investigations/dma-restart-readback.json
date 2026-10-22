@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\readback-hardware-v1",
+  "hypothesis": "The remaining first post-write beam difference reflects CPU bus timing and persists into later straight-line reads.",
+  "test": "32 master-pre-enabled ROM cases with real COPJMP/inert writes, four phases/four repeats, and three consecutive VHPOSR reads before any RAM store. Prefix through first read unchanged from kind113. Two independent A500 captures.",
+  "smaller_reproducer": null,
+  "next_question": "Does the post-write difference persist through a straight-line read triplet?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "6b79690946711ce5862adf7be3445905840e37b1c661dd2a99b40dcac7a76891",
+  "decision": "validation failed"
+}

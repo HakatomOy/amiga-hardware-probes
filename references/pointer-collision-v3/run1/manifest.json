@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "reference_id": "pointer-collision-v3-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\pointer-coverage-hardware-v1\\hardware-1",
+  "test_rom_sha256": "89e928cb35641a5e0d5519d6103ebcfc97a2d7ec206fab8feb9ac8a64c013aaf",
+  "source_id": "6386f8702df804478280c5f0639af82f9a4301d4817512fcfe02d6f1fde28aaf",
+  "results_sha256": "b360efdb2a9c0d581f80900fe66b8addc58c07cabc8b012a6be705d814d16a62",
+  "record_count": 480,
+  "metadata": {
+    "version": 1,
+    "source_id": "6386f8702df804478280c5f0639af82f9a4301d4817512fcfe02d6f1fde28aaf",
+    "record_count": 480,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "b360efdb2a9c0d581f80900fe66b8addc58c07cabc8b012a6be705d814d16a62"
+  },
+  "restoration": {
+    "backup_sha256": "7e8a320d9b342c565b47ca7c563efb54aa19eae403890538e8521d30f3400700",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "7e8a320d9b342c565b47ca7c563efb54aa19eae403890538e8521d30f3400700",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\pointer-coverage-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 73,
+    "aligned": false,
+    "targets": [
+      "BPL2PTL",
+      "BPL2PTH",
+      "BPL1PTL"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Settled pixel witness distinguishes accepted/lost retargeting; exact transfer-slot attribution still needs validated scheduling.",
+    "measurement_fields": "kind72 plus end_beam settled CLXDAT after the following full line; saved_pc_offset brackets that read"
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 588,
+    "independently_repeated_cohorts": 204,
+    "candidate_cases_with_independent_repeats": 113,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock 68000, 512KiB chip/512KiB slow; silicon revisions unconfirmed. CLXDAT is a digital pixel witness, not an electrical pointer bus measurement. Exact write/read beam brackets are retained; no alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\pointer-coverage-hardware-v1\\reference-1"
+}

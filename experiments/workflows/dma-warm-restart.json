@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "id": "dma-warm-restart",
+  "hypothesis": "Cold COPEN request ownership differs from a Copper already waiting; explicit COPJMP can be isolated after warming the request gate.",
+  "competitor": "The immediate post-write error also occurs with a warm sleeping Copper, indicating a strobe/read or bitplane interaction rather than initial COPEN.",
+  "test": "96 ROM-only cases: COPEN off/cold/warm crossed with COPJMP/inert write, four launch phases and four repeats. Warm Copper enabled at line40 and waits until43:40. Measured input atline42; finite completion and negative witnesses. Two independent A500 runs.",
+  "outcomes": {
+    "warm inert matches but cold inert differs": "Isolate initial COPEN request sampling; keep explicit restart separate.",
+    "warm COPJMP differs": "Constrain explicit restart bus ownership independently of cold enable.",
+    "warm inert also differs": "Revisit common bitplane/read path before modifying Init."
+  },
+  "next_question": "Which boundary remains after Copper is already sleeping before bitplane enable?",
+  "investigation": "investigations/dma-warm-restart.json",
+  "binary": "captures/collision-cpu-20261022/enable-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-warm-restart-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "cc832b787e473e8fbc6400799ea9545f54b64760642c2dbc02c9de161167ceb2",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 96,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Copper-off negative witness",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-warm-restart-v1/run1",
+    "references/dma-warm-restart-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after actual COPJMP or inert write"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

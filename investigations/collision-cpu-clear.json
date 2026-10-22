@@ -1,0 +1,18 @@
+{
+  "status": "diagnostic controls measured; timing instability retained",
+  "confirmed_facts": [
+    "DMA-off and fixed-instruction controls match.",
+    "Immediate-source DMACON polling exposes30 stable timing differences; register-source controls expose none.",
+    "Even-step BMAPEN candidate repairs all30 stable immediate cases with zero new fields."
+  ],
+  "reference_capture_ids": [
+    "collision-cpu-clear-dispatch-v1",
+    "collision-cpu-clear-register-v1",
+    "collision-cpu-clear-immediate-v1"
+  ],
+  "limitations": [
+    "Register and immediate contracts each retain one conflicting hardware timing cohort; budgets unchanged."
+  ],
+  "next_question": "See collision-cpu-poll.json and collision-cpu-enable-even.json for stable first-divergence evidence and acceptance.",
+  "details": "docs/collision-cpu-ordering-2026-10-22.md"
+}

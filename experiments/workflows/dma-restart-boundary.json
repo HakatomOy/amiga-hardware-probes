@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "id": "dma-restart-boundary",
+  "hypothesis": "The remaining combined startup difference belongs to COPJMP ownership, independently of the corrected bitplane enable phase.",
+  "competitor": "Initial COPEN or bitplane enable/read arbitration differs even when the following write is inert.",
+  "test": "64 ROM-only cases: COPEN off/on crossed with real COPJMP/inert COLOR00 write, four launch phases and four repeats. Identical immediate write forms. Record pre-enable and immediate post-write beams; finite Copper completion witness. Two independent A500 captures.",
+  "outcomes": {
+    "only real strobe differs": "Investigate explicit restart/reload ownership.",
+    "inert and strobe differ with COPEN": "Investigate initial Copper fetch request or enable arbitration.",
+    "COPEN-off controls differ": "Revisit BMAPEN versus CPU sampling before Init work."
+  },
+  "next_question": "Does the immediate post-write boundary depend on COPJMP or initial COPEN?",
+  "investigation": "investigations/dma-restart-boundary.json",
+  "binary": "captures/collision-cpu-20261022/enable-even-acceptance-v1/emulator.exe",
+  "romdir": "build/dma-restart-boundary-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "5f25e13c27466738509a445ba9d1862ac15856603a4322c196fdb67853c5897f",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 64,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Copper-off negative witness",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-restart-boundary-v1/run1",
+    "references/dma-restart-boundary-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after actual COPJMP or inert write"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

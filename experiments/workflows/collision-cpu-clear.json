@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "id": "collision-cpu-clear",
+  "hypothesis": "The residual boundary is sensitive to immediate-source DMACON instruction timing under active DMA, rather than a uniform CPU or comparator delay.",
+  "competitor": "A specific polling phase or first-line DMA state differs even with correct immediate write sequencing.",
+  "test": "96 cases: original immediate DMACON write and polling cadence, fixed182/194 NOP controls, DMA on/off, DPF pairs, targets8/12, polling thresholds4410/4418/4420/4428. Select paths before alignment. v5/v6 register-source DMACON controls retained separately; v6 has one unstable cohort.",
+  "outcomes": {
+    "both paths late under DMA": "Trace the common grant/read phase before changing collision logic.",
+    "polling alone differs": "Isolate VHPOSR sample timing and polling branch boundaries.",
+    "planes-off differs too": "Investigate CPU/ROM baseline before DMA arbitration."
+  },
+  "next_question": "Does the clear bracket differ in fixed sequences too?",
+  "investigation": "investigations/collision-cpu-clear.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/collision-cpu-clear-v7",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "3fecb04ba28d720fa2602b42c0b48cbbeb87af16b79f3086820989de894cc994",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 96,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/collision-cpu-clear-immediate-v1/run1",
+    "references/collision-cpu-clear-immediate-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "pre_clear",
+        "field": "launch_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Beam before destructive clear"
+      },
+      {
+        "name": "pre_read",
+        "field": "irq_level",
+        "unit": "packed VHPOSR",
+        "meaning": "Beam before settled read"
+      },
+      {
+        "name": "collision",
+        "field": "counter",
+        "unit": "CLXDAT",
+        "meaning": "Settled collision result"
+      },
+      {
+        "name": "second",
+        "field": "icr",
+        "unit": "CLXDAT",
+        "meaning": "Immediate second sample"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

@@ -27,16 +27,21 @@ suites. Nine older suites,8416 cases, retain byte-identical packets, including
 281 qualified pointer and438 qualified Copper collision cases. Existing CIA,
 bus and startup quality gaps are preserved, not counted as matches.
 
-## Remaining uncertainty
+## Late-clear follow-up
 
-The original `playfield-modes.json` still fails its unchanged512-match floor:
-488 match and24 mismatch. All remaining cases use plane pattern2; Copperline's
+The original clean baseline fails its unchanged512-match floor:
+488 match and24 mismatch. These cases use plane pattern2; Copperline's
 clear bracket is443C instead of A5004438 for the same424E observer entry. The
 clear crosses the brief zero interval. The earlier-clear experiment independently
-validates logic without concealing this failure. Ungated burst/window diagnostics
-also retain CPU timing differences; do not align their samples or fit a blanket
-IRQ or collision delay. Next: identify the first CPU/DMA grant difference in that
-specific polling/clear cohort. A smaller startup pulse remains a competitor.
+validates logic without concealing this failure.
+
+Follow-up Copperline `b40122d4` repairs all24 by sampling classic BMAPEN enable
+on an even CCK after its existing delay. The original512 floor now passes.
+Independent data/launch and two/three/four-plane controls support the source
+phase; selector-free scoped/control replay4352/4352, core3675 and goldens46 pass.
+Full combined COPEN/Init acceptance remains blocked by timing and qualification
+differences. See [the CPU/DMA investigation](collision-cpu-ordering-2026-10-22.md)
+for those unchanged gates, new hardware references and the next discriminator.
 
 ## Reuse
 

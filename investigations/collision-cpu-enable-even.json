@@ -1,0 +1,23 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\enable-even-acceptance-v1",
+  "hypothesis": "Classic BMAPEN assertion is sampled on the even CCK of the fetch-counter step; odd-clock assertion currently starts a partial unit one CCK too early.",
+  "test": "Round only classic DDF BMAPEN_SET effects to the next even CCK. Require all256 stable first-divergence controls and512 original collision cases; retain immediate/register control instability, gated and bus/CIA neighbors without aligning traces.",
+  "smaller_reproducer": null,
+  "next_question": "Resolve the separate cold/warm COPEN and explicit restart timing, using new master and read-triplet evidence.",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "37214ca191daf803280e45f7791b4d858fce32be033782a8d624ff623130acc0",
+  "decision": "narrow",
+  "decision_reason": "Retain full acceptance blockers; independently establish the BMAPEN correction before resolving COPEN startup.",
+  "evidence": [
+    "docs/collision-cpu-ordering-2026-10-22.md"
+  ],
+  "scope_commit": "b40122d4",
+  "full_acceptance": false,
+  "confirmed_facts": [
+    "Original24 failures repaired:512/512.",
+    "Selector-free production7-suite4352/4352, core3675/0, goldens46/46, strict Clippy/fmt pass.",
+    "Independent-data two/four-plane1024 and nonuniform three-plane256 discriminate the source phase.",
+    "Full startup acceptance remains blocked; no original qualification budget changed."
+  ],
+  "details": "docs/collision-cpu-ordering-2026-10-22.md"
+}

@@ -591,3 +591,27 @@ If an earlier-clear control isolates logic, create a new ROM/reference contract;
 retain the original strict failing contract and its case IDs. Do not redefine
 those failures as matches. See `docs/playfield-collision-fix-2026-10-22.md` and
 `tools/playfield_gate_report.py` for a bounded, reusable example.
+
+### Preserve the instruction boundary and bound traces
+
+Paired controls must account for instruction forms as well as total timing:
+replacing an immediate custom-register write with a register-source write can
+move the following access off a failing DMA boundary. Choose variants before
+alignment, retain the original opcode path, and record the common entry marker.
+Use fixed-instruction and DMA-off neighbors to distinguish polling drift from
+comparator visibility. Capture the final polling value after the critical
+sequence when locating the first divergent iteration.
+
+Prefer `run_rom.py --profile-case ID --profile-entry ADDRESS --verify-packet
+PATH` and `tools/profile_case_window.py` for bounded per-case bus evidence.
+Whole-run register logging also traces synchronization loops and can produce
+hundreds of megabytes. Keep it file-backed and use it only when a single-case
+profile cannot answer the stated question. See
+`docs/collision-cpu-ordering-2026-10-22.md` for the measured example.
+
+Use an immutable binary from the exact starting commit for regression deltas;
+a historical prototype answers a counterfactual, not whether this patch caused
+a difference. Recompare both binaries against the same reference union when
+adding captures. Separate input variables that were coupled in an earlier probe
+(for example launch phase and plane data). Test a second DMA width when periodic
+slot occupancy can make different counter phases look identical.

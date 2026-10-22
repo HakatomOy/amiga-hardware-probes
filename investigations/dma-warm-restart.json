@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\warm-init-prototype",
+  "hypothesis": "Cold COPEN request ownership differs from a Copper already waiting; explicit COPJMP can be isolated after warming the request gate.",
+  "test": "96 ROM-only cases: COPEN off/cold/warm crossed with COPJMP/inert write, four launch phases and four repeats. Warm Copper enabled at line40 and waits until43:40. Measured input atline42; finite completion and negative witnesses. Two independent A500 runs.",
+  "smaller_reproducer": null,
+  "next_question": "Which boundary remains after Copper is already sleeping before bitplane enable?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "fca6dec6abbbdf2b67384a2284faf2c070135719a940f943f00df903bde9f406",
+  "decision": "validation failed"
+}

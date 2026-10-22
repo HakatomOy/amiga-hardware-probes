@@ -1,0 +1,36 @@
+{
+  "experiment": "dma-three-plane",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\three-plane-hardware-v1",
+  "identity": {
+    "binary_sha256": "ad969e08a6baf4dd5ae8031eeb6ea7d6a33158cc56a63fb8858be7df1ddbb8d9",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "0f0999eb91101fee18262ee826899fb804cb6c52c892794cb3205f161eeef7fc",
+    "source_id": "3b28b0479daa6063503509bd0afd5c9f1167c6c8bf4177e5f89d382751e630e9"
+  },
+  "hypothesis": "The nonuniform three-plane slots3/5/7 distinguish absolute enable phases that uniform two/four-plane occupancy aliases.",
+  "competitor": "The two-plane repair is only an occupancy fit and fails the three-plane first-unit ownership pattern.",
+  "test": "256 cases: three planes with BPL3 zero, two independent BPL1/2 patterns, four launch phases, eight exit thresholds, DMA on/off and two repeats. Exact input qualification, two independent hardware captures; compare explicit phase models, not arbitrary trace alignment.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "one phase model preserves all three-plane controls": "Retain that source-phase hypothesis and recheck existing timing regressions.",
+    "all candidates disagree": "Reject the partial-unit enable fit and isolate first-fetch ownership with independent data evidence."
+  },
+  "next_question": "Which enable model preserves the nonuniform three-plane slot pattern?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\three-plane-hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\three-plane-hardware-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "ba7e0b2d408bff41491462db0a929c9d1ba25273f6da05367846c09e8ce155c7",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "patch",
+  "decision_reason": "Nonuniform three-plane ownership independently confirms even-step BMAPEN assertion; full startup acceptance remains blocked.",
+  "evidence": [
+    "captures/collision-cpu-20261022/enable-three-screen-v1/results.json"
+  ]
+}

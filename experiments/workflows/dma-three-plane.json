@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "id": "dma-three-plane",
+  "hypothesis": "The nonuniform three-plane slots3/5/7 distinguish absolute enable phases that uniform two/four-plane occupancy aliases.",
+  "competitor": "The two-plane repair is only an occupancy fit and fails the three-plane first-unit ownership pattern.",
+  "test": "256 cases: three planes with BPL3 zero, two independent BPL1/2 patterns, four launch phases, eight exit thresholds, DMA on/off and two repeats. Exact input qualification, two independent hardware captures; compare explicit phase models, not arbitrary trace alignment.",
+  "outcomes": {
+    "one phase model preserves all three-plane controls": "Retain that source-phase hypothesis and recheck existing timing regressions.",
+    "all candidates disagree": "Reject the partial-unit enable fit and isolate first-fetch ownership with independent data evidence."
+  },
+  "next_question": "Which enable model preserves the nonuniform three-plane slot pattern?",
+  "investigation": "investigations/dma-three-plane.json",
+  "binary": "captures/collision-cpu-20261022/enable-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-three-plane-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "0f0999eb91101fee18262ee826899fb804cb6c52c892794cb3205f161eeef7fc",
+  "capture": {
+    "minimum_seconds": 60,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 28672,
+        "unit": "BPLCON0 BPU",
+        "meaning": "Three-plane configuration",
+        "require_values": [
+          12288
+        ],
+        "allowed_values": [
+          12288
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-three-plane-v1/run1",
+    "references/dma-three-plane-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "last_poll",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Final beam value that exits the unmodified polling loop"
+      },
+      {
+        "name": "pre_clear",
+        "field": "launch_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Beam before destructive clear"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

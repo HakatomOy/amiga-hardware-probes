@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "reference_id": "collision-cpu-poll-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\poll-hardware-v1\\hardware-2",
+  "test_rom_sha256": "93bf458780470749afcdfa725018ca14deb341ca63456fb15f714ce52645d4ec",
+  "source_id": "9e809ce96991ee157635059d32d048ac603c20da3ceff7f339df2d6af188b4c7",
+  "results_sha256": "7b7b113193143996e2d9d5f56ab4c7979c33f74b8a649d4f2828a61d06f0df0b",
+  "record_count": 256,
+  "metadata": {
+    "version": 1,
+    "source_id": "9e809ce96991ee157635059d32d048ac603c20da3ceff7f339df2d6af188b4c7",
+    "record_count": 256,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "7b7b113193143996e2d9d5f56ab4c7979c33f74b8a649d4f2828a61d06f0df0b"
+  },
+  "restoration": {
+    "backup_sha256": "fb25f502d58b161156c5bb1b055a2a771d9152392861db16e81ea633943cc06d",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "fb25f502d58b161156c5bb1b055a2a771d9152392861db16e81ea633943cc06d",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\poll-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 108,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "Original polling opcodes and immediate DMACON write. Last poll stored only after clear. No beam alignment.",
+    "thresholds": [
+      16992,
+      17024,
+      17056,
+      17088,
+      17120,
+      17152,
+      17184,
+      17216,
+      17248,
+      17280,
+      17312,
+      17344,
+      17376,
+      17408,
+      17424,
+      17440
+    ],
+    "variants": "bit3 DMA off; phase also selects constant plane bits",
+    "fields": {
+      "12": "observer entry",
+      "14": "pre-clear beam",
+      "18": "last VHPOSR polling value"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 128,
+    "independently_repeated_cohorts": 128,
+    "candidate_cases_with_independent_repeats": 256,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\poll-hardware-v1\\reference-2"
+}

@@ -1,0 +1,24 @@
+{
+  "variants": {
+    "baseline": {
+      "COPPERLINE_EXP_BMAPEN_PHASE": "0"
+    },
+    "tail-even": {
+      "COPPERLINE_EXP_BMAPEN_PHASE": "1"
+    },
+    "transfer-even": {
+      "COPPERLINE_EXP_BMAPEN_PHASE": "2"
+    }
+  },
+  "scenarios": {
+    "modes": "experiments/workflows/playfield-modes.json",
+    "poll": "experiments/workflows/collision-cpu-poll.json",
+    "restart": "experiments/workflows/dma-restart-boundary.json",
+    "startup": "experiments/workflows/collision-startup.json"
+  },
+  "baseline": {
+    "variant": "baseline",
+    "scenario": "modes",
+    "packet": "captures/collision-cpu-20261022/baseline/candidate/results.bin"
+  }
+}

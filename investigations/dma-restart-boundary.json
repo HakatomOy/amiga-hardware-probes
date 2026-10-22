@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\restart-init-prototype",
+  "hypothesis": "The remaining combined startup difference belongs to COPJMP ownership, independently of the corrected bitplane enable phase.",
+  "test": "64 ROM-only cases: COPEN off/on crossed with real COPJMP/inert COLOR00 write, four launch phases and four repeats. Identical immediate write forms. Record pre-enable and immediate post-write beams; finite Copper completion witness. Two independent A500 captures.",
+  "smaller_reproducer": null,
+  "next_question": "Does the immediate post-write boundary depend on COPJMP or initial COPEN?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "424ffd3dac7a25bed80530a5e23725282d0bd4f8cb29b31d829052845aec601a",
+  "decision": "validation failed"
+}

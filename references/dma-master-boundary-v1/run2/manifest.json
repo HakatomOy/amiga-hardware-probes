@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-master-boundary-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\master-boundary-hardware-v1\\hardware-2",
+  "test_rom_sha256": "1c00a58ea071deaa624ff16302944b70fd31e91941d939fec9e9f97bd0acb32e",
+  "source_id": "c74cd90a660e3a6872123fcb7cd6d5eccb8298e53896bc79d0be50e37ae6438d",
+  "results_sha256": "f5609784e4070f949cd6be0614d80f2c4ab743f7cc4bdb60e4c0d53d158714f7",
+  "record_count": 32,
+  "metadata": {
+    "version": 1,
+    "source_id": "c74cd90a660e3a6872123fcb7cd6d5eccb8298e53896bc79d0be50e37ae6438d",
+    "record_count": 32,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "f5609784e4070f949cd6be0614d80f2c4ab743f7cc4bdb60e4c0d53d158714f7"
+  },
+  "restoration": {
+    "backup_sha256": "597fc5868c7db51ecd0ea3667f51870ac5a6be6fc20106a273a2a0fa70cd83c8",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "597fc5868c7db51ecd0ea3667f51870ac5a6be6fc20106a273a2a0fa70cd83c8",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\master-boundary-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 113,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "32 ROM-only cases distinguish DMAEN rise from COPEN rise. Only the pre-enable marker qualifies; no output alignment.",
+    "variants": "1 inert write;3 COPJMP; master DMA already enabled at line40",
+    "fields": {
+      "12": "pre-enable beam",
+      "24": "post-write beam",
+      "16": "INTREQR completion bit2"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 8,
+    "independently_repeated_cohorts": 8,
+    "candidate_cases_with_independent_repeats": 32,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\master-boundary-hardware-v1\\reference-2"
+}

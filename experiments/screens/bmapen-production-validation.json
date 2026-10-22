@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "production": {}
+  },
+  "scenarios": {
+    "modes": "experiments/workflows/playfield-modes.json",
+    "poll": "experiments/workflows/collision-cpu-poll.json",
+    "phase": "experiments/workflows/dma-enable-phase.json",
+    "three": "experiments/workflows/dma-three-plane.json",
+    "early": "experiments/workflows/playfield-early-clear.json",
+    "gate": "experiments/workflows/playfield-gate.json",
+    "word": "experiments/workflows/playfield-word-gate.json"
+  },
+  "baseline": {
+    "variant": "production",
+    "scenario": "modes",
+    "packet": "captures/collision-cpu-20261022/enable-even-acceptance-v1/original-late-clear/candidate/results.bin"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "status": "additional captures retained; original qualification gates remain blocking",
+  "references": [
+    "pointer-collision-v3"
+  ],
+  "confirmed_facts": [
+    "New unchanged-ROM captures contain no collision-value conflicts or mismatches in qualified cases.",
+    "Expanded pointer union291/480; expanded Copper union424/800. Do not repeat unchanged captures: this does not resolve timing qualification losses."
+  ],
+  "next_question": "Resolve initial Copper ownership with controlled pre-enable inputs; retain original strict contracts.",
+  "details": "docs/collision-cpu-ordering-2026-10-22.md"
+}

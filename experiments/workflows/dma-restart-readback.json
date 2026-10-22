@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "id": "dma-restart-readback",
+  "hypothesis": "The remaining first post-write beam difference reflects CPU bus timing and persists into later straight-line reads.",
+  "competitor": "Only the first beam value is sampled differently; later independent reads agree without persistent CPU timing drift.",
+  "test": "32 master-pre-enabled ROM cases with real COPJMP/inert writes, four phases/four repeats, and three consecutive VHPOSR reads before any RAM store. Prefix through first read unchanged from kind113. Two independent A500 captures.",
+  "outcomes": {
+    "multiple reads retain the phase difference": "Trace first divergent request/grant; change arbitration, not beam lookup.",
+    "only first read differs": "Investigate the first read sampling/pipeline boundary.",
+    "reads reconverge after stalls": "Use raw slot profiles to identify compensating grants; do not align outputs."
+  },
+  "next_question": "Does the post-write difference persist through a straight-line read triplet?",
+  "investigation": "investigations/dma-restart-readback.json",
+  "binary": "captures/copper-phase-20261021/frame-origin-production-v1/emulator.exe",
+  "romdir": "build/dma-restart-readback-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "cdb69ef317dd1719ff7958f7b62bf66f96d4449e543a3ee1bd5f95e599a43548",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 32,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-restart-readback-v1/run1",
+    "references/dma-restart-readback-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "first_read",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First post-write read"
+      },
+      {
+        "name": "second_read",
+        "field": "launch_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Second consecutive read"
+      },
+      {
+        "name": "third_read",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Third consecutive read"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

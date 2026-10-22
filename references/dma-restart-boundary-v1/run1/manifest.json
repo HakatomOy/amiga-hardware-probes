@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-restart-boundary-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\restart-hardware-v1\\hardware-1",
+  "test_rom_sha256": "5f25e13c27466738509a445ba9d1862ac15856603a4322c196fdb67853c5897f",
+  "source_id": "ad26f7e515ebfede9a75d5572be0fbccd6df5a211f33dfd449d78a5dd1813afb",
+  "results_sha256": "fd50de108affe0ae079d95e1e4c7c94a5c9830912a0958dab1f8965122ae8566",
+  "record_count": 64,
+  "metadata": {
+    "version": 1,
+    "source_id": "ad26f7e515ebfede9a75d5572be0fbccd6df5a211f33dfd449d78a5dd1813afb",
+    "record_count": 64,
+    "agnus_vposr": "a001",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "fd50de108affe0ae079d95e1e4c7c94a5c9830912a0958dab1f8965122ae8566"
+  },
+  "restoration": {
+    "backup_sha256": "8949643a992425eeacc04d109cf50751b9c59899238c544cfd298a9bf2506fff",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "8949643a992425eeacc04d109cf50751b9c59899238c544cfd298a9bf2506fff",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\restart-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 109,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "64 ROM-only cases; identical immediate-write forms, two-plane DMA in all cases; pre-enable input qualification only. No RAM writes until post-write sample; four repeats per launch.",
+    "variants": "bit0 COPEN; bit1 COPJMP instead of inert COLOR00 write",
+    "fields": {
+      "12": "pre-enable beam",
+      "24": "post-write beam",
+      "16": "INTREQR Copper completion bit2"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 4,
+    "conflicting_cohorts": 1,
+    "reference_cohorts": 16,
+    "independently_repeated_cohorts": 16,
+    "candidate_cases_with_independent_repeats": 64,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\restart-hardware-v1\\reference-1"
+}

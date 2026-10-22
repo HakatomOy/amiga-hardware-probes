@@ -1,14 +1,15 @@
 {
-  "status": "scoped collision fix committed; original24 late-clear CPU/DMA cases unresolved",
+  "status": "Original24 late-clear cases fixed; combined COPEN/Init acceptance remains unresolved",
   "init_branch": "wip/init-copper-timing",
   "init_commit": "02318e9e",
-  "branch": "fix/a500-hardware-timing",
+  "branch": "fix/more-a500-timing-fixes",
   "confirmed_facts": [
     "CLXDAT PF-PF bit0 uses CLXCON match masks in both playfield modes, including zero.",
     "1024 finite-Copper gates and768 first/last-bit gates match with two-CCK mask/data paths and a one-lores-pixel comparator enable lead.",
     "512 earlier-clear paired logic cases match;328 same-ROM pre-fix differences repaired without field regressions.",
     "Nine broader suites/8416 cases produce byte-identical packets to the clean baseline.",
-    "Original late-clear matrix remains488/512;24 phase2 cases have pre-clear443C vs A5004438 for the same424E input. No qualification budget or old preservation floor changed."
+    "Original late-clear matrix remains488/512;24 phase2 cases have pre-clear443C vs A5004438 for the same424E input. No qualification budget or old preservation floor changed.",
+    "b40122d4 samples classic BMAPEN assertion on an even CCK: original512/512, new independent1536/1536; all4352 scoped/control cases pass. Combined COPEN timing and old qualification gates remain explicit."
   ],
   "reference_capture_ids": [
     "playfield-boundary-v1",
@@ -39,14 +40,15 @@
     "build_playfield_word_gate_rom.py",
     "build_playfield_early_clear_rom.py"
   ],
-  "details": "docs/playfield-modes-2026-10-22.md",
+  "details": "docs/collision-cpu-ordering-2026-10-22.md",
   "logs": "captures/collision-clean-20261022",
-  "next_question": "Why does identical observer entry424E produce pre-clear443C in Copperline versus4438 on A500 in24 late-clear phase2 cases?",
-  "next_hypothesis": "A CPU/DMA polling/clear grant boundary differs; gates and the earlier-clear matrix validate collision logic independently.",
+  "next_question": "Resolve cold/warm COPEN and explicit restart ownership, then complete Init/Copper acceptance.",
+  "next_hypothesis": "New warm/master and read-triplet controls distinguish initial request ownership from explicit restart timing.",
   "competing_explanation": "Sub-CCK startup duration still differs; retain all ungated read-window observations when testing the CPU hypothesis.",
-  "copperline_commit": "7bbedf58",
+  "copperline_commit": "b40122d4",
   "accepted_commits": [
-    "Copperline:7bbedf58"
+    "Copperline:7bbedf58",
+    "Copperline:b40122d4"
   ],
   "validation": {
     "core": {

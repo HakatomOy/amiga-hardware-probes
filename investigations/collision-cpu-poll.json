@@ -1,0 +1,81 @@
+{
+  "experiment": "collision-cpu-poll",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\poll-hardware-v1",
+  "identity": {
+    "binary_sha256": "c674bdca99f383a71fa4a73783d1a3729544028729dca33e83b1a921c80c1ebf",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "93bf458780470749afcdfa725018ca14deb341ca63456fb15f714ce52645d4ec",
+    "source_id": "9e809ce96991ee157635059d32d048ac603c20da3ceff7f339df2d6af188b4c7"
+  },
+  "hypothesis": "The immediate-write polling sequence first diverges at a specific active bitplane grant, accumulating the later four-CCK clear difference.",
+  "competitor": "Only the final clear access differs; earlier polling values and exit brackets agree.",
+  "test": "256 cases: sixteen exit thresholds4260..4420, four launch phases, DMA on/off, two repeats. Record final polling value and subsequent pre-clear bracket; store diagnostics after the critical sequence.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "early last-poll values differ": "Locate the first divergent grant and test its ownership.",
+    "last poll matches but clear differs": "Inspect the following ROM fetch and custom-to-chip transfer timing.",
+    "only unstable observations": "Narrow to stable cohorts before implementing changes."
+  },
+  "next_question": "Does independently varied data and two/four-plane pressure confirm the enable phase, and can the existing COPEN startup defect be separated without accepting new timing regressions?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\poll-hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\poll-hardware-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "b1041ce4f6cc985adcf080e5b223108b41c951e237490701c4a48b2345da4639",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "confirmed_facts": [
+    "Original late-clear replay reproduces488/512 with24 failures; no qualification changes.",
+    "The original loop polls VHPOSR, never CLXDAT. Collision state cannot change its exit.",
+    "Fixed NOP and DMA-off controls match A500. Immediate-source DMACON polling differs only under active bitplane DMA.",
+    "256 first-divergence sweep cases have two independent stable A500 captures;208 baseline matches and48 differences.",
+    "Launch phases0/2 first differ at4260 by2CCK; phases1/3 and all DMA-off cases agree. Phase2 later drifts4CCK."
+  ],
+  "reference_capture_ids": [
+    "collision-cpu-clear-dispatch-v1",
+    "collision-cpu-clear-register-v1",
+    "collision-cpu-clear-immediate-v1",
+    "collision-cpu-poll-v1"
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "Collision pulse changes polling-loop exit",
+      "evidence": "Loop compares VHPOSR; fixed/read and gate controls independently validate collision logic."
+    },
+    {
+      "hypothesis": "Uniform CPU or comparator delay",
+      "evidence": "DMA-off and fixed controls match; phases1/3 match the entire threshold sweep."
+    }
+  ],
+  "limitations": [
+    "Register control has one conflicting timing cohort; immediate control has one conflicting timing cohort. Instability remains explicit and budgets unchanged.",
+    "A500 signal phase inferred from software observations, not electrical traces."
+  ],
+  "source_files": [
+    "build_collision_cpu_clear_rom.py",
+    "build_collision_cpu_poll_rom.py",
+    "../Copperline/src/bus/ddf_line.rs"
+  ],
+  "details": "docs/collision-cpu-ordering-2026-10-22.md",
+  "status": "late-enable candidate repairs primary cases but blocked by broader timing-field regressions",
+  "counterfactuals": {
+    "tail_even": {
+      "sweep_matches": 256,
+      "original_matrix_matches": 512,
+      "startup_field_regressions": 80,
+      "accepted": false
+    },
+    "transfer_even": {
+      "sweep_matches": 208,
+      "original_matrix_matches": 472,
+      "new_original_fields": 20,
+      "accepted": false
+    }
+  }
+}

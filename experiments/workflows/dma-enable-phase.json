@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "id": "dma-enable-phase",
+  "hypothesis": "Even-step BMAPEN assertion predicts timing independently of plane data and across two/four-plane pressure; two-plane-only fits can alias absolute counter phase.",
+  "competitor": "The apparent repair overfits the coupled data/launch phase or two-plane slot pattern.",
+  "test": "1024 cases independently cross four launch phases, four constant BPL1/2 patterns, two/four planes, DMA on/off and eight polling thresholds, with two repeats. Two independent A500 captures. BPL3/4 explicitly zero. No Copper or blitter.",
+  "outcomes": {
+    "same model matches both widths and all data": "Support a hardware-derived counter sampling correction, while retaining unrelated startup acceptance blockers.",
+    "four-plane or independent-data cases regress": "Reject two-plane fit and isolate the earliest discrepant event.",
+    "repeats conflict": "Retain conflicts and narrow the test; do not fit unstable values."
+  },
+  "next_question": "Does the enable-phase correction generalize beyond the original coupled two-plane matrix?",
+  "investigation": "investigations/dma-enable-phase.json",
+  "binary": "captures/collision-cpu-20261022/enable-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-enable-phase-v3",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "52f1a58a5306b10558f6fe56511ca61139debebf3d7727100113161d442c99c3",
+  "capture": {
+    "minimum_seconds": 160,
+    "expected_cases": 1024,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 28672,
+        "unit": "BPLCON0 BPU",
+        "meaning": "Both two/four-plane configurations",
+        "require_values": [
+          8192,
+          16384
+        ],
+        "allowed_values": [
+          8192,
+          16384
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-enable-phase-v1/run1",
+    "references/dma-enable-phase-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "last_poll",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Final beam value that exits the unmodified polling loop"
+      },
+      {
+        "name": "pre_clear",
+        "field": "launch_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Beam before destructive clear"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

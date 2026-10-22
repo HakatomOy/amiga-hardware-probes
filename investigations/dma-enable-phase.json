@@ -1,0 +1,33 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\enable-phase-hardware-v3",
+  "hypothesis": "Even-step BMAPEN assertion predicts timing independently of plane data and across two/four-plane pressure; two-plane-only fits can alias absolute counter phase.",
+  "test": "1024 cases independently cross four launch phases, four constant BPL1/2 patterns, two/four planes, DMA on/off and eight polling thresholds, with two repeats. Two independent A500 captures. BPL3/4 explicitly zero. No Copper or blitter.",
+  "smaller_reproducer": null,
+  "next_question": "Does the enable-phase correction generalize beyond the original coupled two-plane matrix?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "42c77691f54a1193aa97460fb4180a754caf3469f1cf79eb5f7d8f6f877872a9",
+  "decision": "review evidence",
+  "experiment": "dma-enable-phase",
+  "identity": {
+    "binary_sha256": "ad969e08a6baf4dd5ae8031eeb6ea7d6a33158cc56a63fb8858be7df1ddbb8d9",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "52f1a58a5306b10558f6fe56511ca61139debebf3d7727100113161d442c99c3",
+    "source_id": "b297e8c9f2eed8dbf689442a6dd79ed587848266b19a4d0422d09c0e1c90715e"
+  },
+  "competitor": "The apparent repair overfits the coupled data/launch phase or two-plane slot pattern.",
+  "outcomes": {
+    "same model matches both widths and all data": "Support a hardware-derived counter sampling correction, while retaining unrelated startup acceptance blockers.",
+    "four-plane or independent-data cases regress": "Reject two-plane fit and isolate the earliest discrepant event.",
+    "repeats conflict": "Retain conflicts and narrow the test; do not fit unstable values."
+  },
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\enable-phase-hardware-v3\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\enable-phase-hardware-v3\\reference-2"
+  ],
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ]
+}

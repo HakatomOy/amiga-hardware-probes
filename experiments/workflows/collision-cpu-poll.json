@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "id": "collision-cpu-poll",
+  "hypothesis": "The immediate-write polling sequence first diverges at a specific active bitplane grant, accumulating the later four-CCK clear difference.",
+  "competitor": "Only the final clear access differs; earlier polling values and exit brackets agree.",
+  "test": "256 cases: sixteen exit thresholds4260..4420, four launch phases, DMA on/off, two repeats. Record final polling value and subsequent pre-clear bracket; store diagnostics after the critical sequence.",
+  "outcomes": {
+    "early last-poll values differ": "Locate the first divergent grant and test its ownership.",
+    "last poll matches but clear differs": "Inspect the following ROM fetch and custom-to-chip transfer timing.",
+    "only unstable observations": "Narrow to stable cohorts before implementing changes."
+  },
+  "next_question": "At which polling threshold does the first stable timing difference appear?",
+  "investigation": "investigations/collision-cpu-poll.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/collision-cpu-poll-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "93bf458780470749afcdfa725018ca14deb341ca63456fb15f714ce52645d4ec",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/collision-cpu-poll-v1/run1",
+    "references/collision-cpu-poll-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "last_poll",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Final beam value that exits the unmodified polling loop"
+      },
+      {
+        "name": "pre_clear",
+        "field": "launch_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Beam before destructive clear"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

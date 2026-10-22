@@ -1,0 +1,32 @@
+{
+  "experiment": "dma-master-boundary",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-cpu-20261022\\master-init-prototype",
+  "identity": {
+    "binary_sha256": "67e9ec734a0c5d657fe904c78ec6b63c24c6c28a747ae2772267412a1d5b7bec",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "1c00a58ea071deaa624ff16302944b70fd31e91941d939fec9e9f97bd0acb32e",
+    "source_id": "c74cd90a660e3a6872123fcb7cd6d5eccb8298e53896bc79d0be50e37ae6438d"
+  },
+  "hypothesis": "A simultaneous master-DMA edge contributes to cold COPEN timing; enabling DMAEN earlier separates it from initial Copper requests.",
+  "competitor": "The same cold-COPEN difference remains with DMAEN already high, locating it at Copper request/restart sequencing.",
+  "test": "32 ROM-only cases: DMAEN set atline40 with COPEN off; line42 enable BPL+COPEN, then real COPJMP or inert write. Four launch phases and four repeats; two independent captures, exact pre-enable marker.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "master-only preparation repairs the boundary": "Investigate DMAEN delivery before changing Copper state transitions.",
+    "cold-COPEN error remains": "Focus on Copper request/restart ownership independently of the master gate."
+  },
+  "next_question": "Does cold-COPEN behavior change when master DMA was already enabled?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\dma-master-boundary-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\dma-master-boundary-v1\\run2"
+  ],
+  "evidence_fingerprint": "986ccc4a372bbce41f56a8d58cce11f3a27a7b3392c77abb883b13fe5583ce83",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}
