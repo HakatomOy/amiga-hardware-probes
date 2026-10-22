@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "reference_id": "playfield-word-gate-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\word-gate-hardware-v1\\hardware-1",
+  "test_rom_sha256": "2f75937d2e3df3319d4eb3ed4af4961c2d0e871682d9b5d46784804509fde6de",
+  "source_id": "a3b6b3ed49e6ef1f53e89a2e7b53ec1e2e79054650f7fcda53bc52169c54c32a",
+  "results_sha256": "decce53ca2fa8987539ef4252e4d9b755d34e2f25cd030e7a582d0134a161558",
+  "record_count": 768,
+  "metadata": {
+    "version": 1,
+    "source_id": "a3b6b3ed49e6ef1f53e89a2e7b53ec1e2e79054650f7fcda53bc52169c54c32a",
+    "record_count": 768,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "decce53ca2fa8987539ef4252e4d9b755d34e2f25cd030e7a582d0134a161558"
+  },
+  "restoration": {
+    "backup_sha256": "972b42fe665337bc27556fa44427b96c95026eaf08288bd95d157da07073cdab",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "972b42fe665337bc27556fa44427b96c95026eaf08288bd95d157da07073cdab",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\word-gate-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 105,
+    "aligned": false,
+    "targets": [
+      "NOP_DBRA",
+      "STORE_DBRA",
+      "STOP",
+      "TST_MEMORY_DBRA",
+      "MASKED_INTREQR"
+    ],
+    "sources": [
+      "CIA_A_PORTS",
+      "COPPER_COPER",
+      "CIA_B_EXTER",
+      "COPPER_PORTS",
+      "COPPER_EXTER"
+    ],
+    "masks": [
+      8,
+      16,
+      8192,
+      8,
+      8192
+    ],
+    "phases": "Repeated two-plane word0000/ffff/8000/0001",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": {
+      "counter": "raw0",
+      "icr": "raw1",
+      "irq_beam": "raw2",
+      "irq_level": "beam0",
+      "saved_pc_offset": "beam1:beam2",
+      "aux": "beam3",
+      "second_counter_or_beam": "settled INTREQR",
+      "second_icr_or_level": "expected source mask"
+    },
+    "limitations": "C3 gate opens at WAIT4420 and closes at4430+2*delay; CLXCON0820 outside gate. WAIT positions are programmed, not electrical edges. Positive/negative controls and finite Copper completion witness. No alignment.",
+    "variants": "0 base;1 DPF;2 DDF+8CCK;4 DIW+16 lores pixels",
+    "fields": {
+      "12": "input",
+      "16": "INTREQR completion witness bit2",
+      "20": "CLXDAT bit0",
+      "22": "second CLXDAT",
+      "26": "pre-read beam",
+      "34": "post-read beam"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 384,
+    "independently_repeated_cohorts": 384,
+    "candidate_cases_with_independent_repeats": 768,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow, silicon revisions unconfirmed. Two-plane lores, finite Copper CLXCON gate, INTREQR bit2 completion witness; no sprites or blitter. WAIT words describe programmed intervals, not inferred electrical timestamps. CPU samples after gate close; no timing alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\word-gate-hardware-v1\\reference-1"
+}

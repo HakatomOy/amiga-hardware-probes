@@ -1,0 +1,39 @@
+{
+  "experiment": "playfield-boundary",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\boundary-candidate-v3",
+  "identity": {
+    "binary_sha256": "023ee41d792da3869fa0a45146f9d8c41e97148bf7db97433a2f21af61866e4f",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "ae9d085df510d96a3c07684c483894475ac51c6a00b285576c27f35f6e221d36",
+    "source_id": "ae5ff9f78234c0db9f688551fdfd1673d11d538cd01aa4be8ff1cfe66d773f65"
+  },
+  "hypothesis": "A zero-data comparator interval precedes fetched pixels and follows DDF rather than DIW.",
+  "competitor": "The zero interval is display-window gated, or an apparent difference comes from different CPU read windows.",
+  "test": "768 cases: individually bracketed clear/read windows, 24 polling thresholds, masks0040/C3, pixels0/3, base/DPF/DDF+8/DIW+16, two repeats in two independent captures. No alignment.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "boundary follows DDF": "Model fetch/shift activation independently from visible window.",
+    "boundary follows DIW": "Retain display gating and correct its comparator boundary.",
+    "brackets differ or evidence conflicts": "Use measured windows to narrow uncertainty; do not infer a phase from sample indices."
+  },
+  "next_question": "Does the zero-to-data transition follow DDF or DIW?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-boundary-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-boundary-v1\\run2"
+  ],
+  "evidence_fingerprint": "f10e9b9f4bd792404314f4393ebc41d6a78cae3df00dff9599c71aef79eefb5a",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "decision_reason": "Independent DDF and DIW controls locate a window-gated zero interval before fetched nonzero data. Test CLXCON-mask matching and captured fetch-origin placement; reject if earlier qualified pointer/Copper cases regress. Raw CPU brackets differ and are not aligned.",
+  "evidence": [
+    "references/playfield-boundary-v1/run1/manifest.json",
+    "references/playfield-boundary-v1/run2/manifest.json",
+    "docs/playfield-modes-2026-10-22.md"
+  ]
+}

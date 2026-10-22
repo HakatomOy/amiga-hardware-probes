@@ -579,3 +579,15 @@ field. It checks saved capture provenance and retains exact input qualification.
 The full report stays in `RUN/field-stability-diagnostic.json`. This can identify
 where a sequence first becomes unstable; it never turns a conflicting whole
 case into a match or changes exclusion/instability budgets.
+
+### Separate comparator timing from destructive reads
+
+When a narrow event can cross a CPU clear/read window, use a finite Copper
+gate and an independent completion witness before inferring comparator latency.
+Move fetch and display boundaries independently; isolated first/last-bit words
+can distinguish compensating register/data delays. Require the witness during
+emulator preflight so malformed or inactive probes never consume hardware runs.
+If an earlier-clear control isolates logic, create a new ROM/reference contract;
+retain the original strict failing contract and its case IDs. Do not redefine
+those failures as matches. See `docs/playfield-collision-fix-2026-10-22.md` and
+`tools/playfield_gate_report.py` for a bounded, reusable example.

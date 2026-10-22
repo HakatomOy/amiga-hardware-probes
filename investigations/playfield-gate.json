@@ -1,0 +1,33 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\gate-candidate-v3",
+  "hypothesis": "The zero match is a short startup interval; moving every later DMA pixel is incorrect.",
+  "test": "1024 cases, finite Copper CLXCON gates with an INTREQR completion witness. Sweep opening or closing WAIT position4430..444e, pixels0/3, masks0040/C3, DPF and independent DDF/DIW controls. CPU reads only after the gate closes. Two independent hardware captures.",
+  "smaller_reproducer": null,
+  "next_question": "What comparator interval is visible independently of CPU destructive-read timing?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "ddd6c19392952697d455b3470f5d60da8278408376a97fc3759de68910802fbf",
+  "decision": "review evidence",
+  "experiment": "playfield-gate",
+  "identity": {
+    "binary_sha256": "023ee41d792da3869fa0a45146f9d8c41e97148bf7db97433a2f21af61866e4f",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "81df4ede352b59c840847ae24b1ad4b7bfdeee8a8963bfecd3471c5309c4ed74",
+    "source_id": "bb71d3a7aa6c079e73e44c5f08c41e45a699aedc872b20d32a35ba9ff3ffc03e"
+  },
+  "competitor": "A uniform data pipeline delay explains both startup and later transitions; earlier failures were CPU read artifacts.",
+  "outcomes": {
+    "uniform shift fits gated data and old transitions": "Retain full-stream placement only if strict neighbor cases also pass.",
+    "startup gate differs while later transitions are already correct": "Model startup gating separately; reject blanket retiming.",
+    "witness or repeats fail": "Repair the probe before deriving a timing rule."
+  },
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-gate-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-gate-v1\\run2"
+  ],
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ]
+}

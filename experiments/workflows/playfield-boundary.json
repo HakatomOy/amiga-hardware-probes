@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "id": "playfield-boundary",
+  "hypothesis": "A zero-data comparator interval precedes fetched pixels and follows DDF rather than DIW.",
+  "competitor": "The zero interval is display-window gated, or an apparent difference comes from different CPU read windows.",
+  "test": "768 cases: individually bracketed clear/read windows, 24 polling thresholds, masks0040/C3, pixels0/3, base/DPF/DDF+8/DIW+16, two repeats in two independent captures. No alignment.",
+  "outcomes": {
+    "boundary follows DDF": "Model fetch/shift activation independently from visible window.",
+    "boundary follows DIW": "Retain display gating and correct its comparator boundary.",
+    "brackets differ or evidence conflicts": "Use measured windows to narrow uncertainty; do not infer a phase from sample indices."
+  },
+  "next_question": "Does the zero-to-data transition follow DDF or DIW?",
+  "investigation": "investigations/playfield-boundary.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/playfield-boundary-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "ae9d085df510d96a3c07684c483894475ac51c6a00b285576c27f35f6e221d36",
+  "capture": {
+    "minimum_seconds": 180,
+    "expected_cases": 768,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/playfield-boundary-v1/run1",
+    "references/playfield-boundary-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "pf_pf",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Destructive sample with independent pre/post beam brackets"
+      },
+      {
+        "name": "second",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Second destructive sample; retain its separate CPU timing"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

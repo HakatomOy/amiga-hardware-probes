@@ -1,15 +1,15 @@
 {
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\final-known-failures",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\modes-candidate-v3",
   "hypothesis": "DPF changes odd/even match combination for sprite-playfield collisions; PF-PF behavior must be measured separately.",
   "test": "512 cases: paired DPF bit, four plane patterns, four enabled-plane masks, four desired patterns, sprite0 on/off, two repeats. Two independent A500 packets. Settled scanline44, no Copper or blitter.",
   "smaller_reproducer": null,
   "next_question": "Which settled collision bits differ solely because DPF is enabled?",
   "no_new_evidence": 0,
-  "evidence_fingerprint": "5bc09a501dbb7cea3c2394b8d5d2f0fde5f26e73d271cf15c7b95d8217026db6",
-  "decision": "validation failed",
+  "evidence_fingerprint": "355d9355a49cc09f5ea4edd7bb97daa7f3683a04ccceefc4fe684de41fbd6f5d",
+  "decision": "narrow",
   "experiment": "playfield-modes",
   "identity": {
-    "binary_sha256": "67e9ec734a0c5d657fe904c78ec6b63c24c6c28a747ae2772267412a1d5b7bec",
+    "binary_sha256": "7b2ea4b16e056feeddc854673208c9e4f798545fffa622f42e372e8da3ddca1d",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "3a614aba9686ad37d83a210a0016b6ec870e36d1fa07294ba0e4ab0c31d82765",
     "source_id": "2c0569e6eae8535288b419c2c489d84ce53e264a662f991716d8790eb7d0b6a0"
@@ -21,12 +21,19 @@
     "sprite controls or repeats fail": "Repair measurement before deriving emulator expectations."
   },
   "references": [
-    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\reference-1",
-    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\hardware-v1\\reference-2"
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-modes-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-modes-v1\\run2"
   ],
-  "validation": [],
-  "decision_reason": "Reject match-mask-only candidate:424/512 matches,88 missing zero assertions,20 field regressions. Keep active paired sprite tests and explicitly ignored PF-PF known-failure tests.32-case read burst is stable but HW/CPU read brackets differ, so do not align sample indexes or fit a delay. Next experiment must record individual read beam brackets before a timing patch.",
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision_reason": "Keep unchanged512-match contract failing24 cases; all remaining phase2 cases have a four-CCK-late clear bracket. Narrow the next CPU/DMA experiment to identical424E input and4438/443C clear difference. Scoped collision correction7bbedf58 separately matches2304 new gated/earlier-clear cases and preserves8416 old packets.",
   "evidence": [
-    "captures/playfield-modes-20261022/neighbors-v1/patched-paired-modes/evidence.json"
+    "docs/playfield-collision-fix-2026-10-22.md",
+    "references/playfield-early-clear-v1/run1/manifest.json",
+    "captures/collision-clean-20261022/test-final-preserved"
   ]
 }

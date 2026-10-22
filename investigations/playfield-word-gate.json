@@ -1,0 +1,39 @@
+{
+  "experiment": "playfield-word-gate",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\word-gate-candidate-v3",
+  "identity": {
+    "binary_sha256": "023ee41d792da3869fa0a45146f9d8c41e97148bf7db97433a2f21af61866e4f",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "2f75937d2e3df3319d4eb3ed4af4961c2d0e871682d9b5d46784804509fde6de",
+    "source_id": "a3b6b3ed49e6ef1f53e89a2e7b53ec1e2e79054650f7fcda53bc52169c54c32a"
+  },
+  "hypothesis": "Comparator startup is distinct from later word placement; whole-stream retiming caused the older Copper regressions.",
+  "competitor": "Every bit, including isolated first/last bits, follows the same delayed BPL1 data stream.",
+  "test": "768 cases: Copper C3 closing gates, words0000/ffff/8000/0001 in both planes, DPF and independent DDF/DIW controls, 24 closing WAITs4430..445e, two repeats and two independent captures. No destructive read during gate.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "isolated first and last bits follow uniform delay": "Retain data timing only with corrected mask-control coordinates and investigate line-end gate separately.",
+    "first-word activation differs from subsequent placement": "Model comparator startup independently; preserve hardware-qualified later transitions.",
+    "witness/controls/repeats fail": "Reject the measurement."
+  },
+  "next_question": "When do isolated first/last bits first produce C3 matches?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-word-gate-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-word-gate-v1\\run2"
+  ],
+  "evidence_fingerprint": "e61c7654673a7a7e21dcd8b9d3d70d7b462f7a84367c9a918294ec7520ce900f",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "decision_reason": "The shifted-DIW control rejects the four-CCK mask/data delay pair despite 766 matches. Test two-CCK mask/data delays and absolute mask coordinates; preserve CLXDAT start sampling and demand all gated and old qualified collision cases.",
+  "evidence": [
+    "references/playfield-word-gate-v1/run1/manifest.json",
+    "references/playfield-word-gate-v1/run2/manifest.json",
+    "docs/playfield-modes-2026-10-22.md"
+  ]
+}

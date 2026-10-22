@@ -1,0 +1,389 @@
+{
+  "version": 1,
+  "id": "playfield-early-clear",
+  "hypothesis": "The remaining24 old matrix failures result from a late CPU clear crossing the short startup pulse, not incorrect settled collision matching.",
+  "competitor": "The collision truth table is still wrong even when all clears precede the first BPL1 trigger.",
+  "test": "Repeat all512 paired mode/mask/pixel/sprite cases with threshold4400 instead of4420; preserve and report the unchanged original late-clear contract separately. Two independent hardware captures. Baseline old emulator on the same new ROM.",
+  "outcomes": {
+    "all512 match and clear remains before trigger": "Accept logic/source-coordinate fix within scope; retain the old24 CPU-clear boundary failures.",
+    "matrix still differs": "Reject or narrow the collision model, not the qualification budget."
+  },
+  "next_question": "Does the full logic matrix match when clear is safely before the short startup event?",
+  "investigation": "investigations/playfield-early-clear.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/playfield-early-clear-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "e15d34b153671ac93e8313d4f97ac0626e01a20b15fb850d10f91a8363064646",
+  "capture": {
+    "minimum_seconds": 120,
+    "expected_cases": 512,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "irq_beam",
+        "mask": 65535,
+        "unit": "BPLCON0 value",
+        "meaning": "Both programmed playfield modes",
+        "require_values": [
+          8704,
+          9728
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 34,
+        "unit": "sprite-playfield bits",
+        "meaning": "Sprite0 witness spans odd/even matches",
+        "require_values": [
+          0,
+          2,
+          32,
+          34
+        ]
+      },
+      {
+        "field": "counter",
+        "mask": 34,
+        "unit": "sprite-playfield bits",
+        "meaning": "Transparent sprite negative control",
+        "where": {
+          "variant": {
+            "mask": 2,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/playfield-early-clear-v1/run1",
+    "references/playfield-early-clear-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Common observer entry before DMA enable"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "pf_pf",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Odd/even playfield collision"
+      },
+      {
+        "name": "sprite_pf1",
+        "field": "counter",
+        "mask": 2,
+        "unit": "CLXDAT bit1",
+        "meaning": "Sprite pair0 versus odd playfield match"
+      },
+      {
+        "name": "sprite_pf2",
+        "field": "counter",
+        "mask": 32,
+        "unit": "CLXDAT bit5",
+        "meaning": "Sprite pair0 versus even playfield match"
+      },
+      {
+        "name": "second_sample",
+        "field": "icr",
+        "mask": 35,
+        "unit": "CLXDAT bits0/1/5",
+        "meaning": "Immediate clear/reaccumulation sample"
+      }
+    ],
+    "min_matches": 512,
+    "required_field_repairs": {
+      "pf_pf": 328
+    }
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [
+    {
+      "name": "gated-matches",
+      "tier": "focused",
+      "parallel_group": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/playfield-gate.json",
+        "--out",
+        "{out}/gated-matches",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "isolated-word-bits",
+      "tier": "focused",
+      "parallel_group": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/playfield-word-gate.json",
+        "--out",
+        "{out}/isolated-word-bits",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "old-pointer",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-collision-pointer.json",
+        "--out",
+        "{out}/old-pointer",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "old-copper",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-collision-copper.json",
+        "--out",
+        "{out}/old-copper",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-onset",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-onset.json",
+        "--out",
+        "{out}/bus-onset",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-completion",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-completion.json",
+        "--out",
+        "{out}/bus-completion",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "bus-pressure",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-pressure.json",
+        "--out",
+        "{out}/bus-pressure",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cia-aperture",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-cia-aperture.json",
+        "--out",
+        "{out}/cia-aperture",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "cia-clear",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-cia-clear.json",
+        "--out",
+        "{out}/cia-clear",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "serial",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-serial.json",
+        "--out",
+        "{out}/serial",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "core-tests",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-core",
+        "--",
+        "test",
+        "--profile",
+        "ci",
+        "--locked",
+        "--lib",
+        "--",
+        "--skip",
+        "video::window::",
+        "--test-threads=1"
+      ]
+    },
+    {
+      "name": "strict-clippy",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-clippy",
+        "--",
+        "clippy",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "name": "format",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-format",
+        "--",
+        "fmt",
+        "--",
+        "--check"
+      ]
+    },
+    {
+      "name": "probe-tests",
+      "tier": "broad",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ]
+    }
+  ],
+  "purpose": "regression",
+  "baseline": "experiments/baselines/playfield-early-clear-before-fix",
+  "limitations": "This scoped logic/control-pipeline contract does not replace playfield-modes.json: its original late-clear512-case floor still fails24 cases. Retain that failure and the ungated CPU-window diagnostics in the investigation record."
+}

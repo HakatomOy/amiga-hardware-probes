@@ -1,0 +1,73 @@
+{
+  "status": "scoped collision fix committed; original24 late-clear CPU/DMA cases unresolved",
+  "init_branch": "wip/init-copper-timing",
+  "init_commit": "02318e9e",
+  "branch": "fix/a500-hardware-timing",
+  "confirmed_facts": [
+    "CLXDAT PF-PF bit0 uses CLXCON match masks in both playfield modes, including zero.",
+    "1024 finite-Copper gates and768 first/last-bit gates match with two-CCK mask/data paths and a one-lores-pixel comparator enable lead.",
+    "512 earlier-clear paired logic cases match;328 same-ROM pre-fix differences repaired without field regressions.",
+    "Nine broader suites/8416 cases produce byte-identical packets to the clean baseline.",
+    "Original late-clear matrix remains488/512;24 phase2 cases have pre-clear443C vs A5004438 for the same424E input. No qualification budget or old preservation floor changed."
+  ],
+  "reference_capture_ids": [
+    "playfield-boundary-v1",
+    "playfield-gate-v1",
+    "playfield-word-gate-v1",
+    "playfield-early-clear-v1"
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "Mask-only correction is sufficient",
+      "evidence": "experiments/patches/playfield-modes-rejected-match-only.patch;424/512 and20 new fields"
+    },
+    {
+      "hypothesis": "Retiming every sample by2.5CCK is sufficient",
+      "evidence": "experiments/patches/playfield-modes-rejected-uniform-stream.patch;three qualified older Copper regressions"
+    },
+    {
+      "hypothesis": "Four-CCK mask/data paths with corrected coordinates fit independent controls",
+      "evidence": "gate-candidate-v2:1020/1024;word-gate-candidate-v2:766/768;all residuals in shifted DIW control"
+    }
+  ],
+  "source_files": [
+    "../Copperline/src/bus.rs",
+    "../Copperline/src/bus/collisions.rs",
+    "../Copperline/src/bus/frame_capture.rs",
+    "../Copperline/src/bus/tests/playfield_modes.rs",
+    "build_playfield_gate_rom.py",
+    "build_playfield_word_gate_rom.py",
+    "build_playfield_early_clear_rom.py"
+  ],
+  "details": "docs/playfield-modes-2026-10-22.md",
+  "logs": "captures/collision-clean-20261022",
+  "next_question": "Why does identical observer entry424E produce pre-clear443C in Copperline versus4438 on A500 in24 late-clear phase2 cases?",
+  "next_hypothesis": "A CPU/DMA polling/clear grant boundary differs; gates and the earlier-clear matrix validate collision logic independently.",
+  "competing_explanation": "Sub-CCK startup duration still differs; retain all ungated read-window observations when testing the CPU hypothesis.",
+  "copperline_commit": "7bbedf58",
+  "accepted_commits": [
+    "Copperline:7bbedf58"
+  ],
+  "validation": {
+    "core": {
+      "passed": 3670,
+      "failed": 0,
+      "ignored": 37,
+      "window_tests_filtered": 559,
+      "logs": "captures/collision-clean-20261022/test-final-preserved"
+    },
+    "clippy": "all targets/features, -D warnings passed",
+    "format": "passed",
+    "probe_tests": 361,
+    "hardware_cases": {
+      "early_clear": 512,
+      "copper_gate": 1024,
+      "isolated_word_gate": 768
+    },
+    "neighbor_suites": 9,
+    "neighbor_cases": 8416,
+    "neighbor_packets_byte_identical": 9,
+    "documentation": "MyST executable unavailable; HTML/PDF builds not run"
+  },
+  "run": "captures/collision-clean-20261022/early-clear-hardware-v1"
+}

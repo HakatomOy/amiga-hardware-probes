@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "id": "playfield-word-gate",
+  "hypothesis": "Comparator startup is distinct from later word placement; whole-stream retiming caused the older Copper regressions.",
+  "competitor": "Every bit, including isolated first/last bits, follows the same delayed BPL1 data stream.",
+  "test": "768 cases: Copper C3 closing gates, words0000/ffff/8000/0001 in both planes, DPF and independent DDF/DIW controls, 24 closing WAITs4430..445e, two repeats and two independent captures. No destructive read during gate.",
+  "outcomes": {
+    "isolated first and last bits follow uniform delay": "Retain data timing only with corrected mask-control coordinates and investigate line-end gate separately.",
+    "first-word activation differs from subsequent placement": "Model comparator startup independently; preserve hardware-qualified later transitions.",
+    "witness/controls/repeats fail": "Reject the measurement."
+  },
+  "next_question": "When do isolated first/last bits first produce C3 matches?",
+  "investigation": "investigations/playfield-word-gate.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/playfield-word-gate-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "2f75937d2e3df3319d4eb3ed4af4961c2d0e871682d9b5d46784804509fde6de",
+  "capture": {
+    "minimum_seconds": 180,
+    "expected_cases": 768,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper list reached the marker after closing the collision gate",
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/playfield-word-gate-v1/run1",
+    "references/playfield-word-gate-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "pf_pf",
+        "field": "counter",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Latched collision inside the Copper-defined gate"
+      },
+      {
+        "name": "second",
+        "field": "icr",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Negative disabled-gate read-to-clear control"
+      }
+    ],
+    "min_matches": 768
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow, silicon revisions unconfirmed. Two-plane lores, finite Copper CLXCON gate, INTREQR bit2 completion witness; no sprites or blitter. WAIT words describe programmed intervals, not inferred electrical timestamps. CPU samples after gate close; no timing alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

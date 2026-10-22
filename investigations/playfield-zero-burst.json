@@ -1,8 +1,8 @@
 {
   "experiment": "playfield-zero-burst",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\zero-burst-hardware-v1",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\burst-candidate-v1",
   "identity": {
-    "binary_sha256": "a6a9a534f69188cc48d5ec02ff39d35f4e379b52cafaf732cbd1e756c9aaceaf",
+    "binary_sha256": "7b2ea4b16e056feeddc854673208c9e4f798545fffa622f42e372e8da3ddca1d",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "c782993fab7a63d1d42a343fff6f0b928bc89450f6e62b9d8276e3e024585be1",
     "source_id": "d7726ae661bf62c422bdccab526859e54235e556ed81cd3383837f091e6d5378"
@@ -18,13 +18,18 @@
   },
   "next_question": "When does a zero-required plane match compared with all-ones pixel data?",
   "references": [
-    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\zero-burst-hardware-v1\\reference-1",
-    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\playfield-modes-20261022\\zero-burst-hardware-v1\\reference-2"
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-zero-burst-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\playfield-zero-burst-v1\\run2"
   ],
-  "evidence_fingerprint": "4987d1aeac77be6d268b26a721005fce8946be42bf97d67d4335cb23119add1c",
+  "evidence_fingerprint": "7424d41a4069f58f225dcd2be29a0cd2f7f6fc183af0a6374b0ccf6ff39e74af",
   "no_new_evidence": 0,
-  "validation": [],
-  "decision": "narrow",
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
   "decision_reason": "All32 burst cases are repeated and stable. Zero match is near fetch/display start, but HW/CPU burst beam brackets differ by several CCK; no trace/sample alignment allowed. Need individual read beam brackets to distinguish comparator timing from known CPU-DMA arbitration before another patch.",
   "evidence": [
     "captures/playfield-modes-20261022/zero-burst-hardware-v1/evidence.json"

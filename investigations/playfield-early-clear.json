@@ -1,0 +1,32 @@
+{
+  "experiment": "playfield-early-clear",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\early-clear-hardware-v1",
+  "identity": {
+    "binary_sha256": "023ee41d792da3869fa0a45146f9d8c41e97148bf7db97433a2f21af61866e4f",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "e15d34b153671ac93e8313d4f97ac0626e01a20b15fb850d10f91a8363064646",
+    "source_id": "80fd36e857306c94465cf9205ef5686fde6b44c3045728273a317a002f8ef297"
+  },
+  "hypothesis": "The remaining24 old matrix failures result from a late CPU clear crossing the short startup pulse, not incorrect settled collision matching.",
+  "competitor": "The collision truth table is still wrong even when all clears precede the first BPL1 trigger.",
+  "test": "Repeat all512 paired mode/mask/pixel/sprite cases with threshold4400 instead of4420; preserve and report the unchanged original late-clear contract separately. Two independent hardware captures. Baseline old emulator on the same new ROM.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "all512 match and clear remains before trigger": "Accept logic/source-coordinate fix within scope; retain the old24 CPU-clear boundary failures.",
+    "matrix still differs": "Reject or narrow the collision model, not the qualification budget."
+  },
+  "next_question": "Does the full logic matrix match when clear is safely before the short startup event?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\early-clear-hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\collision-clean-20261022\\early-clear-hardware-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "6af6b02211a4fcfc76b6ab228495f47396c80da90e2cd6d133d3ddebd564d487",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}
