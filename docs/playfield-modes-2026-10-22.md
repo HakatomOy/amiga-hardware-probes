@@ -92,3 +92,12 @@ reports184 matches/328 PF?PF mismatches, zero newly regressed fields, zero
 qualification changes, and no invalid/excluded/conflicting captures. The active
 sprite matcher test validates256 consensus rows; two known-failing PF?PF tests
 are ignored with explicit reasons. No rejected implementation is committed.
+
+## Final commits and checks
+
+Copperline `52d4060b` commits only the paired tests, consensus fixture and
+behavior/known-gap documentation. Final core3680 passed,0 failed,39 ignored
+(including the two explicit new PF?PF failures),559 window tests filtered.
+Strict Clippy and formatting pass. Probe-tool suite356 passes. Original Init
+working changes remain uncommitted and unchanged in behavior. The rejected
+collision model is not present in the emulator commit.
