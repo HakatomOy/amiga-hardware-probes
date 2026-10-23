@@ -1,5 +1,5 @@
 {
-  "status": "Accepted merge subset; deferred timing kept on separate WIP branch",
+  "status": "Reduced PR pushed and ready for review; mergeable; WIP branch pushed",
   "hypothesis": "Deferring exact CIA STOP deadlines and early PB/carry previews removes known regressions without losing independent fixes.",
   "competitor": "Deferred state is coupled to retained timing fixes.",
   "distinguishing_test": "Frozen binary replay of unchanged HW references with field-level deltas and original qualification.",
@@ -49,5 +49,17 @@
       "serial_boundary": "0/38 ->38/38;2 unstable excluded",
       "cia_output": "584 matches/936 differences/752 excluded ->2015/0/257"
     }
+  },
+  "github": {
+    "pr": "https://github.com/CopperlineHQ/Copperline/pull/810",
+    "is_draft": false,
+    "mergeable": true,
+    "head": "a213b680",
+    "evidence_commit": "e6cc6c4",
+    "wip_head": "d8c47e3a",
+    "followup_replies": [
+      4362740533,
+      4362741090
+    ]
   }
 }

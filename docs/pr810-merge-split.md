@@ -85,3 +85,8 @@ Decision: accept the reduced scope for review, preserve the full experimental
 state on WIP, and do not tune the global IRQ latency to mask remaining failures.
 No new HW measurements were needed. Further CIA/PB work must resolve its
 uncertainty with phase-qualified or electrical controls before merging.
+
+PR810 is now **ready for review** and GitHub reports it mergeable. Both
+Copperline branches and the evidence branch `review/pr810-a500` are pushed.
+The primary checkout remains on `fix/a500-hardware-timing`; temporary
+validation worktrees were removed without deleting either branch.
