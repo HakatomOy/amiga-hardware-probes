@@ -95,7 +95,9 @@ extra bus/CPU CCK. Correct that charge before interpreting the fresh HW outcome.
 
 Copperline commits: `4226b413` (tooling/dependency scope), `0f20b644`
 (documentation inclusion/link corrections), `ae68ce90` (functional corrections,
-state migration, two golden probes). The PR remains a draft targeting `main`.
+state migration, two golden probes), `569af24e` (PDF appendices). All15 inline
+comments have evidence-backed replies. The PR remains a draft targeting `main`.
+Use [the short restart record](../investigations/pr810-review.json) next session.
 
 | Comment | Evidence / change |
 |---|---|
@@ -122,6 +124,12 @@ The explicit `--lib -- --skip window::` run passed3679 tests,37 ignored,
 failures: keypad mapping (passes alone, fails in the parallel suite) and a GPU
 scaler comparison (3/255 difference). These are recorded, not counted as passes;
 the native suite is also run with just those two exact test names excluded.
+That run passes4230 library tests,43 ignored,2 filtered, and all other enabled
+native binaries except three `--run` integration tests initially blocked from
+writing the user's Documents directory. Those three pass when retried with
+temporary portable mode inside the workspace; the marker is removed afterward.
+The48 golden tests pass on the final executable. Strict Clippy/fmt, HTML/link
+checks and the PDF including all14 supplementary articles pass.
 The complete17-suite baseline/candidate replay has identical counts except the
 open original kind56 CIA-A STOP timing family. Exclusions and historical raw
 differences remain explicit; these runs are not claimed as17 all-matching suites.

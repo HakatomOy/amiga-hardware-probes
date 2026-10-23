@@ -1,0 +1,35 @@
+{
+  "status": "Corrections pushed and all15 comments answered; draft; CIA propagation/PB edges open",
+  "pr": "https://github.com/CopperlineHQ/Copperline/pull/810",
+  "copperline_branch": "fix/a500-hardware-timing",
+  "copperline_commits": ["4226b413", "0f20b644", "ae68ce90", "569af24e"],
+  "evidence_branch": "review/pr810-a500",
+  "confirmed_facts": [
+    "Both CIAs retain the request across mask clear until ICR acknowledgement; corrected probe32/32 matches.",
+    "Decrement-stage START transfer preview matches288/288 latch0/1/3 cases; hidden TB carry symmetry remains unproven.",
+    "RAM commit after the DMA tail reversed CPU/blitter order; transfer-time writes match384/384 destination races and2304/2304 source races.",
+    "Correct STOP bounds preserve all prior matching independently calibrated fields;280 already-wrong fields change and beam-only kind56 gains five mismatches. This is not complete CIA timing acceptance.",
+    "PB aperture failed its budget:224 matches,37 stable differences,27 unstable. Do not infer a TB carry fix from it.",
+    "All five live measurement batches ended with verified original-ROM restoration and reset release."
+  ],
+  "validation": {
+    "library_without_window": "3679 passed,37 ignored,559 filtered",
+    "native_library": "4230 passed,43 ignored,two named window exclusions",
+    "window_limits": "Parallel keypad failure passes alone; GPU scaler differs3/255. Unfiltered suite is not claimed passing.",
+    "integration": "Other enabled native binaries pass. Three sandbox-blocked copperhf tests pass in temporary portable mode; marker removed.",
+    "goldens": "48 pass; both new images visually verified",
+    "python": "388 pass; standalone CIA harness passes",
+    "lint_docs": "strict Clippy,fmt,HTML/link-check and PDF pass;14 supplemental pages exported",
+    "hardware_replay": "17 baseline/final suites replayed; counts unchanged except kind56 CIA-A STOP. Existing mismatches/exclusions retained."
+  },
+  "references": [
+    "references/cia-review-mask-v1",
+    "references/cia-review-zero-v1",
+    "references/pr810-destination-v1",
+    "references/pr810-irq-stage-fresh-v1",
+    "references/cia-review-zero-pulse-v1"
+  ],
+  "details": "docs/pr-810-review.md",
+  "logs": "captures/pr-810-review/",
+  "next_question": "Qualify CIA/Paula/CPU propagation and PB6/PB7 pulse edges with independent E/CPU phase evidence before another timing/carry patch. DEFAULT_IRQ_LATENCY_CCK remains6."
+}
