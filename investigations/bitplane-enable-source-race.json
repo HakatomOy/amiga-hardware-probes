@@ -1,0 +1,45 @@
+{
+  "hypothesis": "The first midline bitplane fetch claims the bus too early relative to CPU overwrite, while Copper instruction ownership is correct.",
+  "competitor": "Bitplane ownership is also correct; the remaining difference is in subsequent CPU return/recognition.",
+  "test": "Two dual-playfield planes have only first source wordffff. CPU clears plane2 first word versus neighbor after midline BPLEN, optional cold Copper,0..3 NOP gaps and phases. PF1/PF2 collision is old-word witness; preseed-zero and neighbor controls, independent finite Copper marker.",
+  "outcomes": {
+    "source collision boundary differs": "Inspect first bitplane data/bus ownership before CPU timing.",
+    "source ordering matches": "Keep CPU return/recognition in scope; do not move DMA fetches.",
+    "activity or controls fail": "Reject inference and refine source witness."
+  },
+  "next_question": "Which custom-register read/return path causes the remaining beam-sequence drift?",
+  "experiment": "bitplane-enable-source-race",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\bitplane-source-hardware-v1",
+  "identity": {
+    "binary_sha256": "49df162e65188abbe362df11a53e6fca82c60ff749b19375c7aa285c21b8bb75",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "33e4000e879e69882cf7326096c20c9b30ecc41f6698ee6a6440598403f97238",
+    "source_id": "a5fa2eae64bdc31e309f904b2f980bc888fae694739e25589590b73a3268cc5f",
+    "environment_sha256": "9ae0139bb1db3d2e95d8f0e2bf17a05f8cc2281c2f6b7ad145b3436df9928da4"
+  },
+  "smaller_reproducer": null,
+  "references": [
+    "bitplane-enable-source-race-v1"
+  ],
+  "evidence_fingerprint": "af0c62d642af36bba7692253fd16e67bfbcab0a550bf0108d8527bcb93c38a32",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "status": "256 stable qualified matches",
+  "results": {
+    "matches": 256,
+    "mismatches": 0,
+    "excluded": 0,
+    "unstable": 0,
+    "invalid": 0
+  },
+  "confirmed_facts": [
+    "First bitplane source-word ownership matches with/without cold Copper.",
+    "Old/new source outcomes and neighbor/preseed/overwrite/completion controls pass."
+  ]
+}

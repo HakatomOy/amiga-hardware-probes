@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "id": "custom-read-return",
+  "hypothesis": "The remaining drift is a custom-register read/return path rather than DMA fetch ownership.",
+  "competitor": "The delay is shared with writes or only appears in the following beam observer.",
+  "test": "Compare VHPOSR,DMACONR,INTREQR,CLXDAT reads with COLOR00 write, using matched12-clock MOVE.W forms. Cross cold Copper and one-NOP gap. Record two following beam reads before stores, raw operand, plane and Copper witnesses.",
+  "outcomes": {
+    "only one chip or read type differs": "Narrow CPU return model to measured path.",
+    "all reads differ and write agrees": "Inspect shared custom-read timing.",
+    "reads and write both differ": "Revisit common observer/timeline boundary before changing a chip path."
+  },
+  "next_question": "Is the late sequence specific to Agnus beam, another chip, or common custom-read return?",
+  "investigation": "investigations/custom-read-return.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/custom-read-return-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 160,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Independent two-plane activity after operand and beam reads",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper activity when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper activity when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          8
+        ],
+        "allowed_values": [
+          8
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/custom-read-return-v1/run1",
+    "references/custom-read-return-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "first_following_beam",
+        "field": "second_counter_or_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after operand"
+      },
+      {
+        "name": "second_following_beam",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Second consecutive beam after operand"
+      },
+      {
+        "name": "plane_activity",
+        "field": "aux",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Independent fetched display data witness"
+      },
+      {
+        "name": "copper_completion",
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper completion"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Two all-one planes, DPF, DIW line32, BPLEN midline. Optional cold Copper, no blitter/sprite DMA. Raw operand is diagnostic; compare following beam outputs without alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "rom_sha256": "bbf31d21b74b7f26b6827b9d7cd4a42c0b2c70e8a525b9b111739b35762aaa91",
+  "probe_precheck": "160 cases,0 failed activity controls,32 cases per operand target.",
+  "measurement_correction": "Common cold kernel stores D4 again at24 and D5 at36 after observer returns. Field24 is raw operand echo; true first following beam is36, second is18. Original raw packets and erroneous first report retained."
+}

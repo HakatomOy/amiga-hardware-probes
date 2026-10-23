@@ -242,3 +242,40 @@ separately constrain first MOVE-word ownership and the second word of an initial
 WAIT under simultaneous BPLEN. Do not move those fetch boundaries to repair a
 beam observation. The next value-based control races the CPU against the first
 bitplane source word, using isolated PF1/PF2 collision data as the result.
+
+
+`bitplane-enable-source-race-v1` also matches256/256 with no exclusions,
+instability or invalid captures. Its isolated first-word data distinguishes
+CPU overwrite versus bitplane fetch while preseed/neighbor controls establish
+observability. Together these value races constrain the tested register-source
+DMACON path. They do **not** waive the original immediate-enable timing family:
+register-source enable is4 CPU clocks shorter and can move the following
+operation off that boundary. The next return-path ROM must pair both enable
+forms, retaining separate cases and exact ROM-specific reference cohorts.
+
+
+Kind122 `custom-read-return-v1` has160 stable timing matches after correcting
+its projection: the shared return helper overwrites24 with operand D4 and saves
+first following beam D5 at36. Second following beam D6 survives18. Original
+incorrect report remains alongside `corrected-comparison.json`; raw packets
+are unchanged. Separately,32 DMACONR operands differ by BZERO bit13 (HW0300/
+0380, emulator2300/2380). Prior blitter/reset state is uncontrolled, so this
+alone does not justify changing reset defaults. Historical kind122 builder
+metadata24 was mislabeled; its recipe and archived annotations correct it.
+
+Kind123 pairs original immediate and faster register-source DMACON in one ROM,
+with the same5 matched12-clock operand paths. It compares36/18, retains scalar
+operands, and independently witnesses plane/Copper activity. Dense observer
+banks fit the reserved ffb000..ffc000 window. Emulator320-case precheck passes;
+see `investigations/custom-return-forms.json` for live results. No global timing
+counterfactual remains in Copperline source.
+
+
+Paired `custom-return-forms-v2` has320/320 stable qualified timing matches, all
+witnesses pass. It includes both enable forms, but its actor uses matched12-clock
+register read/write instructions; the original immediate COLOR00 actor takes16
+CPU clocks and remains a distinct unresolved sequence. Next retain that complete
+observer byte-for-byte while varying prior case history. The integer input
+marker may not establish all CPU phase state. All global candidate source
+changes are removed; accepted branch remainsb40122d4, Init checkpoint6c06be2a.
+Probe tools373 pass. New raw data and annotations remain in references/.

@@ -12,6 +12,9 @@ import build_dma_gap_readback_rom as readback
 import build_dma_steady_read_rom as steady
 import build_copper_cold_fetch_race_rom as race
 import build_copper_wait_mask_race_rom as mask_race
+import build_bitplane_enable_source_race_rom as bpl_race
+import build_custom_read_return_rom as custom_return
+import build_custom_return_forms_rom as return_forms
 
 
 def generated(builder):
@@ -148,6 +151,51 @@ class CollisionCpuProbeTests(unittest.TestCase):
             self.assertLess(text.index('cmpi.w #$42a0'), text.index('move.w d5,14(a4)'))
             self.assertLess(text.index('move.w d5,14(a4)'), text.index('cmpi.w #$4460'))
             self.assertLess(text.index('cmpi.w #$4460'), text.index('move.w d0,16(a4)'))
+
+    def test_bitplane_race_isolates_first_source_words_and_preserves_controls(self):
+        self.assertEqual(len(set(bpl_race.trials())), 256)
+        kernel, _ = generated(bpl_race)
+        self.assertIn('.plane2_ready:\n        moveq #0,d1\n        moveq #0,d2', kernel)
+        self.assertIn('move.w #$ffff,$18000', kernel)
+        self.assertIn('move.w #$ffff,$19000', kernel)
+        self.assertIn('clr.w $19000', kernel)
+        self.assertIn('lea $19000,a1', kernel)
+        self.assertIn('lea $19010,a1', kernel)
+        self.assertIn('move.w #$2600,$100(a6)', kernel)
+        self.assertIn('tst.w $0e(a6)\n        jsr sync_beam', kernel)
+        for variant in range(32):
+            text = bpl_race.observer(variant)
+            self.assertIn('move.w #$8380,d1' if variant & 1 else 'move.w #$8300,d1', text)
+            self.assertLess(text.index('move.w d2,(a1)'), text.index('move.w $0e(a6),d0'))
+            self.assertIn('move.w (a1),20(a4)', text)
+
+    def test_custom_return_records_preserve_the_actual_common_return_mapping(self):
+        self.assertEqual(len(set(custom_return.trials())), 160)
+        kernel, observer = generated(custom_return)
+        self.assertIn('dc.l $dff000,$dfeffc,$dff018,$dff008,$dff17a', kernel)
+        # Common return overwrites24 with D4; D5's true following beam survives36.
+        self.assertIn('move.w d4,24(a4)', kernel)
+        self.assertIn('move.w d5,36(a4)', kernel)
+        self.assertIn('move.w d6,18(a4)', observer)
+        for variant in sorted({r[2] for r in custom_return.trials()}):
+            text = custom_return.observer(variant)
+            self.assertLess(text.index('move.w 6(a6),d6'), text.index('34(a4)'))
+            self.assertIn('move.w d2,6(a0)' if (variant >> 1) & 7 == 4 else
+                          'move.w 6(a0),d4', text)
+
+    def test_return_forms_pair_exact_gate_instructions_and_fit_reserved_rom(self):
+        rows = return_forms.trials()
+        self.assertEqual(len(set(rows)), 320)
+        for row in rows:
+            self.assertIn((123, row[1], row[2] ^ 32, *row[3:]), rows)
+        self.assertLessEqual(len(return_forms.VARIANTS) * return_forms.STRIDE, 0x1000)
+        kernel, _ = generated(return_forms)
+        self.assertIn('lea custom_return_observers(pc),a3', kernel)
+        for variant in return_forms.VARIANTS:
+            text = return_forms.observer(variant)
+            gate = (f'move.w #${0x8380 if variant & 1 else 0x8300:x},$96(a6)'
+                    if variant & 32 else 'move.w d1,$96(a6)')
+            self.assertIn('move.w 6(a6),d3\n        ' + gate, text)
 
 
 if __name__ == '__main__':

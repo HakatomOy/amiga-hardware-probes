@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "id": "custom-return-forms",
+  "hypothesis": "Original immediate DMACON exposes CPU read/return timing differences masked by the shorter register-source enable.",
+  "competitor": "Both forms agree; the original failure requires another context or unrecorded CPU phase.",
+  "test": "Pair immediate and register-source enables in one ROM, all5 matched read/write targets, cold Copper, NOP gap, phases and repeats. Compare true following-beam fields36/18; retain raw operand and independent witnesses.",
+  "outcomes": {
+    "immediate-only mismatch": "Inspect exact immediate-enable/following-access CPU sequence.",
+    "read-type-specific mismatch": "Narrow the corresponding custom-read return path.",
+    "both forms match": "Shrink original observer reproducer rather than changing broad timing."
+  },
+  "next_question": "Does the original immediate-enable form reproduce the residual in this matched return-path matrix?",
+  "investigation": "investigations/custom-return-forms.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/custom-return-forms-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 320,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Independent two-plane activity after operand and beam reads",
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper activity when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper activity when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          8
+        ],
+        "allowed_values": [
+          8
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/custom-return-forms-v2/run1",
+    "references/custom-return-forms-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "first_following_beam",
+        "field": "second_counter_or_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after operand"
+      },
+      {
+        "name": "second_following_beam",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Second consecutive beam after operand"
+      },
+      {
+        "name": "plane_activity",
+        "field": "aux",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Independent fetched display data witness"
+      },
+      {
+        "name": "copper_completion",
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper completion"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Two all-one planes, DPF, DIW line32, BPLEN midline. Optional cold Copper, no blitter/sprite DMA. Raw operand is diagnostic; compare following beam outputs without alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "measurement_correction": "Common cold kernel stores D4 again at24 and D5 at36 after observer returns. Field24 is raw operand echo; true first following beam is36, second is18. Original raw packets and erroneous first report retained.",
+  "rom_sha256": "13b02db3054498927a293cc6926535b6e1a71938cb489f6431faa75612e06c72",
+  "probe_precheck": "320 cases,0 failed controls;160 per enable form. Observer banks checked within ffb000..ffc000."
+}

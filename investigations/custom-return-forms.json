@@ -1,0 +1,46 @@
+{
+  "hypothesis": "Original immediate DMACON exposes CPU read/return timing differences masked by the shorter register-source enable.",
+  "competitor": "Both forms agree; the original failure requires another context or unrecorded CPU phase.",
+  "test": "Pair immediate and register-source enables in one ROM, all5 matched read/write targets, cold Copper, NOP gap, phases and repeats. Compare true following-beam fields36/18; retain raw operand and independent witnesses.",
+  "outcomes": {
+    "immediate-only mismatch": "Inspect exact immediate-enable/following-access CPU sequence.",
+    "read-type-specific mismatch": "Narrow the corresponding custom-read return path.",
+    "both forms match": "Shrink original observer reproducer rather than changing broad timing."
+  },
+  "next_question": "Does original observer timing depend on prior case history despite identical integer input beam?",
+  "experiment": "custom-return-forms",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\return-forms-hardware-v2",
+  "identity": {
+    "binary_sha256": "49df162e65188abbe362df11a53e6fca82c60ff749b19375c7aa285c21b8bb75",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "13b02db3054498927a293cc6926535b6e1a71938cb489f6431faa75612e06c72",
+    "source_id": "fa78a32487edd654f41bf0c908161dcfe080690c1b959a2dccfe90e61991d0bc",
+    "environment_sha256": "9ae0139bb1db3d2e95d8f0e2bf17a05f8cc2281c2f6b7ad145b3436df9928da4"
+  },
+  "smaller_reproducer": null,
+  "references": [
+    "custom-return-forms-v2"
+  ],
+  "evidence_fingerprint": "f553c2388cb1691bc3bddff2a6b20ad0d762197b2bb725f5a4f1a639f01da891",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "status": "320 stable qualified timing matches",
+  "results": {
+    "matches": 320,
+    "mismatches": 0,
+    "excluded": 0,
+    "unstable": 0,
+    "invalid": 0
+  },
+  "confirmed_facts": [
+    "Both gate forms and all5 read/write targets match following beams36/18.",
+    "All plane and conditional Copper witnesses pass.",
+    "Original immediate COLOR00 actor was replaced by equal-length register-source read/write controls; original inert-write observer remains unresolved."
+  ]
+}

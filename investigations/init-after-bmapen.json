@@ -1,24 +1,19 @@
 {
-  "status": "Unaccepted Init integration isolated; cold custom-write boundary narrowed",
+  "status": "Scoped collision fix committed; Init integration unaccepted; fetching/return controls constrain next exact observer test",
   "branch": "wip/init-after-bmapen-20261023",
   "base_commit": "b40122d4",
   "prototype_commit": "02318e9e",
   "full_acceptance": false,
   "confirmed_facts": [
-    "Integrated prototype preserves original512/512 and independent1536/1536 enable observations.",
-    "Init resource600/600, launch sweep606/606, access1024/1024 and register witnesses768/768 match.",
-    "27-contract screen passes22; cold/warm/triplet and original pointer/Copper qualification remain blocking.",
-    "Master-preenabled startup28/32 match; residual4 cases are inert write atphase1, one CCK late.",
-    "Cold64:40 match20 mismatch4 unstable; warm96:72 match20 mismatch4 unstable. Exact b401 baseline reveals8 new cold timing-field regressions.",
-    "Original pointer242/480 and Copper396/800 qualify with zero collision-value mismatches; original budgets remain unchanged.",
-    "Transfer-time combined DMAEN/COPEN request improves16 cases with no new fields in10-contract mechanism screen; other DMA consumers retain register commit timing.",
-    "Selected prototype passes3691 core tests; full HW acceptance remains blocked.",
-    "New kind115 NOP/custom-write control60/64 match,64 independently stable. All NOP and warm cases match; only cold custom-write phase1 is oneCCK late.",
-    "Selected request model old collision gates: pointer243/480 and Copper391/800 qualify, zero collision-value mismatches; original budgets remain blocked.",
-    "Write-gap256:228 match16 mismatch12 unstable. One NOP repairs original first-read residual; longer gaps expose same1CCK error in warm NOP controls.",
-    "Gap-readback256:196 match48 mismatch12 unstable. Later reads remain1CCK late in stable controls; first-read outputs can differ between ROM-specific references with same recorded integer input.",
-    "Copper-disabled steady DMA read probe127 qualified matches,0 mismatches,1 excluded,0 unstable; all128 activity witnesses pass.",
-    "First Copper MOVE-word race256/256 and initial WAIT-mask race256/256 stable qualified matches, including BPLEN simultaneous enable. Do not shift those fetch boundaries."
+    "Acceptedb40122d4: original512 and independent1536 match; seven-suite4352 replay, core3675, goldens46, strictClippy/fmt pass.",
+    "Unaccepted6c06be2a integrates old Init prototype and transfer-time combined master/COPEN request; core3691 passes. Request screen improves16 cases without new fields in10 contracts.",
+    "Original pointer/Copper gates remain blocked: selected request model243/480 and391/800 qualify with zero collision-value differences; original budgets unchanged.",
+    "Cold custom-write/read boundary retains stable1CCK differences; gap/triplet references also contain explicitly unqualified unstable cohorts and cross-ROM integer-input ambiguity.",
+    "Global early beam, WAIT-tail reuse, half-CCK waits and grant-window shifts regress independent controls; source restored, exact patches and screens retained.",
+    "Register-source enable paths: first Copper MOVE race256, WAIT-mask race256, first bitplane source race256 all stable qualified matches. These do not waive original immediate-enable family.",
+    "Copper-disabled steady DMA127 qualified matches,1 missing cohort excluded, all activity witnesses pass.",
+    "Kind122 corrected timing fields36/18 match160/160. Field24 is raw operand echo from common return, not following beam. Raw DMACONR BZERO bit13 differs in32cases; prior blitter/reset state uncontrolled.",
+    "Kind123 pairs both enable forms:320/320 following-beam matches with5 matched operand controls. Original immediate COLOR00 actor remains a distinct unresolved path."
   ],
   "references": [
     "dma-master-boundary-v1",
@@ -30,7 +25,10 @@
     "dma-gap-readback-v1",
     "dma-steady-read-v1",
     "copper-cold-fetch-race-v2",
-    "copper-wait-mask-race-v1"
+    "copper-wait-mask-race-v1",
+    "bitplane-enable-source-race-v1",
+    "custom-read-return-v1",
+    "custom-return-forms-v2"
   ],
   "rejected_hypotheses": [
     {
@@ -58,16 +56,16 @@
       "evidence": "Both variants lose768 qualification cases and hundreds of matched fields in13-contract screen."
     }
   ],
-  "next_question": "Does first bitplane source-word ownership differ during midline BPLEN, versus a later CPU return/observation issue?",
+  "next_question": "Does changing prior case history alter the original byte-identical observer under the same recorded integer input?",
   "hypothesis": "Copper request sampling and in-flight restart work are distinct resources; test explicit mechanisms before changing delays.",
   "details": "docs/collision-cpu-ordering-2026-10-22.md",
   "logs": "captures/init-after-bmapen-20261022",
   "evidence": [
     "captures/init-after-bmapen-20261022/integrated-screen-v1/results.json",
-    "captures/init-after-bmapen-20261022/current-baseline-v1/results.json",
-    "captures/init-after-bmapen-20261022/mechanisms-screen-v1/results.json",
-    "captures/init-after-bmapen-20261022/nop-boundary-hardware-v1/comparison.json",
-    "captures/init-after-bmapen-20261022/request-gate-collision-v1/results.json"
+    "captures/init-after-bmapen-20261022/shared-phase-screen-v1/results.json",
+    "captures/init-after-bmapen-20261022/grant-phase-screen-v1/results.json",
+    "captures/init-after-bmapen-20261022/custom-return-hardware-v1/corrected-comparison.json",
+    "investigations/custom-return-forms.json"
   ],
   "source_files": [
     "../Copperline/src/bus.rs",

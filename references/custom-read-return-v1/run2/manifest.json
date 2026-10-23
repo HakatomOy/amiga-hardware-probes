@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "reference_id": "custom-read-return-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\custom-return-hardware-v1\\hardware-2",
+  "test_rom_sha256": "bbf31d21b74b7f26b6827b9d7cd4a42c0b2c70e8a525b9b111739b35762aaa91",
+  "source_id": "a721679f641f4ccde39a81477e23322ca9e4aea95c8d49a0a8ce0af3856a8d67",
+  "results_sha256": "d704fbc8ac5f49851ebc3589116b7106e1388487fe070c84dc0976abf17471de",
+  "record_count": 160,
+  "metadata": {
+    "version": 1,
+    "source_id": "a721679f641f4ccde39a81477e23322ca9e4aea95c8d49a0a8ce0af3856a8d67",
+    "record_count": 160,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "d704fbc8ac5f49851ebc3589116b7106e1388487fe070c84dc0976abf17471de"
+  },
+  "restoration": {
+    "backup_sha256": "7f1bc6a5150f03c8668e62279aea482b4eb7ef320c9b1c616fc88b8cb0509e7f",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "7f1bc6a5150f03c8668e62279aea482b4eb7ef320c9b1c616fc88b8cb0509e7f",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\custom-return-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 122,
+    "aligned": false,
+    "targets": [
+      "VHPOSR",
+      "DMACONR",
+      "INTREQR",
+      "CLXDAT",
+      "COLOR00_WRITE"
+    ],
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "limitations": "160 ROM-only cases. MOVE.W d16(An),Dn versus Dn,d16(An), both12 uncontended CPU clocks. Target pointer selected before alignment. Two following beam reads before RAM stores. Midline BPLEN, optional cold Copper; independent plane and Copper witnesses.",
+    "variants": "bit0 cold Copper; bits1:3 operand target; bit4 one NOP gap",
+    "fields": {
+      "12": "input beam",
+      "20": "raw operand value",
+      "24": "raw operand echo from common return D4",
+      "18": "second following beam",
+      "34": "PF1/PF2 activity bit0",
+      "16": "Copper completion bit3",
+      "36": "first following beam from common return D5"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 80,
+    "independently_repeated_cohorts": 80,
+    "candidate_cases_with_independent_repeats": 160,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Two all-one planes, DPF, DIW line32, BPLEN midline. Optional cold Copper, no blitter/sprite DMA. Raw operand is diagnostic; compare following beam outputs without alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\custom-return-hardware-v1\\reference-2",
+  "metadata_correction": "Common cold kernel stores D4 again at24 and D5 at36 after observer returns. Field24 is raw operand echo; true first following beam is36, second is18. Original raw packets and erroneous first report retained."
+}

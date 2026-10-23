@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "id": "bitplane-enable-source-race",
+  "hypothesis": "The first midline bitplane fetch claims the bus too early relative to CPU overwrite, while Copper instruction ownership is correct.",
+  "competitor": "Bitplane ownership is also correct; the remaining difference is in subsequent CPU return/recognition.",
+  "test": "Two dual-playfield planes have only first source wordffff. CPU clears plane2 first word versus neighbor after midline BPLEN, optional cold Copper,0..3 NOP gaps and phases. PF1/PF2 collision is old-word witness; preseed-zero and neighbor controls, independent finite Copper marker.",
+  "outcomes": {
+    "source collision boundary differs": "Inspect first bitplane data/bus ownership before CPU timing.",
+    "source ordering matches": "Keep CPU return/recognition in scope; do not move DMA fetches.",
+    "activity or controls fail": "Reject inference and refine source witness."
+  },
+  "next_question": "Does bitplane2 fetch its old source word before the CPU overwrite at the same boundary as A500?",
+  "investigation": "investigations/bitplane-enable-source-race.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/bitplane-enable-source-race-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper activity when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Finite Copper activity when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          8
+        ],
+        "allowed_values": [
+          8
+        ]
+      },
+      {
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "CPU overwrite completed",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Preseed zero cannot collide",
+        "where": {
+          "variant": {
+            "mask": 4,
+            "equals": 4
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Neighbor write preserves old source and witnesses both planes",
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 2
+          }
+        },
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/bitplane-enable-source-race-v1/run1",
+    "references/bitplane-enable-source-race-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "source_old_word",
+        "field": "launch_ref",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Both initial all-one plane words reached display before CPU overwrite"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Independent finite Copper witness"
+      },
+      {
+        "name": "stored_word",
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "CPU-written word after settle"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. DPF two-plane only first wordsffff, DIW beginsline32, BPLEN midline. Optional cold finite Copper; no blitter/sprite DMA. Collision value witness, exact input beam; no output alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "rom_sha256": "33e4000e879e69882cf7326096c20c9b30ecc41f6698ee6a6440598403f97238",
+  "probe_precheck": "256 cases,0 failed controls; both fetched-old and fetched-new outcomes with/without Copper."
+}

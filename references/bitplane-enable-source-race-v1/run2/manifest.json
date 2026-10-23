@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "reference_id": "bitplane-enable-source-race-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\bitplane-source-hardware-v1\\hardware-2",
+  "test_rom_sha256": "33e4000e879e69882cf7326096c20c9b30ecc41f6698ee6a6440598403f97238",
+  "source_id": "a5fa2eae64bdc31e309f904b2f980bc888fae694739e25589590b73a3268cc5f",
+  "results_sha256": "b41eb94f8d7274bb63fac18b4deece454dcde9fb0019181ace6696b84f85f43f",
+  "record_count": 256,
+  "metadata": {
+    "version": 1,
+    "source_id": "a5fa2eae64bdc31e309f904b2f980bc888fae694739e25589590b73a3268cc5f",
+    "record_count": 256,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "b41eb94f8d7274bb63fac18b4deece454dcde9fb0019181ace6696b84f85f43f"
+  },
+  "restoration": {
+    "backup_sha256": "8f8753b998a261a1624e5d1c0fe40aa79e96ad51e1c655f4227fbeec94cf43c3",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "8f8753b998a261a1624e5d1c0fe40aa79e96ad51e1c655f4227fbeec94cf43c3",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\bitplane-source-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 121,
+    "aligned": false,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "limitations": "256 ROM-only cases. Only first word of each plane isffff, all other source words zero. CPU clears first plane2 word or neighbor. PF1/PF2 collision witnesses old-word fetch; preseed-zero and neighbor controls. Master pre-enabled, BPLEN midline, optional cold finite Copper.",
+    "variants": "bit0 cold Copper; bit1 neighbor overwrite; bit2 preseed zero; bits3:4 NOP gap",
+    "fields": {
+      "12": "input beam",
+      "14": "PF1/PF2 source collision bit0",
+      "16": "finite Copper completion bit3",
+      "20": "CPU-written word",
+      "24": "diagnostic post-store beam"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 128,
+    "independently_repeated_cohorts": 128,
+    "candidate_cases_with_independent_repeats": 256,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. DPF two-plane only first wordsffff, DIW beginsline32, BPLEN midline. Optional cold finite Copper; no blitter/sprite DMA. Collision value witness, exact input beam; no output alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\bitplane-source-hardware-v1\\reference-2",
+  "metadata_correction": "Removed inherited IRQ-profile labels; raw packets and hashes unchanged."
+}

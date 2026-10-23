@@ -628,3 +628,12 @@ identical bytes through a measured read do not establish equal sub-CCK CPU
 phase or all prefetched successors. If sibling ROMs disagree at that boundary,
 preserve both results, record the changed successor and narrow the experiment;
 do not align the outputs or silently combine their reference cohorts.
+
+
+Audit the complete result-store path, including common code after an observer
+returns. A correctly stored field can be overwritten by that helper. Verify the
+final packet mapping before labeling a scalar flag difference as timing drift.
+If the required measurement survives elsewhere, correct the documented
+projection and recompare the original packets; preserve the initial report and
+correction rather than recapturing hardware. Kind122's D5 beam survives at36,
+while common return overwrites24 with operand D4.

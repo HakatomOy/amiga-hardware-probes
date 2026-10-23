@@ -1,0 +1,52 @@
+{
+  "hypothesis": "The remaining drift is a custom-register read/return path rather than DMA fetch ownership.",
+  "competitor": "The delay is shared with writes or only appears in the following beam observer.",
+  "test": "Compare VHPOSR,DMACONR,INTREQR,CLXDAT reads with COLOR00 write, using matched12-clock MOVE.W forms. Cross cold Copper and one-NOP gap. Record two following beam reads before stores, raw operand, plane and Copper witnesses.",
+  "outcomes": {
+    "only one chip or read type differs": "Narrow CPU return model to measured path.",
+    "all reads differ and write agrees": "Inspect shared custom-read timing.",
+    "reads and write both differ": "Revisit common observer/timeline boundary before changing a chip path."
+  },
+  "next_question": "Pair original immediate versus register-source enable in one return-time ROM.",
+  "experiment": "custom-read-return",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\custom-return-hardware-v1",
+  "identity": {
+    "binary_sha256": "49df162e65188abbe362df11a53e6fca82c60ff749b19375c7aa285c21b8bb75",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "bbf31d21b74b7f26b6827b9d7cd4a42c0b2c70e8a525b9b111739b35762aaa91",
+    "source_id": "a721679f641f4ccde39a81477e23322ca9e4aea95c8d49a0a8ce0af3856a8d67",
+    "environment_sha256": "9ae0139bb1db3d2e95d8f0e2bf17a05f8cc2281c2f6b7ad145b3436df9928da4"
+  },
+  "smaller_reproducer": null,
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\custom-return-hardware-v1\\reference-1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\custom-return-hardware-v1\\reference-2"
+  ],
+  "evidence_fingerprint": "b6cd1ad8473d09a46ed615b260fd00e180184550775fa9d842dc9668de4c3d06",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "status": "corrected timing projection160/160; raw DMACONR flag difference separate",
+  "results": {
+    "total": 160,
+    "matches": 160,
+    "mismatches": 0,
+    "missing_results": 0,
+    "excluded": 0,
+    "unstable_reference": 0,
+    "invalid_captures": 0,
+    "reference_conflicting_cohorts": 0
+  },
+  "confirmed_facts": [
+    "Both following beams match all160 cases, all5 operand targets32cases each, register-source DMACON.",
+    "Initial report used overwritten field24, actually raw D4 operand echo. True first following beam saved by common kernel at36; second at18. Corrected projection reuses original packets.",
+    "Raw DMACONR is0300/0380 on HW versus2300/2380 emulator in32cases: bit13 BZERO differs. Prior blitter/reset state is not controlled; do not change reset default from this alone.",
+    "Plane and Copper witnesses pass; final ROM restoration verified."
+  ],
+  "evidence": "captures\\init-after-bmapen-20261022\\custom-return-hardware-v1\\corrected-comparison.json"
+}
