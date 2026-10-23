@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "id": "dma-vpa-phase",
+  "hypothesis": "A VPA/E-clock synchronization control reduces unrecorded CPU phase dependence of the original observer.",
+  "competitor": "The dependency is Copper/DMA internal history or generic elapsed delay, rather than CPU phase.",
+  "test": "CIA-A PRA byte read versus6 ROM NOPs before input marker,0..3 additional NOPs, inert/COPJMP actors and4 phases. Preserve entire original immediate-enable sequence after input. Compare conflicts and exact cohorts, finite Copper witness required.",
+  "outcomes": {
+    "VPA cohorts stable while overlapping delay controls conflict": "Further constrain CPU/E phase before choosing a clock model.",
+    "both prefixes conflict": "VPA control insufficient; retain missing-state uncertainty.",
+    "both stable but original mismatch remains": "Inspect deterministic original sequence; do not credit synchronization as repair."
+  },
+  "next_question": "Does the VPA prefix change repeatability or the early/late outcome family?",
+  "investigation": "investigations/dma-vpa-phase.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-vpa-phase-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 128,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-vpa-phase-v1/run1",
+    "references/dma-vpa-phase-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after actual COPJMP or inert write"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. VPA read aligns with E-clock handshake by MC68000 specification, but a fixed Amiga CPU/CCK phase is a tested hypothesis. Exact post-prefix input cohorts only; no output alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "source_reference": "https://www.nxp.com/docs/en/reference-manual/MC68000UM.pdf#page=156",
+  "rom_sha256": "cf50075ad2ee94e5595a3d4bf9114c0fd0ac1a89736c429f5ffd5a30fc725f32",
+  "probe_precheck": "128 cases,all finite Copper witnesses pass; exact post-input observer source retained."
+}

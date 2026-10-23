@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-vpa-phase-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\vpa-phase-hardware-v1\\hardware-2",
+  "test_rom_sha256": "cf50075ad2ee94e5595a3d4bf9114c0fd0ac1a89736c429f5ffd5a30fc725f32",
+  "source_id": "1cc28d270f2fe6c389104ad54161216c673576c22f9744e2d1e7084a3510b3be",
+  "results_sha256": "dea5f02b4debe42c9d9cd35a829dbcaa3cdee8af8e49ccd58bc538a6ae1dd539",
+  "record_count": 128,
+  "metadata": {
+    "version": 1,
+    "source_id": "1cc28d270f2fe6c389104ad54161216c673576c22f9744e2d1e7084a3510b3be",
+    "record_count": 128,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "dea5f02b4debe42c9d9cd35a829dbcaa3cdee8af8e49ccd58bc538a6ae1dd539"
+  },
+  "restoration": {
+    "backup_sha256": "7b1f13a11e5619a6f9c5483f310d11aad58b270ff9d77f0c0432ced9b7c60d7f",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "7b1f13a11e5619a6f9c5483f310d11aad58b270ff9d77f0c0432ced9b7c60d7f",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\vpa-phase-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 124,
+    "aligned": false,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "limitations": "128 ROM-only cases. Original post-input immediate enable/actor sequence unchanged. CIA read attempts VPA/E synchronization; ROM-delay control is24 CPU clocks plus same0..3 extra NOPs. This tests phase control, not an assumed Amiga phase guarantee.",
+    "variants": "bit0 CIA-A PRA byte read versus6 NOPs; bit1 COPJMP versus inert; bits2:3 extra NOPs",
+    "fields": {
+      "12": "input after prefix",
+      "24": "original post-write beam",
+      "16": "finite Copper completion bit2"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 32,
+    "conflicting_cohorts": 20,
+    "reference_cohorts": 128,
+    "independently_repeated_cohorts": 64,
+    "candidate_cases_with_independent_repeats": 96,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. VPA read aligns with E-clock handshake by MC68000 specification, but a fixed Amiga CPU/CCK phase is a tested hypothesis. Exact post-prefix input cohorts only; no output alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\vpa-phase-hardware-v1\\reference-2",
+  "metadata_correction": "Removed inherited IRQ-profile labels; raw packets and hashes unchanged.",
+  "critical_code_verification": {
+    "old_rom_sha256": "1c00a58ea071deaa624ff16302944b70fd31e91941d939fec9e9f97bd0acb32e",
+    "new_rom_sha256": "cf50075ad2ee94e5595a3d4bf9114c0fd0ac1a89736c429f5ffd5a30fc725f32",
+    "post_input_observers_identical": true,
+    "variants_checked": 16
+  }
+}

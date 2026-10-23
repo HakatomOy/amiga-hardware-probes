@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "emulator_counterfactual_profile_comparison",
+  "hardware_trace": false,
+  "source_base": "6c06be2a",
+  "patch": "experiments/patches/init-copper-write-ack-v1.patch",
+  "binary_identity": {
+    "binary_sha256": "15dc237c3d919e30f4bc79936265072cf8184d82b9699f36c6617060f71f7805",
+    "acceptance_performed": false
+  },
+  "modes": {
+    "baseline": "COPPERLINE_EXP_CLASSIC_BUS_PHASE=0",
+    "prototype": "COPPERLINE_EXP_CLASSIC_BUS_PHASE=101"
+  },
+  "units": "Raw hexadecimal beam/register values and unshifted CCK grant positions",
+  "packets_verified_identical_to_each_model_parent": true,
+  "cases": [
+    {
+      "case": "inert-p1",
+      "same_grant_pipeline_through_first_read": true,
+      "write_grant": {
+        "0": "42:59",
+        "101": "42:59"
+      },
+      "last_owner_before_write": "copper",
+      "read_grant": {
+        "0": "42:60",
+        "101": "42:60"
+      },
+      "read_value": {
+        "0": "0000000000004265",
+        "101": "0000000000004264"
+      }
+    },
+    {
+      "case": "inert-p3",
+      "same_grant_pipeline_through_first_read": true,
+      "write_grant": {
+        "0": "42:5b",
+        "101": "42:5b"
+      },
+      "last_owner_before_write": "copper",
+      "read_grant": {
+        "0": "42:62",
+        "101": "42:62"
+      },
+      "read_value": {
+        "0": "0000000000004267",
+        "101": "0000000000004266"
+      }
+    },
+    {
+      "case": "strobe-p1",
+      "same_grant_pipeline_through_first_read": true,
+      "write_grant": {
+        "0": "42:59",
+        "101": "42:59"
+      },
+      "last_owner_before_write": "copper",
+      "read_grant": {
+        "0": "42:61",
+        "101": "42:61"
+      },
+      "read_value": {
+        "0": "0000000000004266",
+        "101": "0000000000004265"
+      }
+    }
+  ],
+  "limitation": "These are emulator profiles, not hardware grant traces. They show the candidate changed return timing without moving its grant pipeline. Hardware clock/strobe capture is still needed.",
+  "detail_root": "captures\\init-after-bmapen-20261022"
+}

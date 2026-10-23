@@ -549,7 +549,7 @@
       "cwd": "../Copperline",
       "argv": [
         "{python}",
-        "tools/cargo_report.py",
+        "{root}/tools/cargo_report.py",
         "--log-dir",
         "{out}/cargo-core-tests",
         "--",
@@ -569,7 +569,7 @@
       "cwd": "../Copperline",
       "argv": [
         "{python}",
-        "tools/cargo_report.py",
+        "{root}/tools/cargo_report.py",
         "--log-dir",
         "{out}/cargo-strict-clippy",
         "--",
@@ -588,7 +588,7 @@
       "cwd": "../Copperline",
       "argv": [
         "{python}",
-        "tools/cargo_report.py",
+        "{root}/tools/cargo_report.py",
         "--log-dir",
         "{out}/cargo-rust-format",
         "--",

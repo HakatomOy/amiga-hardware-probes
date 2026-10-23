@@ -45,7 +45,9 @@
   "replay_inputs": [],
   "references": [
     "references/dma-master-boundary-v1/run1",
-    "references/dma-master-boundary-v1/run2"
+    "references/dma-master-boundary-v1/run2",
+    "references/dma-master-stability-v1/run1",
+    "references/dma-master-stability-v1/run2"
   ],
   "comparison": {
     "alignment": "exact",

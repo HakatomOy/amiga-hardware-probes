@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-master-reorder-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\master-reorder-hardware-v1\\hardware-1",
+  "test_rom_sha256": "e38a2d541f048d0f8a841388da230c1f426a6efc6949317226f2cec53d75f566",
+  "source_id": "c8d5646edec9d0ebe490930b76e8a3917d4fb41ce0cbf35f6ce1ddec2b80c747",
+  "results_sha256": "a61a793f8d4a5562b4973e00814d9b4535234ece927d784b60ff1b9a1b2740d7",
+  "record_count": 32,
+  "metadata": {
+    "version": 1,
+    "source_id": "c8d5646edec9d0ebe490930b76e8a3917d4fb41ce0cbf35f6ce1ddec2b80c747",
+    "record_count": 32,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "a61a793f8d4a5562b4973e00814d9b4535234ece927d784b60ff1b9a1b2740d7"
+  },
+  "restoration": {
+    "backup_sha256": "3d8010342075c1c5224a93db574d983ca5aaa3f8261f1216afff42f3686cae71",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "3d8010342075c1c5224a93db574d983ca5aaa3f8261f1216afff42f3686cae71",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\master-reorder-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 113,
+    "aligned": false,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "limitations": "32 original case IDs; observer and kernel unchanged. Only table order/source identity changes. Record-slot address and prior history also change; integer input is not complete CPU phase qualification.",
+    "variants": "Original1 inert write;3 COPJMP; phase order1,3,0,2",
+    "fields": {
+      "12": "input beam",
+      "24": "original post-write beam",
+      "16": "finite Copper completion bit2"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 8,
+    "conflicting_cohorts": 2,
+    "reference_cohorts": 8,
+    "independently_repeated_cohorts": 8,
+    "candidate_cases_with_independent_repeats": 32,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Same original32 cases and critical code, reordered table. Source ID, record-slot address and prior execution history differ. Exact input beam alone does not prove equal sub-CCK phase.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\master-reorder-hardware-v1\\reference-1",
+  "metadata_correction": "Removed inherited IRQ-profile labels; raw packet and hashes unchanged.",
+  "critical_code_verification": {
+    "old_sha256": "1c00a58ea071deaa624ff16302944b70fd31e91941d939fec9e9f97bd0acb32e",
+    "new_sha256": "e38a2d541f048d0f8a841388da230c1f426a6efc6949317226f2cec53d75f566",
+    "checks": {
+      "observers": true,
+      "rom_alignment": true,
+      "blitter_handoff_kernel.i": true,
+      "blitter_handoff_observer.i": true
+    }
+  }
+}

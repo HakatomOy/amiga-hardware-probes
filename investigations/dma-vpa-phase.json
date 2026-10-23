@@ -1,0 +1,46 @@
+{
+  "hypothesis": "A VPA/E-clock synchronization control reduces unrecorded CPU phase dependence of the original observer.",
+  "competitor": "The dependency is Copper/DMA internal history or generic elapsed delay, rather than CPU phase.",
+  "test": "CIA-A PRA byte read versus6 ROM NOPs before input marker,0..3 additional NOPs, inert/COPJMP actors and4 phases. Preserve entire original immediate-enable sequence after input. Compare conflicts and exact cohorts, finite Copper witness required.",
+  "outcomes": {
+    "VPA cohorts stable while overlapping delay controls conflict": "Further constrain CPU/E phase before choosing a clock model.",
+    "both prefixes conflict": "VPA control insufficient; retain missing-state uncertainty.",
+    "both stable but original mismatch remains": "Inspect deterministic original sequence; do not credit synchronization as repair."
+  },
+  "next_question": "Do direction-specific CPU read/write strobes model the transitions missing from symmetric phase models?",
+  "source_reference": "https://www.nxp.com/docs/en/reference-manual/MC68000UM.pdf#page=156",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\vpa-phase-hardware-v1",
+  "smaller_reproducer": null,
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "d8323d5585ecd6cc6c3af4ed43749d110043fef11376fd1e281e59ab8f8e179a",
+  "decision": "validation failed",
+  "status": "VPA reduces conflicts but does not establish complete phase qualification",
+  "results": {
+    "matches": 62,
+    "mismatches": 34,
+    "unstable": 32,
+    "excluded": 0,
+    "invalid": 0
+  },
+  "prefix_counts": {
+    "rom_delay": {
+      "matches": 24,
+      "mismatches": 16,
+      "unstable": 24
+    },
+    "vpa": {
+      "matches": 38,
+      "mismatches": 18,
+      "unstable": 8
+    }
+  },
+  "references": [
+    "dma-vpa-phase-v1"
+  ],
+  "confirmed_facts": [
+    "All128 finite Copper witnesses pass.",
+    "All16 post-input compiled observers byte-identical corresponding original observer.",
+    "VPA does not eliminate output conflicts; no fixed phase guarantee inferred.",
+    "Final ROM restoration and reset release verified."
+  ]
+}

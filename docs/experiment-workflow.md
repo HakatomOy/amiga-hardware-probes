@@ -2,6 +2,12 @@
 
 `tools/experiment.py` executes mechanical work and returns a bounded report.
 Sol designs the experiment, interprets evidence and chooses the emulator change.
+For leaf CIA/blitter/Copper edits, run `python tools/check_chip_model.py MODULE
+--out captures/UNIQUE` first: it includes Copperline's actual module in a small
+test crate and catches local failures before a full emulator rebuild. It does
+not cover bus/CPU integration. Final acceptance must explicitly run Copperline's
+library tests (`cargo test --profile ci --locked --lib -- --skip window::`), plus
+appropriate CLI/integration/golden gates; `--bin copperline` runs CLI tests only.
 No agent needs to read thousands of matching records. All paths below are
 relative to this repository, including when invoked from another directory;
 command `cwd` defaults to the repository root. Python requires3.9+.
@@ -637,3 +643,13 @@ If the required measurement survives elsewhere, correct the documented
 projection and recompare the original packets; preserve the initial report and
 correction rather than recapturing hardware. Kind122's D5 beam survives at36,
 while common return overwrites24 with operand D4.
+
+
+When narrowing an observer, append controls after the original case prefix when
+possible: retain descriptor order, result-slot addresses and compiled observer
+bytes. Verify those regions against the original ROM before a live run. Keep
+actor-selection bits independent of inherited sprite/data setup bits. Equal
+instruction duration alone is insufficient: placing a NOP before or after a
+write changes its arbitration boundary. If a candidate repairs one stable
+family but breaks another, retain the original failure and obtain the missing
+phase evidence rather than adjusting comparison alignment.

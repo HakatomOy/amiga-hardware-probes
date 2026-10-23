@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "id": "dma-master-stability",
+  "hypothesis": "The original reference undersampled a CPU phase/history cohort;4265 is also valid hardware for input424d.",
+  "competitor": "The added outcome is specific to reordered trial history or changed ROM data, while original ROM remains deterministic.",
+  "test": "Recapture the exact original32-case ROM twice, unchanged hash/code/order, then compare original plus fresh references without selecting either output.",
+  "outcomes": {
+    "original also yields4265": "Original stable-difference claim needs phase qualification; no blanket correction.",
+    "original consistently4264": "Narrow order/history dependency; preserve original mismatch separately.",
+    "conflicting outputs": "Mark ambiguous cohort unstable, not matched or repaired."
+  },
+  "next_question": "Is the original exact ROM output stable across these fresh independent runs?",
+  "investigation": "investigations/dma-master-stability.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-master-boundary-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "1c00a58ea071deaa624ff16302944b70fd31e91941d939fec9e9f97bd0acb32e",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 32,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-master-stability-v1/run1",
+    "references/dma-master-stability-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after actual COPJMP or inert write"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Settled collision truth table, manual sprite0, no Copper/blitter/sprite DMA. DPF pairs otherwise identical. Input and read brackets retained; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

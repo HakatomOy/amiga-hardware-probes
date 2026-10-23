@@ -1,19 +1,18 @@
 {
-  "status": "Scoped collision fix committed; Init integration unaccepted; fetching/return controls constrain next exact observer test",
+  "status": "Collision correction accepted; Init unaccepted; needs original CPU bus-phase evidence",
   "branch": "wip/init-after-bmapen-20261023",
   "base_commit": "b40122d4",
   "prototype_commit": "02318e9e",
   "full_acceptance": false,
   "confirmed_facts": [
     "Acceptedb40122d4: original512 and independent1536 match; seven-suite4352 replay, core3675, goldens46, strictClippy/fmt pass.",
-    "Unaccepted6c06be2a integrates old Init prototype and transfer-time combined master/COPEN request; core3691 passes. Request screen improves16 cases without new fields in10 contracts.",
-    "Original pointer/Copper gates remain blocked: selected request model243/480 and391/800 qualify with zero collision-value differences; original budgets unchanged.",
-    "Cold custom-write/read boundary retains stable1CCK differences; gap/triplet references also contain explicitly unqualified unstable cohorts and cross-ROM integer-input ambiguity.",
-    "Global early beam, WAIT-tail reuse, half-CCK waits and grant-window shifts regress independent controls; source restored, exact patches and screens retained.",
-    "Register-source enable paths: first Copper MOVE race256, WAIT-mask race256, first bitplane source race256 all stable qualified matches. These do not waive original immediate-enable family.",
-    "Copper-disabled steady DMA127 qualified matches,1 missing cohort excluded, all activity witnesses pass.",
-    "Kind122 corrected timing fields36/18 match160/160. Field24 is raw operand echo from common return, not following beam. Raw DMACONR BZERO bit13 differs in32cases; prior blitter/reset state uncontrolled.",
-    "Kind123 pairs both enable forms:320/320 following-beam matches with5 matched operand controls. Original immediate COLOR00 actor remains a distinct unresolved path."
+    "Unaccepted6c06be2a retains Init transfer/reload prototype and combined master/COPEN forwarding; core3691 passes, request screen16 repairs. Original pointer/Copper qualification gates remain blocked at243/480 and391/800.",
+    "Exact original32-caseROM1c00a58e recaptured twice:28 match4 stable mismatch atphase1 inert, input424d HW4264 versus prototype4265.",
+    "Original first32 retained in actor/target ROMs reproduce4 failures. Immediate and NOP-before-register actors fail; register-then-NOP and NOP-only controls match. All seven custom/RAM targets share the same Copper-enabled family.",
+    "Register-source enable value races: Copper first-word256, initial WAIT mask256, first bitplane source256 stable matches. Return controls160 and paired gate forms320 match; these do not waive original actor path.",
+    "Reordered byte-identical observer32 has24 matches8 unstable. VPA prefix8/64 unstable versus ROM-delay24/64; complete phase/history qualification remains missing. Keep ROM-specific references separate.",
+    "All tested global/directed/Copper-wait clock changes rejected. Mode101 preserves measured source ownership but repairs4 original cases and regresses other stable cases. Emulator-only packet-qualified profiles retain same grants through first read while returned value changes.",
+    "Raw DMACONR BZERO bit13 differs in32 operand cases; prior blitter/reset state uncontrolled, not a justified reset-default fix."
   ],
   "references": [
     "dma-master-boundary-v1",
@@ -28,7 +27,12 @@
     "copper-wait-mask-race-v1",
     "bitplane-enable-source-race-v1",
     "custom-read-return-v1",
-    "custom-return-forms-v2"
+    "custom-return-forms-v2",
+    "dma-master-reorder-v1",
+    "dma-master-stability-v1",
+    "dma-vpa-phase-v1",
+    "dma-master-actor-forms-v2",
+    "dma-master-write-targets-v1"
   ],
   "rejected_hypotheses": [
     {
@@ -56,16 +60,16 @@
       "evidence": "Both variants lose768 qualification cases and hundreds of matched fields in13-contract screen."
     }
   ],
-  "next_question": "Does changing prior case history alter the original byte-identical observer under the same recorded integer input?",
+  "next_question": "What CPU clock/AS/DTACK/strobe phase distinguishes original case113,8,1,1,0,0 from stable neighbors? Analyzer availability was requested; do not replace this evidence with another guessed clock offset.",
   "hypothesis": "Copper request sampling and in-flight restart work are distinct resources; test explicit mechanisms before changing delays.",
   "details": "docs/collision-cpu-ordering-2026-10-22.md",
   "logs": "captures/init-after-bmapen-20261022",
   "evidence": [
-    "captures/init-after-bmapen-20261022/integrated-screen-v1/results.json",
-    "captures/init-after-bmapen-20261022/shared-phase-screen-v1/results.json",
-    "captures/init-after-bmapen-20261022/grant-phase-screen-v1/results.json",
-    "captures/init-after-bmapen-20261022/custom-return-hardware-v1/corrected-comparison.json",
-    "investigations/custom-return-forms.json"
+    "investigations/dma-master-stability.json",
+    "investigations/dma-master-actor-forms.json",
+    "investigations/dma-master-write-targets.json",
+    "experiments/diagnostics/init-return-phase-v1.json",
+    "investigations/init-copper-write-ack.json"
   ],
   "source_files": [
     "../Copperline/src/bus.rs",
@@ -77,5 +81,9 @@
   ],
   "checkpoint_commit": "6c06be2a",
   "accepted_branch": "fix/more-a500-timing-fixes",
-  "accepted_commit": "b40122d4"
+  "accepted_commit": "b40122d4",
+  "active_experiment": null,
+  "checkout_branch": "fix/more-a500-timing-fixes",
+  "prototype_branch": "wip/init-after-bmapen-20261023",
+  "next_experiment": "docs/init-bus-phase-capture.md"
 }

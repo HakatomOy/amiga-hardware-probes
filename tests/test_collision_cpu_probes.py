@@ -15,6 +15,10 @@ import build_copper_wait_mask_race_rom as mask_race
 import build_bitplane_enable_source_race_rom as bpl_race
 import build_custom_read_return_rom as custom_return
 import build_custom_return_forms_rom as return_forms
+import build_dma_master_reorder_rom as reorder
+import build_dma_vpa_phase_rom as vpa
+import build_dma_master_actor_forms_rom as actor_forms
+import build_dma_master_write_targets_rom as write_targets
 
 
 def generated(builder):
@@ -196,6 +200,64 @@ class CollisionCpuProbeTests(unittest.TestCase):
             gate = (f'move.w #${0x8380 if variant & 1 else 0x8300:x},$96(a6)'
                     if variant & 32 else 'move.w d1,$96(a6)')
             self.assertIn('move.w 6(a6),d3\n        ' + gate, text)
+
+    def test_reordered_master_probe_preserves_original_case_ids_and_critical_code(self):
+        rows = reorder.trials()
+        self.assertEqual(set(rows), set(reorder.master.trials()))
+        self.assertNotEqual(rows, reorder.master.trials())
+        self.assertEqual(rows[0][3], 1)
+        self.assertEqual(generated(reorder), generated(reorder.master))
+
+    def test_vpa_control_keeps_complete_original_post_input_sequence(self):
+        self.assertEqual(len(set(vpa.trials())), 128)
+        for variant in range(16):
+            text = vpa.observer(variant)
+            prior = vpa.master.warm.cold.observer(3 if variant & 2 else 1)
+            marker = '        move.w 6(a6),d3'
+            self.assertEqual(text.split(marker, 1)[1], prior.split(marker, 1)[1])
+            self.assertEqual('move.b $bfe001,d0' in text, bool(variant & 1))
+
+    def test_actor_matrix_retains_original_prefix_and_decouples_control_setup(self):
+        rows = actor_forms.trials()
+        self.assertEqual(len(set(rows)), 160)
+        self.assertEqual(rows[:32], actor_forms.master.trials())
+        kernel, observer = generated(actor_forms)
+        _, original = generated(actor_forms.master)
+        self.assertTrue(observer.startswith(original))
+        self.assertIn('moveq #0,d2\n        jsr sync_beam', kernel)
+        for variant in actor_forms.CONTROLS:
+            self.assertEqual(variant & 2, 0)  # Do not couple actor to sprite setup.
+            text = actor_forms.observer(variant)
+            actor = (variant - 16) >> 2
+            if actor == 0:
+                prior = actor_forms.master.warm.cold.observer(variant & 1)
+                marker = '        move.w 6(a6),d3'
+                self.assertEqual(text.split(marker)[1], prior.split(marker)[1])
+            elif actor == 1:
+                self.assertIn('move.w d2,$180(a6)\n        nop', text)
+            elif actor == 2:
+                self.assertIn('nop\n        move.w d2,$180(a6)', text)
+
+    def test_write_target_matrix_keeps_original_and_explicit_equal_length_forms(self):
+        rows = write_targets.trials()
+        self.assertEqual(len(set(rows)), 256)
+        self.assertEqual(rows[:32], write_targets.master.trials())
+        kernel, observer = generated(write_targets)
+        _, original = generated(write_targets.master)
+        self.assertTrue(observer.startswith(original))
+        self.assertIn('lea $1a000,a1\n        jsr sync_beam', kernel)
+        self.assertLessEqual(0xffb800 + len(write_targets.CONTROLS) * 0x80, 0xffc000)
+        for variant in write_targets.CONTROLS:
+            self.assertEqual(variant & 2, 0)
+            target = (variant - 16) >> 2
+            _, operand, value = write_targets.TARGETS[target]
+            text = write_targets.observer(variant)
+            self.assertIn(f'move.w #${value:x},{operand}', text)
+            if target < 5:
+                self.assertEqual(value, 0)  # Harmless no-change register writes.
+            else:
+                self.assertIn('0(a1)', text)
+                self.assertLess(text.index('move.w 6(a6),d4'), text.index('move.w (a1),20(a4)'))
 
 
 if __name__ == '__main__':

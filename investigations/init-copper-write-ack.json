@@ -1,0 +1,60 @@
+{
+  "status": "rejected: repairs original4 but overcorrects independent measured timing",
+  "base_commit": "6c06be2a",
+  "hypothesis": "CPU writes stalled by Copper instruction memory fetch recognize release at a CPU-clock boundary; blanket whole-CCK waits overcharge half aCCK. VPA/E cycles then resynchronize phase.",
+  "competitor": "The residual is another ownership/recognition state; short waits or E phase resets regress independently measured ordering.",
+  "test": "Shared four-clock word cycles unchanged. Only Write/custom-write stalls owned by a Copper instruction fetch may wait1 CPU clock; reads,fixedDMA,restart slots remain2. Compare no E-resync versus E phase0/1 after VPA. All source-value and original/actor/target controls are hard guards.",
+  "outcomes": {
+    "original and target family repairs without new fields": "Run all broad Init/collision/CIA/bus/core gates before accepting.",
+    "any source or stable control regressions": "Reject; next require bus-phase capture instead of a beam offset."
+  },
+  "units": "2CPUclocks/CCK; fractional CPU phase explicit; no DMA event shift, no trace alignment or beam correction.",
+  "source_reference": "https://www.nxp.com/docs/en/reference-manual/MC68000UM.pdf",
+  "limitation": "Hardware writer target matrix establishes common write-position family, not the electrical DTACK mechanism. VPA target phase is explicitly compared rather than assumed.",
+  "next_question": "Capture original CPU clock/AS/DTACK/strobe phase before another grant/return patch.",
+  "results": {
+    "0": {
+      "matches": 2658,
+      "mismatches": 86,
+      "excluded": 0,
+      "unstable": 40
+    },
+    "5": {
+      "matches": 2658,
+      "mismatches": 86,
+      "excluded": 0,
+      "unstable": 40
+    },
+    "37": {
+      "matches": 1982,
+      "mismatches": 762,
+      "excluded": 0,
+      "unstable": 40
+    },
+    "69": {
+      "matches": 2658,
+      "mismatches": 86,
+      "excluded": 0,
+      "unstable": 40
+    },
+    "101": {
+      "matches": 2593,
+      "mismatches": 151,
+      "excluded": 0,
+      "unstable": 40
+    },
+    "165": {
+      "matches": 1564,
+      "mismatches": 1180,
+      "excluded": 0,
+      "unstable": 40
+    }
+  },
+  "confirmed_facts": [
+    "Mode101 retains all768 source ownership values and original512 collision matches, but original master falls28 to20 matches and targets224 to216.",
+    "Original inert phase1 repaired; inert phase3 and COPJMP phases1/3 become early.",
+    "Packet-qualified profiles0/101 retain identical grants through first read in3 representative cases; only returned beam changes.",
+    "Modes5 and69 are baseline-identical controls. No clock model accepted."
+  ],
+  "evidence": "experiments/diagnostics/init-return-phase-v1.json"
+}

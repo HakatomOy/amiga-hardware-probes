@@ -1,0 +1,34 @@
+{
+  "hypothesis": "CPU phase within aCCK changes classic grant window even with whole-CCK waits.",
+  "competitor": "The residual belongs to Amiga-specific RGA grant/turnaround rather than general CPU clock accounting.",
+  "test": "Four combinations of explicit CPU 1/2/1-clock phases and early beam sampling; unchanged saved hardware and exact baseline.",
+  "outcomes": {
+    "new boundary repairs without field/qualification regressions": "Retain the supported mechanism and broaden to the existing resource/handoff suite.",
+    "matches move but old controls regress": "Reject or narrow; no counter alignment or relaxed unstable budgets."
+  },
+  "variants": {
+    "0": {
+      "COPPERLINE_EXP_CLASSIC_BUS_PHASE": "0"
+    },
+    "5": {
+      "COPPERLINE_EXP_CLASSIC_BUS_PHASE": "5"
+    },
+    "13": {
+      "COPPERLINE_EXP_CLASSIC_BUS_PHASE": "13"
+    }
+  },
+  "scenarios": {
+    "nop": "experiments/workflows/dma-nop-boundary.json",
+    "master": "experiments/workflows/dma-master-stability.json",
+    "reorder": "experiments/workflows/dma-master-reorder.json",
+    "modes": "experiments/workflows/playfield-modes.json",
+    "poll": "experiments/workflows/collision-cpu-poll.json",
+    "forms": "experiments/workflows/custom-return-forms.json",
+    "source": "experiments/workflows/bitplane-enable-source-race.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "nop",
+    "packet": "captures/init-after-bmapen-20261022/nop-boundary-hardware-v1/candidate/results.bin"
+  }
+}

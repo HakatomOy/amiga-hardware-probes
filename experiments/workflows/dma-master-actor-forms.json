@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "id": "dma-master-actor-forms",
+  "hypothesis": "The original immediate COLOR00 instruction/prefetch sequence differs from equal-duration actor forms.",
+  "competitor": "Outcome depends on history/phase rather than the immediate actor specifically.",
+  "test": "Retain original32 descriptors/order/result slots and observer bytes first, then append immediate COLOR00,register+NOP,NOP+register,fourNOP controls, each16 CPU clocks, with/without Copper. Prealignment dispatch changes; no output alignment.",
+  "outcomes": {
+    "original-only immediate pattern persists": "Inspect immediate EA/prefetch scheduling before changing general bus timing.",
+    "all forms share phase/history pattern": "Seek bus phase witness; no opcode-specific correction.",
+    "original first32 no longer reproduces": "Retain code/history limitation; do not claim original repaired."
+  },
+  "next_question": "Does the immediate actor differ from matched16-clock alternatives in the same ROM?",
+  "investigation": "investigations/dma-master-actor-forms.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-master-actor-forms-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 160,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Copper-disabled controls remain inactive",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-master-actor-forms-v2/run1",
+    "references/dma-master-actor-forms-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after actual COPJMP or inert write"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Original first32 case IDs/order/result addresses and observer bytes retained; ROM identity, trial count and prealignment dispatch differ. Control bit1 is constant0 to avoid coupling actor to manual sprite setup. Exact input cohorts; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "rom_sha256": "75aef97fe56047a3f646e5950ac7d66de76030457fb64987c2e4dffd23083822",
+  "probe_precheck": "160 cases,all Copper controls pass; original observer/alignment bytes and first32 descriptors verified."
+}

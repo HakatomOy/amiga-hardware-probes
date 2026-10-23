@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "id": "cia-review-mask-retrigger",
+  "hypothesis": "A stale IR latch after mask clear prevents a new serial source from reaching Paula in Copperline.",
+  "competitor": "Hardware also suppresses that request until ICR acknowledgement, or old IRQ remains asserted independently of the mask.",
+  "test": "Both CIAs: seed TA interrupt, clear TA mask without ICR read, acknowledge Paula, then complete serial transfer; pair with SP masked, explicit ICR ack, and no-old-TA controls.",
+  "outcomes": {
+    "fresh SP raises request": "Arm delayed IRQ from pin state rather than old IR.",
+    "fresh SP suppressed": "Preserve suppression; reconsider reviewer claim.",
+    "request remains after mask clear": "Revisit mask-to-pin drop separately."
+  },
+  "next_question": "Does a fresh enabled serial source reassert after stale IR and mask clear?",
+  "investigation": "investigations/cia-review-mask-retrigger.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/cia-review-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "4f5407b7227a4ec7440f296b6ae8dacf17fb0b23ae96894ead3e209170fa875a",
+  "capture": {
+    "minimum_seconds": 30,
+    "expected_cases": 32,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": ["references/cia-review-mask-v1/run1", "references/cia-review-mask-v1/run2"],
+  "comparison": {
+    "alignment": "exact",
+    "qualification": [],
+    "measurements": [
+      {
+        "name": "old_request",
+        "field": "counter",
+        "mask": 8200,
+        "unit": "raw register bits",
+        "meaning": "old_request"
+      },
+      {
+        "name": "post_clear_request",
+        "field": "aux",
+        "mask": 8200,
+        "unit": "raw register bits",
+        "meaning": "post_clear_request"
+      },
+      {
+        "name": "serial_request",
+        "field": "second_counter_or_beam",
+        "mask": 8200,
+        "unit": "raw register bits",
+        "meaning": "serial_request"
+      },
+      {
+        "name": "final_icr",
+        "field": "icr",
+        "mask": 159,
+        "unit": "raw register bits",
+        "meaning": "final_icr"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 300,
+    "limitations": "Stock PAL A500; see docs/a500-measurement-hardware.md for both CIA markings, unchanged since before all measurements. Settled truth table only."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

@@ -1,0 +1,52 @@
+{
+  "hypothesis": "The residual belongs to a custom-register write port rather than generic CPU RAM-write timing.",
+  "competitor": "All destinations share the same write/return boundary or only one chipset target differs.",
+  "test": "Original32 cases first, then equal16-clock immediate writes to COLOR00,INTREQ,DMACON,COPCON,NOOP and RAM zero/pattern, each with/without Copper. No-change register values, RAM readback, exact post-write beam and finite Copper witness.",
+  "outcomes": {
+    "custom-register family differs from RAM": "Investigate RGA versus DRAM write handshake.",
+    "only specific target differs": "Inspect that chipset write path without moving general DMA.",
+    "all destinations share difference": "Seek CPU bus phase/wait recognition evidence."
+  },
+  "next_question": "Can CPU-write-only recognition of Copper memory release plus VPA phase sync explain this without moving DMA ownership?",
+  "experiment": "dma-master-write-targets",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\write-targets-hardware-v1",
+  "identity": {
+    "binary_sha256": "49df162e65188abbe362df11a53e6fca82c60ff749b19375c7aa285c21b8bb75",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "9b6b2c5a553d635418d4dc3c17cf971c64c283e29ce92d09476095501f661cc0",
+    "source_id": "e821d0d13c4ef3c2ae220b918140f64017f7a15bc9ad9e13df122256e1e2e631",
+    "environment_sha256": "9ae0139bb1db3d2e95d8f0e2bf17a05f8cc2281c2f6b7ad145b3436df9928da4"
+  },
+  "smaller_reproducer": null,
+  "references": [
+    "dma-master-write-targets-v1"
+  ],
+  "evidence_fingerprint": "e73e4c13b476519dd1bc34851b0f6a7fe0a5a12f15be233e91aabd3c9c1c4906",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "narrow",
+  "status": "stable common CPU-write boundary; no chipset-specific port distinction",
+  "results": {
+    "matches": 224,
+    "mismatches": 32,
+    "unstable": 0,
+    "excluded": 0,
+    "invalid": 0
+  },
+  "confirmed_facts": [
+    "Original32 retain4 failures; each of7 writer targets has4 failures only with Copper enabled.",
+    "COLOR00,INTREQ,DMACON,COPCON,NOOP,RAM-zero,RAM5555 all share same family.",
+    "All disabled-Copper controls and RAM readbacks pass; targets/data not the cause.",
+    "Original observer/alignment and first32 descriptors verified; operands all6 bytes, RAM opcode337c explicit d16."
+  ],
+  "decision_reason": "All custom and RAM writes share the stable Copper-enabled family; guarded clock models regress other measured timing. Obtain original CPU bus phase evidence before another timing patch.",
+  "evidence": [
+    "captures\\init-after-bmapen-20261022\\write-targets-hardware-v1\\comparison.json",
+    "experiments/diagnostics/init-return-phase-v1.json"
+  ]
+}

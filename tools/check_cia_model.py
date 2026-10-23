@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--out", type=Path, required=True, help="artifact root; each run gets a unique directory")
     args = parser.parse_args()
     copperline = args.copperline.resolve()
-    spec = importlib.util.spec_from_file_location("cargo_report", copperline / "tools/cargo_report.py")
+    spec = importlib.util.spec_from_file_location("cargo_report", ROOT / "tools/cargo_report.py")
     wrapper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(wrapper)
     args.out.mkdir(parents=True, exist_ok=True)

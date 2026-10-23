@@ -279,3 +279,56 @@ observer byte-for-byte while varying prior case history. The integer input
 marker may not establish all CPU phase state. All global candidate source
 changes are removed; accepted branch remainsb40122d4, Init checkpoint6c06be2a.
 Probe tools373 pass. New raw data and annotations remain in references/.
+
+
+`dma-master-reorder-v1` retains original32 IDs but orders phases1,3,0,2.
+Observer ROM region,64KiB alignment region and kernel/observer sources are
+byte-identical to original. It has24 matches and8 unstable cases, no stable
+mismatch. Input424d yields4264/4265;424f yields4266/4267 across repeats/runs.
+Source identity, result-slot address and prior history differ, so this does not
+prove CPU phase alone. Original exactROM1c00a58e was then recaptured unchanged:
+`dma-master-stability-v1` reproduces28 matches/4 stable mismatches,4264 versus
+emulator4265. Do not reclassify the original case as unstable or repaired.
+
+Next counterfactual preserves whole-CCK waits and shared instruction accounting,
+but varies initial CPU phase0/1 clocks within aCCK (modes5/13). Mode5 was already
+packet-identical to the original baseline. Address/data/return1/2/1 clocks can
+query different grant windows depending on initial phase, without changing an
+uncontended four-clock duration. No one-clock waits or beam offsets. This is an
+unaccepted diagnostic; controlled CPU/VPA phase evidence would still be needed
+before choosing reset behavior. See `investigations/init-reset-cpu-phase.json`.
+
+
+## Current boundary and handoff
+
+`dma-master-actor-forms-v2` preserves original first32 IDs/order/result slots
+and fixed observer/alignment bytes. Original4 failures reproduce. Immediate
+COLOR00 and NOP-before-register controls each add4 Copper-enabled differences;
+register-then-NOP, fourNOPs and all Copper-disabled controls match. Thus this is
+not immediate-opcode-only. `dma-master-write-targets-v1` preserves the same
+original prefix and compares COLOR00,INTREQ,DMACON,COPCON,NOOP and RAM0/5555:
+224 matches/32 stable differences,0 excluded/unstable/invalid. Every destination
+has the same4 Copper-enabled differences; RAM readbacks and finite witnesses
+pass. Register zeros leave DMA/IRQ requests unchanged; palette/danger fields
+may change without affecting this finite list.
+
+Copper-write-ack models are rejected. Baseline2658 matches/86 differences and
+40 unstable across13 contracts; best altered model101 gives2593/151 with the
+same40 unstable. It retains source ownership but trades4 original repairs for
+other regressions. Modes5/69 reproduce baseline behavior. No experimental
+clock model remains in Copperline source.
+
+Packet-qualified emulator profiles compare mode0/101 for inert phases1/3 and
+strobe phase1. Grants through the first read are identical, but returned beam
+changes:65->64,67->66,66->65 respectively. Only the first change repairs HW.
+This is emulator-only evidence, not a hardware grant trace; see
+`experiments/diagnostics/init-return-phase-v1.json`. It does not justify moving
+DMA events or selecting a different beam offset.
+
+Accepted checkout returns to `fix/more-a500-timing-fixes` atb40122d4, with a fresh
+compact build. Init checkpoint6c06be2a remains on `wip/init-after-bmapen-20261023`;
+older02318e9e remains unchanged. The next evidence is actual CPU clock/strobe/
+DTACK phase for the original observer, using
+`docs/init-bus-phase-capture.md`. All completed live batches restored their
+saved session image and verified reset release. Main handoff record:
+`investigations/init-after-bmapen.json`.

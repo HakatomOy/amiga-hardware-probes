@@ -1,0 +1,10 @@
+{
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\pr-810-review\\cia-zero-pulse-hardware-v1",
+  "hypothesis": "TA and TB share the zero-latch adjacent-underflow pulse width.",
+  "test": "Both CIAs, PB6 versus PB7 pulse-mode high-byte auto-start, latch0/1/3 and0..7 NOP gaps; normalize bit number only after the physical sample.",
+  "smaller_reproducer": null,
+  "next_question": "Does TB emit the same adjacent zero-latch pulse width as TA?",
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "3a24310fd1ca70a588eba7cf7f54ba13f1221edd38ee1d394b1cd2fbdab9b68e",
+  "decision": "validation failed"
+}

@@ -14,7 +14,7 @@ Use `python tools/experiment.py run MANIFEST --out captures/UNIQUE` for an
 experiment batch. The manifest declares build steps, capture requirements,
 comparison rules and focused/neighbor/broad validation. See
 `experiments/workflows/serial-buffer.json`. Commands are argument arrays;
-Cargo commands must use Copperline's `tools/cargo_report.py` wrapper.
+From `Copperline/`, run Cargo through `python ../amiga-hardware-probes/tools/cargo_report.py -- <args>`. See [compact Cargo reporting](docs/cargo-report.md).
 
 ## Evidence and validation
 

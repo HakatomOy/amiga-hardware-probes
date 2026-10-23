@@ -1,0 +1,31 @@
+{
+  "hypothesis": "Original beam mismatch depends on unrecorded execution history or CPU phase despite equal integer input.",
+  "competitor": "Original observer has a deterministic grant/return error independent of preceding cases.",
+  "test": "Reorder the same32 kind113 descriptors to phases1,3,0,2, leaving kernel and fixed-ROM observer byte-identical. Compare new ROM hardware twice, then inspect original/new expectations only within identical recorded input cohorts.",
+  "outcomes": {
+    "hardware output changes under identical input and observer": "Do not tune one cohort; investigate missing phase/history qualification.",
+    "same original residual persists": "Retain deterministic original sequence and narrow its return boundary.",
+    "code or activity differs": "Reject history inference."
+  },
+  "next_question": "Can explicit CPU half-CCK phase reproduce the two hardware outcomes with whole-CCK waits?",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\master-reorder-hardware-v1",
+  "smaller_reproducer": null,
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "961e3f5e4626ac5e84217a875ddf3091f73d38f4107abf2621f69d2e73bf37d5",
+  "decision": "validation failed",
+  "status": "history-sensitive ambiguous cohorts; not accepted",
+  "results": {
+    "matches": 24,
+    "mismatches": 0,
+    "unstable": 8,
+    "excluded": 0
+  },
+  "references": [
+    "dma-master-reorder-v1"
+  ],
+  "confirmed_facts": [
+    "Full observers, alignment ROM region, kernel and observer source byte-identical original.",
+    "Input424d gives HW4264 and4265 across repeats/runs; input424f gives4266 and4267.",
+    "ROM data, record-slot address and prior execution history differ from original; this does not prove CPU phase specifically."
+  ]
+}

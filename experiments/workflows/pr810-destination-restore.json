@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "id": "pr810-destination-restore",
+  "hypothesis": "Bus-free startup/bubble slots remain available under BLTPRI; D-side ordering follows real requests.",
+  "competitor": "BLTPRI adds an extra startup fence needed to delay the CPU restore until after D writes.",
+  "test": "Descending two-word D-only/AD blits; restore last destination versus outside neighbor; BLTPRI off/on, zero-to-three NOP gaps, no-start and preseed5555 controls.",
+  "outcomes": {
+    "hardware permits early restore": "Retain bus-request model; protect destination race in regression.",
+    "hardware fences restore": "Correct arbitration only for measured request conditions.",
+    "unstable": "Narrow launch phase before modifying emulator."
+  },
+  "next_question": "Does the destination-side restore race agree without a synthetic BLTPRI warm-up fence?",
+  "investigation": "investigations/pr810-destination-restore.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/handoff-destination-review-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "6fcf0c764fc2fc314b36023b289b2a6df9c03453834eef456c78c1eaf91c9c6e",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 384,
+    "valid_statuses": [
+      0
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": ["references/pr810-destination-v1/run1", "references/pr810-destination-v1/run2"],
+  "comparison": {
+    "alignment": "exact",
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "exact pre-start phase"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "first_destination",
+        "field": "irq_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "first_destination"
+      },
+      {
+        "name": "last_destination",
+        "field": "irq_level",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "last_destination"
+      },
+      {
+        "name": "cpu_write_readback",
+        "field": "aux",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "cpu_write_readback"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 300,
+    "limitations": "Stock PAL A500; see docs/a500-measurement-hardware.md for both CIA markings, unchanged since before all measurements. Settled truth table only."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation"
+}

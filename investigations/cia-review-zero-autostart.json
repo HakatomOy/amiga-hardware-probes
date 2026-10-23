@@ -1,0 +1,33 @@
+{
+  "experiment": "cia-review-zero-autostart",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\pr-810-review\\cia-zero-final-v3",
+  "identity": {
+    "binary_sha256": "229b43dc1ab161a83ed41bfa9bd89b63c004ee9d6b7484b7fbe8b8da4538f911",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "cd6b020023d28b1fc800e3eaafa6ba48c62169cd32ddd87e2678d0f73c4d7d1e",
+    "source_id": "8e0ed33175f8f38a4a5749071ea19a21b59b88c9e6f64f4a182aad82ddd3c8f5"
+  },
+  "hypothesis": "TA and TB share zero-latch high-byte auto-start carry behavior.",
+  "competitor": "The observed TA extra carry does not apply to TB, or is invisible to this transfer aperture.",
+  "test": "Pair both timers on both CIAs at latch0,1,3 with 0..7 NOP gaps; compare first/second/settled START readbacks, retaining write/read beam brackets.",
+  "smaller_reproducer": null,
+  "outcomes": {
+    "TB differs from emulator in zero only": "Extend carry model if latch1/3 controls agree.",
+    "both timers match": "Do not infer hidden TB underflows; preserve aperture limit.",
+    "broad mismatch": "Reject generalization and isolate transfer timing."
+  },
+  "next_question": "Does TB zero-latch START readback outlive its first LOAD carry like TA?",
+  "references": [
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-review-zero-v1\\run1",
+    "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-review-zero-v1\\run2"
+  ],
+  "evidence_fingerprint": "c86abc4f10d9df4fc06f788326733f53b92e049bddfbb2910afda51b3af4d3d1",
+  "no_new_evidence": 1,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence"
+}

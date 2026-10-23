@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "reference_id": "cia-review-zero-v1-run1",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\pr-810-review\\cia-zero-hardware-v1\\hardware-1",
+  "test_rom_sha256": "cd6b020023d28b1fc800e3eaafa6ba48c62169cd32ddd87e2678d0f73c4d7d1e",
+  "source_id": "8e0ed33175f8f38a4a5749071ea19a21b59b88c9e6f64f4a182aad82ddd3c8f5",
+  "results_sha256": "9264e07c7850c12c69dad00037d0d7c3d06547516e944a35a570aa6f4e559432",
+  "record_count": 288,
+  "metadata": {
+    "version": 1,
+    "source_id": "8e0ed33175f8f38a4a5749071ea19a21b59b88c9e6f64f4a182aad82ddd3c8f5",
+    "record_count": 288,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "9264e07c7850c12c69dad00037d0d7c3d06547516e944a35a570aa6f4e559432"
+  },
+  "restoration": {
+    "backup_sha256": "e964486b20273c0b5707c544c5e672fafc0cd1bcebfbace0237f403aa7b00aa6",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "e964486b20273c0b5707c544c5e672fafc0cd1bcebfbace0237f403aa7b00aa6",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\pr-810-review\\cia-zero-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 126,
+    "aligned": false,
+    "targets": [
+      "CIA-A",
+      "CIA-B"
+    ],
+    "sources": null,
+    "masks": null,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "event_offset": "CIA Timer-A latch32+offset E clocks; Copper WAIT line66 h60+2*offset CCK",
+    "watchdog": "Copper SOFT level1 at line70 h60; all ordinary handlers disable all sources",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "pre/post source release VHPOSR; exact bracket cohorts only",
+    "masked_fields": null,
+    "limitations": "VPA transfer aperture, not direct underflow counting. Paired timers and latch1/3 controls.",
+    "variants": "0=TA,1=TB;phase=latch;delay=NOP count",
+    "fields": {
+      "20": "first CRA/CRB",
+      "22": "second CRA/CRB",
+      "34": "settled CRA/CRB",
+      "12": "pre-write beam",
+      "14": "post-first-read beam"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 96,
+    "independently_repeated_cohorts": 96,
+    "candidate_cases_with_independent_repeats": 288,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "Stock PAL A500; see docs/a500-measurement-hardware.md for both CIA markings, unchanged since before all measurements. Settled truth table only.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\pr-810-review\\cia-zero-hardware-v1\\reference-1"
+}

@@ -1,0 +1,45 @@
+{
+  "hypothesis": "The original reference undersampled a CPU phase/history cohort;4265 is also valid hardware for input424d.",
+  "competitor": "The added outcome is specific to reordered trial history or changed ROM data, while original ROM remains deterministic.",
+  "test": "Recapture the exact original32-case ROM twice, unchanged hash/code/order, then compare original plus fresh references without selecting either output.",
+  "outcomes": {
+    "original also yields4265": "Original stable-difference claim needs phase qualification; no blanket correction.",
+    "original consistently4264": "Narrow order/history dependency; preserve original mismatch separately.",
+    "conflicting outputs": "Mark ambiguous cohort unstable, not matched or repaired."
+  },
+  "next_question": "Which phase/history state distinguishes original and reordered outcomes?",
+  "experiment": "dma-master-stability",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\master-stability-hardware-v1",
+  "identity": {
+    "binary_sha256": "49df162e65188abbe362df11a53e6fca82c60ff749b19375c7aa285c21b8bb75",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "1c00a58ea071deaa624ff16302944b70fd31e91941d939fec9e9f97bd0acb32e",
+    "source_id": "c74cd90a660e3a6872123fcb7cd6d5eccb8298e53896bc79d0be50e37ae6438d",
+    "environment_sha256": "9ae0139bb1db3d2e95d8f0e2bf17a05f8cc2281c2f6b7ad145b3436df9928da4"
+  },
+  "smaller_reproducer": null,
+  "references": [
+    "dma-master-stability-v1"
+  ],
+  "evidence_fingerprint": "7e9ec4dfc88e468dc4a79920cde5f0d7f1c5339014dee419def0094f198d16d2",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "status": "original residual reproduced, not waived",
+  "results": {
+    "matches": 28,
+    "mismatches": 4,
+    "unstable": 0,
+    "excluded": 0
+  },
+  "confirmed_facts": [
+    "Exact originalROM1c00a58e recaptured twice.",
+    "All four phase1 inert cases remain HW4264 versus emulator4265, stable input424d.",
+    "Reordering uncertainty does not make original references unstable; keep contracts separate."
+  ]
+}

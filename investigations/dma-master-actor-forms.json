@@ -1,0 +1,47 @@
+{
+  "hypothesis": "The original immediate COLOR00 instruction/prefetch sequence differs from equal-duration actor forms.",
+  "competitor": "Outcome depends on history/phase rather than the immediate actor specifically.",
+  "test": "Retain original32 descriptors/order/result slots and observer bytes first, then append immediate COLOR00,register+NOP,NOP+register,fourNOP controls, each16 CPU clocks, with/without Copper. Prealignment dispatch changes; no output alignment.",
+  "outcomes": {
+    "original-only immediate pattern persists": "Inspect immediate EA/prefetch scheduling before changing general bus timing.",
+    "all forms share phase/history pattern": "Seek bus phase witness; no opcode-specific correction.",
+    "original first32 no longer reproduces": "Retain code/history limitation; do not claim original repaired."
+  },
+  "next_question": "Do all custom-register destinations share the boundary, and does RAM write differ?",
+  "experiment": "dma-master-actor-forms",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\master-actor-hardware-v2",
+  "identity": {
+    "binary_sha256": "49df162e65188abbe362df11a53e6fca82c60ff749b19375c7aa285c21b8bb75",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "75aef97fe56047a3f646e5950ac7d66de76030457fb64987c2e4dffd23083822",
+    "source_id": "11b90dd9441ba4de397dd93cabff4dccb4ee9a0926fae72ffc93b46c7c3d039f",
+    "environment_sha256": "9ae0139bb1db3d2e95d8f0e2bf17a05f8cc2281c2f6b7ad145b3436df9928da4"
+  },
+  "smaller_reproducer": null,
+  "references": [
+    "dma-master-actor-forms-v2"
+  ],
+  "evidence_fingerprint": "c8cc815962ad7e885c99cde80d767907fd58024ef59fc657eb401b06f7d7c803",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "status": "stable write-position family reproduced",
+  "results": {
+    "matches": 148,
+    "mismatches": 12,
+    "unstable": 0,
+    "excluded": 0,
+    "invalid": 0
+  },
+  "confirmed_facts": [
+    "Original32 prefix remains28 match4 stable mismatch.",
+    "Immediate actor controls and NOP-before-register controls each have4 Copper-enabled differences.",
+    "Register-then-NOP, fourNOPs and all Copper-disabled controls match.",
+    "Not an immediate-opcode-only failure; same16-clock total but write position matters."
+  ]
+}

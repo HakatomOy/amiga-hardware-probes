@@ -1,0 +1,19 @@
+{
+  "status": "not accepted: phase1 repairs original4 but regresses28 other original cases",
+  "base_commit": "6c06be2a",
+  "hypothesis": "A classic word cycle has address/data/return1/2/1 CPU clocks with whole-CCK waits, but missing initial CPU half-CCK phase changes which DMA slot the data window sees.",
+  "competitor": "The dependency is Copper/DMA restart or record history rather than CPU clock phase.",
+  "test": "Use previously baseline-identical shared whole-CCK model5, with phase0 versus phase1 CPU clock at reset. Compare original/reordered32cases, collision controls, paired return forms and source-value witnesses. Keep unstable outputs separate; no alignment or beam adjustment.",
+  "outcomes": {
+    "phase1 reproduces early outcome while phase0 reproduces late": "Design a controlled VPA/CPU phase witness before accepting any phase initialization.",
+    "independent conflicts or unchanged original": "Reject this implementation; retain exact observer reproducer."
+  },
+  "units": "2CPUclocks perCCK; reset phase0 or1 CPUclock; waits2CPUclocks; no one-clock waits",
+  "next_question": "Does a CIA VPA/E-clock synchronization control remove history-dependent outcome conflicts while keeping original observer after input unchanged?",
+  "confirmed_facts": [
+    "Mode5 whole-CCK phase0 remains baseline-identical.",
+    "Mode13 phase1 reproduces original phase1 inert HW4264, but fails28 other original cases and independent controls.",
+    "One global reset phase is not a fix; a hardware phase/control witness is required before modeling transitions."
+  ],
+  "evidence": "captures/init-after-bmapen-20261022/reset-phase-screen-v1/results.json"
+}

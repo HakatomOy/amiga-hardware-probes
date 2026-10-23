@@ -1,0 +1,21 @@
+{
+  "status": "rejected: original and independently measured source regressions",
+  "base_commit": "6c06be2a",
+  "hypothesis": "Read/write data strobes occur at different CPU states; conflating both grant windows prevents correct phase transitions under DMA waits.",
+  "competitor": "Direction-specific windows still misplace ownership; the residual is narrower than this bus model.",
+  "test": "Shared CPU clocks with read address/data/return1/2/1 and write2/2/0, write data sampled at data-window start. Compare one/two CPU-clock waits and initial phase controls. Require existing exact baseline and independently measured first Copper/WAIT/bitplane source ownership.",
+  "outcomes": {
+    "original repairs without field or qualification regressions": "Broaden all collision, CIA/bus, core and original Init gates.",
+    "source ownership or old controls regress": "Reject implementation; preserve original stable mismatch and ambiguous history cohorts."
+  },
+  "units": "Stock68000 four CPU clocks per word,2CPUclocks/CCK; no beam correction or trace alignment.",
+  "source_reference": "https://www.nxp.com/docs/en/reference-manual/MC68000UM.pdf#page=82",
+  "limitation": "NXP specifies readUDS/LDS atS2 versus writeS4; mapping those edges to Amiga RGA/DRAM is the tested hypothesis, not established fact.",
+  "next_question": "Does a paired original/equal-duration actor-form matrix isolate the exact immediate COLOR00 sequence?",
+  "confirmed_facts": [
+    "Modes17/25 repair4 original cases but regress28 other original,64 original mode cases and8 source cases.",
+    "Mode21 retains original512 mode matches but regresses20 original master cases,48 paired return cases and8 source cases.",
+    "Mode5 remains exact baseline control; no directional model accepted; source restored6c06be2a."
+  ],
+  "evidence": "captures/init-after-bmapen-20261022/directed-phase-screen-v1/ranking.json"
+}

@@ -10,6 +10,9 @@ apply them on top of one another or merge their environment selectors.
 | `init-cpu-clock-phase-v1.patch` | `6c06be2a` | `COPPERLINE_EXP_CLASSIC_BUS_PHASE` |
 | `init-shared-cpu-phase-v1.patch` | `6c06be2a` | `COPPERLINE_EXP_CLASSIC_BUS_PHASE` |
 | `init-cpu-grant-phase-v1.patch` | `6c06be2a` | `COPPERLINE_EXP_CPU_GRANT_PHASE` |
+| `init-reset-cpu-phase-v1.patch` | `6c06be2a` | `COPPERLINE_EXP_CLASSIC_BUS_PHASE` |
+| `init-directed-cpu-phase-v1.patch` | `6c06be2a` | `COPPERLINE_EXP_CLASSIC_BUS_PHASE` |
+| `init-copper-write-ack-v1.patch` | `6c06be2a` | `COPPERLINE_EXP_CLASSIC_BUS_PHASE` |
 
 Matching recipes are in `experiments/screens/`. Build with Copperline's compact
 Cargo wrapper, then run `tools/screen_capture_variants.py RECIPE --out

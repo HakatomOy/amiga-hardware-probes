@@ -187,7 +187,7 @@
       "cwd": "../Copperline",
       "argv": [
         "{python}",
-        "tools/cargo_report.py",
+        "{root}/tools/cargo_report.py",
         "--log-dir",
         "{out}/cargo",
         "--",
@@ -207,7 +207,7 @@
       "cwd": "../Copperline",
       "argv": [
         "{python}",
-        "tools/cargo_report.py",
+        "{root}/tools/cargo_report.py",
         "--log-dir",
         "{out}/cargo",
         "--",
@@ -226,7 +226,7 @@
       "cwd": "../Copperline",
       "argv": [
         "{python}",
-        "tools/cargo_report.py",
+        "{root}/tools/cargo_report.py",
         "--log-dir",
         "{out}/cargo",
         "--",

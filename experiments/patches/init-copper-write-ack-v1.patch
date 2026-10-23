@@ -1,0 +1,305 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index c1563a5f..be21a442 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -1171,6 +1171,8 @@ pub struct Bus {
+     /// Transient bus-cycle state, rebuilt every access; not serialized.
+     #[serde(skip)]
+     cpu_custom_request_slot: Option<(u32, u32)>,
++    #[serde(skip)]
++    cpu_custom_write_cycle: bool,
+     dbg_bpl_cck: Vec<u32>,
+     dbg_slotmap: Vec<Vec<u8>>,
+     dbg_slotmap_on: bool,
+@@ -1488,6 +1490,16 @@ pub enum BeamWriteSource {
+     Copper,
+ }
+ 
++fn exp_classic_bus_phase() -> u32 {
++    use std::sync::OnceLock;
++    static MODE: OnceLock<u32> = OnceLock::new();
++    *MODE.get_or_init(|| {
++        crate::envcfg::var("COPPERLINE_EXP_CLASSIC_BUS_PHASE")
++            .and_then(|value| value.parse().ok())
++            .unwrap_or(0)
++    })
++}
++
+ /// One-shot env flag for the CPU write-landing trace
+ /// (`COPPERLINE_DIAG_CPU_WRITES=1`); see [`Bus::diag_cpu_write`].
+ fn diag_cpu_writes_on() -> bool {
+@@ -3881,10 +3893,11 @@ impl Bus {
+             cpu_access_phase_sync: false,
+             cpu_posted_write_debt: 0,
+             cpu_chip_port_free_at: 0,
+-            cpu_chip_clock_phase: 0,
++            cpu_chip_clock_phase: u32::from(exp_classic_bus_phase() & 8 != 0),
+             cpu_bus_overlap_clocks: 0,
+             cpu_custom_access_slot: None,
+             cpu_custom_request_slot: None,
++            cpu_custom_write_cycle: false,
+             cpu_granted_chip_slots: 0,
+             cpu_missed_chip_slots: 0,
+             cpu_wait_cck_total: 0,
+@@ -5554,7 +5567,8 @@ impl Bus {
+         self.emulated_frames = 0;
+         self.cpu_posted_write_debt = 0;
+         self.cpu_chip_port_free_at = 0;
+-        self.cpu_chip_clock_phase = 0;
++        self.cpu_chip_clock_phase = u32::from(exp_classic_bus_phase() & 8 != 0);
++        self.cpu_custom_write_cycle = false;
+         self.cpu_bus_overlap_clocks = 0;
+         self.cpu_wait_cck_total = 0;
+         self.display_dma_bplpt = [0; 8];
+@@ -6953,6 +6967,15 @@ impl Bus {
+         if !self.cpu_bus_arbitration_enabled {
+             return;
+         }
++        if !self.cpu_short_bus_cycle
++            && self.cpu_clocks_per_cck == 2
++            && exp_classic_bus_phase() & 1 != 0
++        {
++            let start = self.cpu_bus_clock_position();
++            self.bill_cpu_bus_clocks(cpu_clocks);
++            self.credit_cpu_bus_clocks_since(start);
++            return;
++        }
+         let total = cpu_clocks + std::mem::take(&mut self.cpu_clock_carry);
+         let cck = total / self.cpu_clocks_per_cck;
+         self.cpu_clock_carry = total % self.cpu_clocks_per_cck;
+@@ -6973,6 +6996,16 @@ impl Bus {
+         if !self.cpu_bus_arbitration_enabled || words == 0 {
+             return;
+         }
++        if !self.cpu_short_bus_cycle
++            && self.cpu_clocks_per_cck == 2
++            && self.dbg_ext_cck_x100 == 200
++            && exp_classic_bus_phase() & 1 != 0
++        {
++            let start = self.cpu_bus_clock_position();
++            self.bill_cpu_bus_clocks(words * 4);
++            self.credit_cpu_bus_clocks_since(start);
++            return;
++        }
+         // dbg_ext_cck_x100 expresses the stock-ratio cost in hundredths of a
+         // cck per word (default 200 = 4 CPU clocks/word); 2x converts it to
+         // hundredths of a CPU clock.
+@@ -7043,6 +7076,24 @@ impl Bus {
+         self.record_slice_bus_advance(3, tick);
+         self.credit_cpu_off_chip_access(3);
+         self.flush_timed_devices();
++        if !self.cpu_short_bus_cycle
++            && self.cpu_clocks_per_cck == 2
++            && exp_classic_bus_phase() & 1 != 0
++            && exp_classic_bus_phase() & (64 | 128) != 0
++        {
++            let target = u32::from(exp_classic_bus_phase() & 128 != 0);
++            let previous = self.cpu_chip_clock_phase;
++            self.cpu_chip_clock_phase = target;
++            if target >= previous {
++                self.cpu_bus_overlap_clocks = self
++                    .cpu_bus_overlap_clocks
++                    .saturating_add(target - previous);
++            } else {
++                self.cpu_bus_overlap_clocks = self
++                    .cpu_bus_overlap_clocks
++                    .saturating_sub(previous - target);
++            }
++        }
+     }
+ 
+     pub fn cpu_slow_external_access(&mut self, words: u32) {
+@@ -7121,6 +7172,10 @@ impl Bus {
+ 
+     /// Whether the current slice charges per instruction, so the chip clock
+     /// phase is fresh at every access.
++    pub fn cpu_shared_clock_phase(&self) -> bool {
++        self.cpu_short_bus_cycle || self.cpu_clocks_per_cck == 2 && exp_classic_bus_phase() & 1 != 0
++    }
++
+     pub fn cpu_access_phase_sync(&self) -> bool {
+         self.cpu_access_phase_sync
+     }
+@@ -7186,7 +7241,17 @@ impl Bus {
+         mut sample: impl FnMut(&mut Self, u32, usize),
+     ) {
+         self.grant_cpu_bus_access_sampled_phased(addr, size, kind, |bus, slot, stride, phase| {
+-            if phase == CpuBusSamplePhase::End {
++            let write_start = !bus.cpu_short_bus_cycle
++                && bus.cpu_clocks_per_cck == 2
++                && exp_classic_bus_phase() & 16 != 0
++                && matches!(kind, CpuBusAccessKind::Write);
++            if phase
++                == if write_start {
++                    CpuBusSamplePhase::Start
++                } else {
++                    CpuBusSamplePhase::End
++                }
++            {
+                 sample(bus, slot, stride);
+             }
+         });
+@@ -7267,17 +7332,28 @@ impl Bus {
+         // Every access the CPU waits for credits its clocks back against the
+         // instruction charge, because the m68k timing table already allots the
+         // instruction the time for its own access.
+-        let credit = self.cpu_short_bus_cycle && self.cpu_access_phase_sync;
++        let credit = self.cpu_shared_clock_phase() && self.cpu_access_phase_sync;
+         // Only a chip-RAM read is known to synchronise the CPU to the chip
+         // clock; see `sync_cpu_to_chip_clock`. Fetches and custom-register
+         // accesses are left unsynchronised until a probe measures them.
+-        let phase_sync = credit && matches!(kind, CpuBusAccessKind::Read);
++        let phase_sync =
++            credit && self.cpu_short_bus_cycle && matches!(kind, CpuBusAccessKind::Read);
+         if phase_sync {
+             self.sync_cpu_to_chip_clock();
+         }
+         let bus_clocks_start = self.cpu_bus_clock_position();
+         let trace_cpu_bus = diag_cpu_bus_on() && diag_cpu_bus_addr_matches(addr, size);
++        let classic_phases = !self.cpu_short_bus_cycle
++            && self.cpu_clocks_per_cck == 2
++            && exp_classic_bus_phase() & 1 != 0;
++        let directed_write = classic_phases
++            && exp_classic_bus_phase() & 16 != 0
++            && (matches!(kind, CpuBusAccessKind::Write)
++                || matches!(kind, CpuBusAccessKind::Custom) && self.cpu_custom_write_cycle);
+         for slot in 0..slots {
++            if classic_phases {
++                self.bill_cpu_bus_clocks(if directed_write { 2 } else { 1 });
++            }
+             self.flush_audio_before_audio_dma_slot();
+             let request_slot = (self.agnus.vpos, self.agnus.hpos);
+             if matches!(kind, CpuBusAccessKind::Custom) {
+@@ -7299,10 +7375,32 @@ impl Bus {
+                 if self.frame_analyzer_enabled {
+                     self.cpu_bus_wait = Some(self.cpu_bus_wait_sample(kind, true));
+                 }
+-                let (cck, tick) = self.advance_one_chip_bus_quantum(None);
+-                wait_cck += cck;
+-                self.note_cpu_missed_chip_bus_cycle(cck);
+-                self.record_slice_bus_advance(cck, tick);
++                if classic_phases {
++                    let before = self.emulated_cck;
++                    let copper_write_release = exp_classic_bus_phase() & 32 != 0
++                        && (matches!(kind, CpuBusAccessKind::Write)
++                            || matches!(kind, CpuBusAccessKind::Custom)
++                                && self.cpu_custom_write_cycle)
++                        && matches!(self.scheduled_dma_owner(true), ChipBusOwner::Copper)
++                        && self.copper.is_running();
++                    self.bill_cpu_bus_clocks(
++                        if copper_write_release || exp_classic_bus_phase() & 4 == 0 {
++                            1
++                        } else {
++                            2
++                        },
++                    );
++                    let advanced = (self.emulated_cck - before) as u32;
++                    wait_cck += advanced;
++                    if advanced != 0 {
++                        self.note_cpu_missed_chip_bus_cycle(advanced);
++                    }
++                } else {
++                    let (cck, tick) = self.advance_one_chip_bus_quantum(None);
++                    wait_cck += cck;
++                    self.note_cpu_missed_chip_bus_cycle(cck);
++                    self.record_slice_bus_advance(cck, tick);
++                }
+                 self.flush_audio_before_audio_dma_slot();
+             }
+             self.cpu_bus_wait = None;
+@@ -7341,8 +7439,14 @@ impl Bus {
+             // inside that clock is carried by `cpu_chip_clock_phase`.
+             if !self.cpu_short_bus_cycle {
+                 sample(self, slot, slot_stride, CpuBusSamplePhase::End);
+-                let (cck, tick) = self.advance_one_chip_bus_quantum(None);
+-                self.record_slice_bus_advance(cck, tick);
++                if classic_phases {
++                    if !directed_write {
++                        self.bill_cpu_bus_clocks(1);
++                    }
++                } else {
++                    let (cck, tick) = self.advance_one_chip_bus_quantum(None);
++                    self.record_slice_bus_advance(cck, tick);
++                }
+             }
+             if trace_cpu_bus {
+                 self.diag_cpu_bus_access(
+@@ -7412,7 +7516,7 @@ impl Bus {
+     }
+ 
+     fn credit_cpu_off_chip_access(&mut self, cck: u32) {
+-        if !self.cpu_short_bus_cycle || !self.cpu_access_phase_sync {
++        if !self.cpu_shared_clock_phase() || !self.cpu_access_phase_sync {
+             return;
+         }
+         let clocks = cck.saturating_mul(self.cpu_clocks_per_cck);
+@@ -9731,7 +9835,11 @@ impl Bus {
+                 } else {
+                     CpuBusSamplePhase::End
+                 };
+-                if matches!(word_off, 0x00E | 0x01E) && phase == sample_phase {
++                let early_beam = word_off == 0x006
++                    && !bus.cpu_short_bus_cycle
++                    && !bus.aga_enabled()
++                    && exp_classic_bus_phase() & 2 != 0;
++                if (matches!(word_off, 0x00E | 0x01E) || early_beam) && phase == sample_phase {
+                     // CLXDAT samples/clears before the word's trailing
+                     // clocks; INTREQR retains its end-of-slot sampling.
+                     bus.flush_timed_devices();
+@@ -9856,6 +9964,7 @@ impl Bus {
+     /// delivered before agnus has a chance to OR in VERTB.
+     pub fn custom_write(&mut self, addr: u64, size: usize, val: u64) -> bool {
+         let off = (addr & 0xFFF) as u16;
++        self.cpu_custom_write_cycle = true;
+         // Copper samples COPEN at transfer, before the CPU tail. Other
+         // DMACON consumers retain their own calibrated write phase.
+         let mut sampled_strobes = [false; 2];
+@@ -9870,11 +9979,16 @@ impl Bus {
+                 CpuBusAccessKind::Custom,
+                 |bus, slot, stride, phase| {
+                     let word_off = off.wrapping_add((slot as usize * stride) as u16) & !1;
+-                    if matches!(word_off, 0x088 | 0x08a) && phase == CpuBusSamplePhase::End {
++                    let transfer = if exp_classic_bus_phase() & 16 != 0 {
++                        CpuBusSamplePhase::Start
++                    } else {
++                        CpuBusSamplePhase::End
++                    };
++                    if matches!(word_off, 0x088 | 0x08a) && phase == transfer {
+                         bus.copjmp_strobe(if word_off == 0x088 { 1 } else { 2 });
+                         sampled_strobes[slot as usize] = true;
+                     }
+-                    if word_off == 0x096 && phase == CpuBusSamplePhase::End {
++                    if word_off == 0x096 && phase == transfer {
+                         let word = match size {
+                             1 => (val as u8 as u16) * 0x0101,
+                             4 if slot == 0 => (val >> 16) as u16,
+@@ -9892,6 +10006,7 @@ impl Bus {
+                 CpuBusAccessKind::Custom,
+             );
+         }
++        self.cpu_custom_write_cycle = false;
+         // Apply deferred device clocks before the write lands: registers such as
+         // INTREQ/INTENA/ADKCON/DSKLEN/AUDxxx/SERDAT change timed-device state, so
+         // the device must first be advanced to this color clock (e.g. so a
+diff --git a/src/cpu.rs b/src/cpu.rs
+index 8ddd2c52..e8f2c2a6 100644
+--- a/src/cpu.rs
++++ b/src/cpu.rs
+@@ -3271,7 +3271,7 @@ impl M68kMachine {
+             // clocks back, so there is nothing left to reconcile. The 68000
+             // keeps its two timelines and the reconciliation below, which can
+             // only ever add time.
+-            if self.sync_cck_on && !self.bus.bus.cpu_short_bus_cycle() {
++            if self.sync_cck_on && !self.bus.bus.cpu_shared_clock_phase() {
+                 // Advance the chipset through this instruction's CPU-internal
+                 // cycles (cpu_cck minus the cycles already spent on the bus) so
+                 // the beam and DMA track the CPU's full instruction time.
+@@ -3508,7 +3508,7 @@ impl M68kMachine {
+     }
+ 
+     fn charge_cpu_clock_value(&mut self, clocks: u32) -> u32 {
+-        if self.bus.bus.cpu_short_bus_cycle() && self.bus.bus.cpu_access_phase_sync() {
++        if self.bus.bus.cpu_shared_clock_phase() && self.bus.bus.cpu_access_phase_sync() {
+             // The 020+ shares one clock timeline with the chip bus, so the
+             // sub-colour-clock phase lives there and an access can see where
+             // in the colour clock the CPU is; see `Bus::cpu_chip_clock_phase`.

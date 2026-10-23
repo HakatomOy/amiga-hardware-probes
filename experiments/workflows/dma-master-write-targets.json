@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "id": "dma-master-write-targets",
+  "hypothesis": "The residual belongs to a custom-register write port rather than generic CPU RAM-write timing.",
+  "competitor": "All destinations share the same write/return boundary or only one chipset target differs.",
+  "test": "Original32 cases first, then equal16-clock immediate writes to COLOR00,INTREQ,DMACON,COPCON,NOOP and RAM zero/pattern, each with/without Copper. No-change register values, RAM readback, exact post-write beam and finite Copper witness.",
+  "outcomes": {
+    "custom-register family differs from RAM": "Investigate RGA versus DRAM write handshake.",
+    "only specific target differs": "Inspect that chipset write path without moving general DMA.",
+    "all destinations share difference": "Seek CPU bus phase/wait recognition evidence."
+  },
+  "next_question": "Does the stable early/late family depend on register target or RAM port?",
+  "investigation": "investigations/dma-master-write-targets.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-master-write-targets-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Copper-disabled controls remain inactive",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "RAM write completed at scratch address",
+        "where": {
+          "variant": {
+            "mask": 62,
+            "equals": 36
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "RAM write completed at scratch address",
+        "where": {
+          "variant": {
+            "mask": 62,
+            "equals": 40
+          }
+        },
+        "require_values": [
+          21845
+        ],
+        "allowed_values": [
+          21845
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-master-write-targets-v1/run1",
+    "references/dma-master-write-targets-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after actual COPJMP or inert write"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Original first32 descriptors/order/record slots and observer/alignment bytes retained; prealignment dispatch and scratch pointer differ. Five harmless register writes, two RAM patterns; explicit d16 forms, no optimization/alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "rom_sha256": "9b6b2c5a553d635418d4dc3c17cf971c64c283e29ce92d09476095501f661cc0",
+  "probe_precheck": "256 cases,all activity/RAM controls pass; original code/first32 verified; all actor operands6 bytes including d16 RAM opcode337c."
+}
