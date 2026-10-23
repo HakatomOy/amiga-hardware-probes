@@ -1,5 +1,5 @@
 {
-  "status": "counterfactual; not accepted",
+  "status": "rejected1-clock waits; whole-CCK control packet-identical baseline",
   "base_commit": "6c06be2a",
   "hypothesis": "The first phase model retained classic whole-CCK instruction reconciliation, which can add time after fractional bus accounting. A shared CPU-clock timeline must also credit every elapsed access/internal clock and charge only remaining instruction clocks.",
   "competitor": "The remaining differences need a different Amiga grant/sampling rule; correct bookkeeping will still fail hardware.",
@@ -9,5 +9,27 @@
     "new fields or lost qualification": "Reject this implementation; retain captures and narrow the grant model."
   },
   "units": "2CPU clocks/CCK; explicit sub-CCK carry, no trace alignment",
-  "next_question": "Does complete shared instruction accounting change the rejected phase-model result?"
+  "next_question": "Does arbitration query the wrong part of the classic CPU bus cycle, rather than using the wrong wait granularity?",
+  "results": {
+    "0": {
+      "matches": 2448,
+      "mismatches": 104,
+      "excluded": 0,
+      "unstable": 40
+    },
+    "1": {
+      "matches": 880,
+      "mismatches": 904,
+      "excluded": 768,
+      "unstable": 40
+    },
+    "5": {
+      "matches": 2448,
+      "mismatches": 104,
+      "excluded": 0,
+      "unstable": 40
+    }
+  },
+  "whole_cck_control_identical": true,
+  "evidence": "captures\\init-after-bmapen-20261022\\shared-phase-screen-v1\\results.json"
 }

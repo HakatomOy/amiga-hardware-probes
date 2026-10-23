@@ -1,0 +1,33 @@
+{
+  "hypothesis": "The persistent late-read family is a general CPU/bitplane grant boundary.",
+  "competitor": "The difference requires midline DMA enable or initial Copper request timing.",
+  "test": "Enable or disable two-plane DMA atline40 with Copper disabled throughout. Read input beam,0..3 NOPs, then three consecutive beam words; CLXDAT PF1/PF2 activity witness after measurements.",
+  "outcomes": {
+    "steady active differs, disabled matches": "Investigate generic CPU/bitplane read grant.",
+    "steady active matches": "Retain current generic path; narrow to enable/startup transition.",
+    "activity absent or unstable": "Preserve invalid/unstable evidence and revise probe."
+  },
+  "next_question": "Does cold Copper first-instruction ownership differ when BPLEN rises simultaneously?",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\steady-read-hardware-v1",
+  "smaller_reproducer": null,
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "f219a93236ecac1bc3350b911cd593e45e304bcb6e79d0ba374386cdab2c5b83",
+  "decision": "validation failed",
+  "status": "127 qualified matches;1 missing input cohort remains excluded",
+  "results": {
+    "matches": 127,
+    "mismatches": 0,
+    "excluded": 1,
+    "unstable": 0,
+    "invalid": 0
+  },
+  "references": [
+    "dma-steady-read-v1"
+  ],
+  "confirmed_facts": [
+    "All steady DMA on/off qualified triplets match with Copper disabled.",
+    "All128 activity witnesses pass on hardware and emulator.",
+    "Case118,15,3,3,0,0 lacks an exact hardware input cohort; not credited as a match.",
+    "Original ROM restoration and reset release verified."
+  ]
+}

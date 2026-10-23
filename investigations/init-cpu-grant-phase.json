@@ -1,0 +1,35 @@
+{
+  "status": "rejected: independent collision and qualification regressions",
+  "base_commit": "6c06be2a",
+  "hypothesis": "Classic arbitration checks DMA ownership at address setup rather than the later CPU data window; a DMA slot can finish before the CPU needs data without a full additional wait.",
+  "competitor": "The grant boundary is already correct; the residual is a narrower RGA/CPU return rule or unrecorded hardware phase.",
+  "test": "Move one of the classic cycle twoCCKs before arbitration, leaving one granted dataCCK and no extra tail. Compare normal versus data-window strobes/INTREQR sampling, across both readback ROMs and independent collision controls. Whole-CCK waits remain unchanged.",
+  "outcomes": {
+    "repairs and preserves independent controls": "Broaden all production gates.",
+    "new collision fields or qualification losses": "Reject general phase shift; do not compensate measurements."
+  },
+  "units": "Stock68000 four CPU clocks: address2, data/return2;2CPUclocks perCCK. No alignment or beam adjustment.",
+  "corroboration": "Local WinUAE/custom.cpp wait_cpu_cycle_read/write execute pre-cycle before dma_cycle; this is hypothesis context, not hardware proof.",
+  "next_question": "Does the read/grant difference exist with steady bitplane DMA and Copper disabled?",
+  "results": {
+    "0": {
+      "matches": 2448,
+      "mismatches": 104,
+      "excluded": 0,
+      "unstable": 40
+    },
+    "1": {
+      "matches": 880,
+      "mismatches": 904,
+      "excluded": 768,
+      "unstable": 40
+    },
+    "2": {
+      "matches": 872,
+      "mismatches": 912,
+      "excluded": 768,
+      "unstable": 40
+    }
+  },
+  "evidence": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/results.json"
+}

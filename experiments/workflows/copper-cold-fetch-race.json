@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "id": "copper-cold-fetch-race",
+  "hypothesis": "The remaining cold-enable difference is incorrect first Copper instruction ownership under simultaneous BPLEN.",
+  "competitor": "First instruction ownership is correct; later CPU observation/recognition produces the beam differences.",
+  "test": "Cold COPEN with/without simultaneous BPLEN, CPU overwrite of first Copper MOVE address009c to0180,0..3 NOP gaps, neighboring launch phases. Independent second MOVE sets completion bit3. Neighbor-write and preseed-new controls distinguish race from failed activity.",
+  "outcomes": {
+    "old/new instruction boundary differs": "Investigate initial Copper request/grant ordering.",
+    "marker boundary matches despite beam differences": "Keep later CPU recognition/read timing in scope; do not shift first fetch.",
+    "controls or repeatability fail": "Preserve invalid/unstable cases and narrow."
+  },
+  "next_question": "Does the first Copper instruction come from before or after the CPU overwrite?",
+  "investigation": "investigations/copper-cold-fetch-race.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/copper-cold-fetch-race-v2",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Independent finite Copper completion",
+        "require_values": [
+          8
+        ],
+        "allowed_values": [
+          8
+        ]
+      },
+      {
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "CPU overwrite completed at selected target",
+        "require_values": [
+          384
+        ],
+        "allowed_values": [
+          384
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Preseed-new instruction cannot set old marker",
+        "where": {
+          "variant": {
+            "mask": 4,
+            "equals": 4
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Neighbor write preserves old instruction",
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 2
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-cold-fetch-race-v2/run1",
+    "references/copper-cold-fetch-race-v2/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "first_instruction",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Old first instruction fetched before CPU overwrite"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Independent finite Copper witness"
+      },
+      {
+        "name": "stored_word",
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "CPU-written word after settle"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Master enabled atline40, COPEN cold until measured write. BPLEN optional at same write; no blitter/sprite DMA. Raw marker values, exact pre-enable cohorts; no beam-output comparison."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "rom_sha256": "174f6ef10cc9edb8287860c20b3bc3a2c1588f43e283872aaff02cfa0c807bf3",
+  "probe_precheck": "256 cases,0 failed controls; initial v1 rejected before HW because launch aligner EXG clobbered D1. Gate value now loaded in observer after alignment."
+}

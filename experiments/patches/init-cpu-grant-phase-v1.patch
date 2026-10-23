@@ -1,0 +1,98 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index c1563a5f..f2130fdc 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -1488,6 +1488,16 @@ pub enum BeamWriteSource {
+     Copper,
+ }
+ 
++fn exp_cpu_grant_phase() -> u32 {
++    use std::sync::OnceLock;
++    static MODE: OnceLock<u32> = OnceLock::new();
++    *MODE.get_or_init(|| {
++        crate::envcfg::var("COPPERLINE_EXP_CPU_GRANT_PHASE")
++            .and_then(|v| v.parse().ok())
++            .unwrap_or(0)
++    })
++}
++
+ /// One-shot env flag for the CPU write-landing trace
+ /// (`COPPERLINE_DIAG_CPU_WRITES=1`); see [`Bus::diag_cpu_write`].
+ fn diag_cpu_writes_on() -> bool {
+@@ -7278,6 +7288,13 @@ impl Bus {
+         let bus_clocks_start = self.cpu_bus_clock_position();
+         let trace_cpu_bus = diag_cpu_bus_on() && diag_cpu_bus_addr_matches(addr, size);
+         for slot in 0..slots {
++            let address_phase = !self.cpu_short_bus_cycle
++                && self.cpu_clocks_per_cck == 2
++                && exp_cpu_grant_phase() != 0;
++            if address_phase {
++                let (cck, tick) = self.advance_one_chip_bus_quantum(None);
++                self.record_slice_bus_advance(cck, tick);
++            }
+             self.flush_audio_before_audio_dma_slot();
+             let request_slot = (self.agnus.vpos, self.agnus.hpos);
+             if matches!(kind, CpuBusAccessKind::Custom) {
+@@ -7341,8 +7358,10 @@ impl Bus {
+             // inside that clock is carried by `cpu_chip_clock_phase`.
+             if !self.cpu_short_bus_cycle {
+                 sample(self, slot, slot_stride, CpuBusSamplePhase::End);
+-                let (cck, tick) = self.advance_one_chip_bus_quantum(None);
+-                self.record_slice_bus_advance(cck, tick);
++                if !address_phase {
++                    let (cck, tick) = self.advance_one_chip_bus_quantum(None);
++                    self.record_slice_bus_advance(cck, tick);
++                }
+             }
+             if trace_cpu_bus {
+                 self.diag_cpu_bus_access(
+@@ -9720,17 +9739,24 @@ impl Bus {
+                 let word_off = off.wrapping_add((slot as usize * stride) as u16) & 0xFFE;
+                 let copjmp = !bus.aga_enabled() && matches!(word_off, 0x088 | 0x08a);
+                 if copjmp {
+-                    if phase == CpuBusSamplePhase::End {
++                    if phase
++                        == if exp_cpu_grant_phase() == 2 {
++                            CpuBusSamplePhase::Start
++                        } else {
++                            CpuBusSamplePhase::End
++                        }
++                    {
+                         bus.copjmp_strobe(if word_off == 0x088 { 1 } else { 2 });
+                         sampled_words[slot as usize] = Some(bus.data_bus);
+                     }
+                     return;
+                 }
+-                let sample_phase = if word_off == 0x00E {
+-                    CpuBusSamplePhase::Start
+-                } else {
+-                    CpuBusSamplePhase::End
+-                };
++                let sample_phase =
++                    if word_off == 0x00E || word_off == 0x01E && exp_cpu_grant_phase() == 2 {
++                        CpuBusSamplePhase::Start
++                    } else {
++                        CpuBusSamplePhase::End
++                    };
+                 if matches!(word_off, 0x00E | 0x01E) && phase == sample_phase {
+                     // CLXDAT samples/clears before the word's trailing
+                     // clocks; INTREQR retains its end-of-slot sampling.
+@@ -9870,11 +9896,16 @@ impl Bus {
+                 CpuBusAccessKind::Custom,
+                 |bus, slot, stride, phase| {
+                     let word_off = off.wrapping_add((slot as usize * stride) as u16) & !1;
+-                    if matches!(word_off, 0x088 | 0x08a) && phase == CpuBusSamplePhase::End {
++                    let transfer_phase = if exp_cpu_grant_phase() == 2 {
++                        CpuBusSamplePhase::Start
++                    } else {
++                        CpuBusSamplePhase::End
++                    };
++                    if matches!(word_off, 0x088 | 0x08a) && phase == transfer_phase {
+                         bus.copjmp_strobe(if word_off == 0x088 { 1 } else { 2 });
+                         sampled_strobes[slot as usize] = true;
+                     }
+-                    if word_off == 0x096 && phase == CpuBusSamplePhase::End {
++                    if word_off == 0x096 && phase == transfer_phase {
+                         let word = match size {
+                             1 => (val as u8 as u16) * 0x0101,
+                             4 if slot == 0 => (val >> 16) as u16,

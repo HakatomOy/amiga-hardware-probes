@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "id": "copper-wait-mask-race",
+  "hypothesis": "The initial WAIT second-word fetch/decode boundary differs under simultaneous BPLEN even though first MOVE ownership matches.",
+  "competitor": "WAIT word ownership also matches; residual belongs to later CPU observation/recognition.",
+  "test": "CPU changes initial WAIT maskfffe to80fe. Early INTREQR bit2 at42:a0 distinguishes immediate passage from waiting for43:40; settled bit3 at44:60 witnesses finite completion. Cross BPLEN, NOP gaps, neighbor and preseed-mask controls.",
+  "outcomes": {
+    "early marker boundary differs": "Inspect WAIT mask fetch/decode ownership and bus state.",
+    "early and settled markers match": "Do not shift WAIT fetching; investigate CPU return/observer path.",
+    "controls or repeats conflict": "Preserve qualification limits and narrow."
+  },
+  "next_question": "Does the initial WAIT consume the old or CPU-updated mask?",
+  "investigation": "investigations/copper-wait-mask-race.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/copper-wait-mask-race-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Settled independent Copper completion",
+        "require_values": [
+          8
+        ],
+        "allowed_values": [
+          8
+        ]
+      },
+      {
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "CPU overwrite completed",
+        "require_values": [
+          33022
+        ],
+        "allowed_values": [
+          33022
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Preseed new mask passes WAIT before43:40",
+        "where": {
+          "variant": {
+            "mask": 4,
+            "equals": 4
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      },
+      {
+        "field": "launch_ref",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Neighbor write retains old WAIT until43:40",
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 2
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-wait-mask-race-v1/run1",
+    "references/copper-wait-mask-race-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "early_wait_passage",
+        "field": "launch_ref",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "CPU mask write beat WAIT second-word consumption"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 8,
+        "unit": "INTREQR bit3",
+        "meaning": "Independent finite Copper witness"
+      },
+      {
+        "name": "stored_word",
+        "field": "counter",
+        "unit": "RAM word",
+        "meaning": "CPU-written word after settle"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Master enabled atline40, COPEN cold until measured write. BPLEN optional at same write; no blitter/sprite DMA. Raw marker values, exact pre-enable cohorts; no beam-output comparison. Early/late deadlines are separated from WAIT43:40; new80fe preserves BFD while disabling vertical mask."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "rom_sha256": "531a70f40f5905061018e591bdba601b6b223f5750bfd1db03cf0154c208e139",
+  "probe_precheck": "256 cases,0 failed controls; old/new mask outcomes present with and without BPLEN."
+}

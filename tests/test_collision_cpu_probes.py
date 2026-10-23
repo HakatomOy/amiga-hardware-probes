@@ -9,6 +9,9 @@ import build_dma_restart_boundary_rom as restart
 import build_dma_nop_boundary_rom as nop
 import build_dma_write_gap_rom as gap
 import build_dma_gap_readback_rom as readback
+import build_dma_steady_read_rom as steady
+import build_copper_cold_fetch_race_rom as race
+import build_copper_wait_mask_race_rom as mask_race
 
 
 def generated(builder):
@@ -99,6 +102,52 @@ class CollisionCpuProbeTests(unittest.TestCase):
                 self.assertLess(text.index('move.w 6(a6),d6'), text.index('16(a4)'))
                 self.assertIn('move.w d5,14(a4)', text)
                 self.assertIn('move.w d6,18(a4)', text)
+
+    def test_steady_probe_removes_copper_and_separates_activity_from_reads(self):
+        self.assertEqual(len(set(steady.trials())), 128)
+        kernel, observer = generated(steady)
+        self.assertIn('move.w #$2600,$100(a6)', kernel)
+        self.assertIn('move.w #$2081,$8e(a6)', kernel)
+        self.assertIn('move.w #$8200,d1', kernel)
+        self.assertIn('move.w #$8300,d1', kernel)
+        self.assertNotIn('#$8280,d1', kernel)
+        self.assertIn('.plane2_ready:\n        moveq #-1,d1\n        moveq #-1,d2', kernel)
+        for variant in range(8):
+            text = steady.observer(variant)
+            self.assertLess(text.index('move.w 6(a6),d6'), text.index('move.w $0e(a6),d0'))
+            self.assertLess(text.index('move.w 6(a6),d6'), text.index('16(a4)'))
+            self.assertEqual(text.count('$96(a6)'), 1)
+            self.assertNotIn('$88(a6)', text)
+
+    def test_cold_fetch_race_preserves_registers_and_independent_witness(self):
+        self.assertEqual(len(set(race.trials())), 256)
+        kernel, observer = generated(race)
+        self.assertIn('lea $2000,a1', kernel)
+        self.assertIn('lea $2010,a1', kernel)
+        self.assertIn('move.w #$8004,(a0)+', kernel)
+        self.assertIn('move.w #$8008,(a0)+', kernel)
+        self.assertIn('move.w #$0180,$2000', kernel)
+        self.assertNotIn('move.w #$8280,d1', kernel)
+        for variant in range(32):
+            text = race.observer(variant)
+            # ROM alignment may EXG D0/D1: load critical gate value afterward.
+            self.assertLess(text.index('move.w #$'), text.index('move.w 6(a6),d3'))
+            self.assertIn('move.w #$8380,d1' if variant & 1 else 'move.w #$8280,d1', text)
+            self.assertLess(text.index('move.w d2,(a1)'), text.index('move.w $1e(a6),d0'))
+            self.assertIn('move.w (a1),20(a4)', text)
+
+    def test_wait_mask_race_separates_early_passage_and_settled_completion(self):
+        self.assertEqual(len(set(mask_race.trials())), 256)
+        kernel, observer = generated(mask_race)
+        self.assertIn('move.w #$4341,(a0)+\n        move.w #$fffe,(a0)+', kernel)
+        self.assertIn('move.w #$80fe,$2002', kernel)
+        self.assertIn('move.w #$80fe,d2', kernel)
+        self.assertIn('lea $2002,a1', kernel)
+        for variant in range(32):
+            text = mask_race.observer(variant)
+            self.assertLess(text.index('cmpi.w #$42a0'), text.index('move.w d5,14(a4)'))
+            self.assertLess(text.index('move.w d5,14(a4)'), text.index('cmpi.w #$4460'))
+            self.assertLess(text.index('cmpi.w #$4460'), text.index('move.w d0,16(a4)'))
 
 
 if __name__ == '__main__':

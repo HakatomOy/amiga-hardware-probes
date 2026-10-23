@@ -199,3 +199,46 @@ whole-CCK instruction reconciliation active after fractional bus accounting.
 It compares1- and2-CPU-clock waits, with fixed1/2/1 address/data/return clocks,
 against both new read sets and the independent collision floor. No beam-value
 exception is introduced. See `investigations/init-shared-cpu-phase.json`.
+
+
+The complete shared-accounting screen also rejects1-CPU-clock waits:880
+matches/904 mismatches/768 exclusions, versus2448/104/0 for the baseline;
+40 unstable cases remain separate. The2-clock-wait control reproduces every
+baseline packet exactly. Fractional bookkeeping was not the repair.
+Source was restored before the next counterfactual. Recipe/results:
+`init-shared-cpu-phase-v1`, `shared-phase-screen-v1`.
+
+Next `init-cpu-grant-phase-v1` moves the arbitration query within the classic
+four-clock cycle: one CCK of address/setup before the grant, one CCK after it,
+without a separate tail. A second variant samples COPJMP/COPEN/INTREQR at the
+start of that data window. This tests ownership phase independently of wait
+granularity and avoids arbitrary beam corrections. Local WinUAE pre-cycle /
+`dma_cycle` ordering is corroborating context only. Require the unchanged
+collision floor; a repaired startup case alone is insufficient.
+
+
+Both grant-window counterfactuals are rejected:880/904/768 and872/912/768
+match/mismatch/excluded versus2448/104/0 baseline (40 unstable separately).
+Source restored to6c06be2a. The smaller `dma-steady-read-v1` (kind118) removes
+Copper and midline enable:127 qualified matches,0 mismatches,1 excluded input
+cohort,0 unstable/invalid. All128 DMA on/off PF1/PF2 activity witnesses pass.
+Do not count excluded `118,15,3,3,0,0` as a match. Final ROM restoration verified.
+This redirects the next test toward cold request/enable ownership, rather than
+a general steady CPU/bitplane grant shift.
+
+`copper-cold-fetch-race-v2` (kind119) changes the first Copper instruction from
+INTREQ to COLOR00 with a CPU word store; an independent second instruction sets
+completion bit3. Old-instruction bit2 is a value witness, not a beam timing
+comparison. Cross simultaneous BPLEN,0..3 NOP gaps, neighbor writes and preseeded
+new instructions. Emulator256-case precheck has0 failed controls and both old/
+new outcomes. V1 was rejected before HW because the launch aligner clobbered a
+preloaded D1; V2 loads the gate value after alignment. See the dedicated record.
+
+
+Hardware `copper-cold-fetch-race-v2` and `copper-wait-mask-race-v1` each match
+256/256 with0 excluded, unstable or invalid cases. Both old/new ownership
+outcomes and all overwrite/preseed/neighbor/completion controls pass. These
+separately constrain first MOVE-word ownership and the second word of an initial
+WAIT under simultaneous BPLEN. Do not move those fetch boundaries to repair a
+beam observation. The next value-based control races the CPU against the first
+bitplane source word, using isolated PF1/PF2 collision data as the result.

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-steady-read-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\steady-read-hardware-v1\\hardware-2",
+  "test_rom_sha256": "9005d2bd0a410081bce01953db9779c97924a3acc004f28053ec09dbb8b154ec",
+  "source_id": "2ef59eb658669f8c207d82b78ef30d055aa5f66d28703fd68ebc7696e6fac274",
+  "results_sha256": "81a2a5627b7dd15512a261f1465402521ef122c68c3a2715b21f2e742fc6ce45",
+  "record_count": 128,
+  "metadata": {
+    "version": 1,
+    "source_id": "2ef59eb658669f8c207d82b78ef30d055aa5f66d28703fd68ebc7696e6fac274",
+    "record_count": 128,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "81a2a5627b7dd15512a261f1465402521ef122c68c3a2715b21f2e742fc6ce45"
+  },
+  "restoration": {
+    "backup_sha256": "10b919d7c091f9841e9b81bfe5d4ba01740832f6e44c1a2841a79b25de0b96dc",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "10b919d7c091f9841e9b81bfe5d4ba01740832f6e44c1a2841a79b25de0b96dc",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\steady-read-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 118,
+    "aligned": false,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "Exact integer input beam; does not establish sub-CCK CPU phase across ROMs.",
+    "limitations": "128 ROM-only cases; DMA enabled atline40, Copper always disabled. Two all-one planes, dual playfield, both enabled bits match one; CLXDAT bit0 witnesses fetch activity after critical reads. Three beam reads before RAM stores; no output alignment.",
+    "variants": "bit0 steady bitplane DMA; bits1:2 ROM NOP gap",
+    "fields": {
+      "12": "input beam",
+      "24": "first read",
+      "14": "second read",
+      "18": "third read",
+      "16": "PF1/PF2 activity bit0"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 39,
+    "independently_repeated_cohorts": 38,
+    "candidate_cases_with_independent_repeats": 127,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Copper/blitter/sprite DMA disabled. Two all-one bitplanes enabled atline40; DIW beginsline32. Exact recorded beam cohorts do not prove sub-CCK phase.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\steady-read-hardware-v1\\reference-2",
+  "metadata_correction": "Removed inherited IRQ-profile labels; raw packets and source hashes unchanged."
+}

@@ -615,3 +615,16 @@ a difference. Recompare both binaries against the same reference union when
 adding captures. Separate input variables that were coupled in an earlier probe
 (for example launch phase and plane data). Test a second DMA width when periodic
 slot occupancy can make different counter phases look identical.
+
+
+Audit register liveness across launch helpers before a live run. The ROM
+aligner can execute `EXG D0,D1`; load critical gate values after alignment and
+before the common input marker unless preservation is verified. Smoke-test
+positive/negative activity and overwrite controls in the emulator first. The
+cold Copper fetch-race precheck caught this clobber before consuming hardware.
+
+Keep expectations specific to the ROM hash. An equal integer input beam and
+identical bytes through a measured read do not establish equal sub-CCK CPU
+phase or all prefetched successors. If sibling ROMs disagree at that boundary,
+preserve both results, record the changed successor and narrow the experiment;
+do not align the outputs or silently combine their reference cohorts.

@@ -1,0 +1,46 @@
+{
+  "hypothesis": "The initial WAIT second-word fetch/decode boundary differs under simultaneous BPLEN even though first MOVE ownership matches.",
+  "competitor": "WAIT word ownership also matches; residual belongs to later CPU observation/recognition.",
+  "test": "CPU changes initial WAIT maskfffe to80fe. Early INTREQR bit2 at42:a0 distinguishes immediate passage from waiting for43:40; settled bit3 at44:60 witnesses finite completion. Cross BPLEN, NOP gaps, neighbor and preseed-mask controls.",
+  "outcomes": {
+    "early marker boundary differs": "Inspect WAIT mask fetch/decode ownership and bus state.",
+    "early and settled markers match": "Do not shift WAIT fetching; investigate CPU return/observer path.",
+    "controls or repeats conflict": "Preserve qualification limits and narrow."
+  },
+  "next_question": "Does first bitplane source-word ownership differ at midline enable?",
+  "experiment": "copper-wait-mask-race",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\wait-mask-hardware-v1",
+  "identity": {
+    "binary_sha256": "49df162e65188abbe362df11a53e6fca82c60ff749b19375c7aa285c21b8bb75",
+    "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
+    "rom_sha256": "531a70f40f5905061018e591bdba601b6b223f5750bfd1db03cf0154c208e139",
+    "source_id": "7f5b66bebfc44f39ea696085d8fe03232051e09d1fc6744c049eda8e567fb406",
+    "environment_sha256": "9ae0139bb1db3d2e95d8f0e2bf17a05f8cc2281c2f6b7ad145b3436df9928da4"
+  },
+  "smaller_reproducer": null,
+  "references": [
+    "copper-wait-mask-race-v1"
+  ],
+  "evidence_fingerprint": "b5ca5f3677b5523d23d9b16487819c221933a4ae1bbd5d68260a8bc25c684ebd",
+  "no_new_evidence": 0,
+  "validation": [
+    {
+      "name": "preflight",
+      "exit": 0
+    }
+  ],
+  "decision": "review evidence",
+  "status": "256 stable qualified matches",
+  "results": {
+    "matches": 256,
+    "mismatches": 0,
+    "excluded": 0,
+    "unstable": 0,
+    "invalid": 0
+  },
+  "confirmed_facts": [
+    "Initial WAIT second-word old/new consumption matches with/without BPLEN.",
+    "All preseed, neighbor, overwrite and settled completion controls pass.",
+    "Final ROM restoration and reset release verified."
+  ]
+}

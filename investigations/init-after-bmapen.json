@@ -16,7 +16,9 @@
     "New kind115 NOP/custom-write control60/64 match,64 independently stable. All NOP and warm cases match; only cold custom-write phase1 is oneCCK late.",
     "Selected request model old collision gates: pointer243/480 and Copper391/800 qualify, zero collision-value mismatches; original budgets remain blocked.",
     "Write-gap256:228 match16 mismatch12 unstable. One NOP repairs original first-read residual; longer gaps expose same1CCK error in warm NOP controls.",
-    "Gap-readback256:196 match48 mismatch12 unstable. Later reads remain1CCK late in stable controls; first-read outputs can differ between ROM-specific references with same recorded integer input."
+    "Gap-readback256:196 match48 mismatch12 unstable. Later reads remain1CCK late in stable controls; first-read outputs can differ between ROM-specific references with same recorded integer input.",
+    "Copper-disabled steady DMA read probe127 qualified matches,0 mismatches,1 excluded,0 unstable; all128 activity witnesses pass.",
+    "First Copper MOVE-word race256/256 and initial WAIT-mask race256/256 stable qualified matches, including BPLEN simultaneous enable. Do not shift those fetch boundaries."
   ],
   "references": [
     "dma-master-boundary-v1",
@@ -25,7 +27,10 @@
     "dma-restart-boundary-v1",
     "dma-nop-boundary-v1",
     "dma-write-gap-v1",
-    "dma-gap-readback-v1"
+    "dma-gap-readback-v1",
+    "dma-steady-read-v1",
+    "copper-cold-fetch-race-v2",
+    "copper-wait-mask-race-v1"
   ],
   "rejected_hypotheses": [
     {
@@ -43,9 +48,17 @@
     {
       "hypothesis": "Sample all beam reads at End",
       "evidence": "Hundreds of new fields and768 lost qualification cases in mechanism screen."
+    },
+    {
+      "hypothesis": "One-CPU-clock waits repair the late read",
+      "evidence": "Both partial and complete shared-clock implementations regress independent controls; whole-CCK shared control packet-identical baseline."
+    },
+    {
+      "hypothesis": "Globally shift classic arbitration to a later cycle window",
+      "evidence": "Both variants lose768 qualification cases and hundreds of matched fields in13-contract screen."
     }
   ],
-  "next_question": "Does complete shared CPU instruction/bus phase accounting preserve old controls and repair persistent triplet drift?",
+  "next_question": "Does first bitplane source-word ownership differ during midline BPLEN, versus a later CPU return/observation issue?",
   "hypothesis": "Copper request sampling and in-flight restart work are distinct resources; test explicit mechanisms before changing delays.",
   "details": "docs/collision-cpu-ordering-2026-10-22.md",
   "logs": "captures/init-after-bmapen-20261022",

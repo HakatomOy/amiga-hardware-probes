@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "id": "dma-steady-read",
+  "hypothesis": "The persistent late-read family is a general CPU/bitplane grant boundary.",
+  "competitor": "The difference requires midline DMA enable or initial Copper request timing.",
+  "test": "Enable or disable two-plane DMA atline40 with Copper disabled throughout. Read input beam,0..3 NOPs, then three consecutive beam words; CLXDAT PF1/PF2 activity witness after measurements.",
+  "outcomes": {
+    "steady active differs, disabled matches": "Investigate generic CPU/bitplane read grant.",
+    "steady active matches": "Retain current generic path; narrow to enable/startup transition.",
+    "activity absent or unstable": "Preserve invalid/unstable evidence and revise probe."
+  },
+  "next_question": "Does the difference persist without midline enable and Copper?",
+  "investigation": "investigations/dma-steady-read.json",
+  "binary": "captures/init-after-bmapen-20261022/grant-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-steady-read-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 128,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Two active all-one playfields witness bitplane activity",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 0
+          }
+        },
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "end_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "Two active all-one playfields witness bitplane activity",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          1
+        ],
+        "allowed_values": [
+          1
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-steady-read-v1/run1",
+    "references/dma-steady-read-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after COLOR00 write or four NOPs"
+      },
+      {
+        "name": "activity",
+        "field": "end_beam",
+        "mask": 1,
+        "unit": "CLXDAT bit0",
+        "meaning": "PF1/PF2 activity witness"
+      },
+      {
+        "name": "second_read",
+        "field": "launch_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Second consecutive beam read"
+      },
+      {
+        "name": "third_read",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Third consecutive beam read"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Copper/blitter/sprite DMA disabled. Two all-one bitplanes enabled atline40; DIW beginsline32. Exact recorded beam cohorts do not prove sub-CCK phase."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "rom_sha256": "9005d2bd0a410081bce01953db9779c97924a3acc004f28053ec09dbb8b154ec"
+}
