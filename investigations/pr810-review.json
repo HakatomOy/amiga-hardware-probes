@@ -1,8 +1,14 @@
 {
-  "status": "Corrections pushed and all15 comments answered; draft; CIA propagation/PB edges open",
+  "status": "Merge subset validated; deferred CIA/PB/STOP on separate WIP branch",
   "pr": "https://github.com/CopperlineHQ/Copperline/pull/810",
   "copperline_branch": "fix/a500-hardware-timing",
-  "copperline_commits": ["4226b413", "0f20b644", "ae68ce90", "569af24e", "d19310f3"],
+  "copperline_commits": [
+    "4226b413",
+    "0f20b644",
+    "ae68ce90",
+    "569af24e",
+    "d19310f3"
+  ],
   "upstream_main": "a444a636",
   "evidence_branch": "review/pr810-a500",
   "confirmed_facts": [
@@ -33,5 +39,6 @@
   ],
   "details": "docs/pr-810-review.md",
   "logs": "captures/pr-810-review/",
-  "next_question": "Qualify CIA/Paula/CPU propagation and PB6/PB7 pulse edges with independent E/CPU phase evidence before another timing/carry patch. DEFAULT_IRQ_LATENCY_CCK remains6."
+  "next_question": "Qualify CIA/Paula/CPU propagation and PB6/PB7 pulse edges with independent E/CPU phase evidence before another timing/carry patch. DEFAULT_IRQ_LATENCY_CCK remains6.",
+  "current_split_record": "investigations/pr810-merge-split.json"
 }

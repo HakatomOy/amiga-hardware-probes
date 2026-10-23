@@ -1,5 +1,9 @@
 # Copperline PR 810 review follow-up
 
+**Update:** the unfinished CIA/PB/STOP changes have been split from the PR.
+See [merge subset and validation](pr810-merge-split.md) for current scope.
+The full-head results below are historical evidence.
+
 Review head: `744c367d`; source branch `fix/a500-hardware-timing`.
 Review comments: https://github.com/CopperlineHQ/Copperline/pull/810
 

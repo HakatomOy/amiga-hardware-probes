@@ -1,0 +1,53 @@
+{
+  "status": "Accepted merge subset; deferred timing kept on separate WIP branch",
+  "hypothesis": "Deferring exact CIA STOP deadlines and early PB/carry previews removes known regressions without losing independent fixes.",
+  "competitor": "Deferred state is coupled to retained timing fixes.",
+  "distinguishing_test": "Frozen binary replay of unchanged HW references with field-level deltas and original qualification.",
+  "preserved_head": "d19310f3",
+  "wip_branch": "wip/cia-propagation-pb-stop",
+  "reference_ids": [
+    "irq-stage-v7-run1",
+    "irq-stage-v7-run2",
+    "cia-phase-v3-run1",
+    "cia-phase-v3-run2",
+    "cia-review-mask-v1",
+    "cia-review-zero-v1",
+    "pr810-destination-v1"
+  ],
+  "confirmed_facts": [
+    "Reduced kind56:601 matched,67 mismatched,932 excluded; original before-review582/86/932; full577/91/932. No lost matching qualified fields;19 repaired cohorts vs original.",
+    "Calibrated kind57:968 matched,360 mismatched,592 excluded;140 repaired fields and no lost matches/changed cohorts vs original.",
+    "Retained mask32/32, START288/288, destination384/384.",
+    "17 replay suites execute;15 counts unchanged vs full. CIA-output deferred kind54 adds48 underflow-bracket differences (24 each CIA). Retained2015 comparable all match;257excluded, none counted as matches."
+  ],
+  "rejected_hypotheses": [
+    {
+      "hypothesis": "The exact STOP cap is required to preserve calibrated matched fields",
+      "evidence": "Reduced candidate gains140 fields without losing any. Full cap had5 beam-only cohort regressions."
+    }
+  ],
+  "source_files": [
+    "Copperline/src/emulator.rs",
+    "Copperline/src/bus.rs",
+    "Copperline/src/chipset/cia.rs"
+  ],
+  "logs": "captures/pr810-split/",
+  "next_question": "On WIP, distinguish CIA output forwarding from Paula input sampling and measure PB/zero-carry boundaries with phase-qualified or electrical controls.",
+  "pr_commit": "a213b680",
+  "wip_commit": "d8c47e3a",
+  "validation": {
+    "native": "45 binaries:4474 passed,131 ignored,2 previously named window exclusions;48 goldens pass",
+    "source_race": "2304/2304 match",
+    "fresh_irq": "498 match,13 different,1089 excluded;full491/20/1089",
+    "python": "388 pass",
+    "lint_docs": "strict Clippy,fmt,HTML/links,PDF pass;MyST network explicitly approved",
+    "upstream_main": {
+      "commit": "a444a636",
+      "irq_cases": "265 matches/403 differences/932 excluded ->601/67/932;336 repaired cases,0 lost complete matches",
+      "irq_fields": "693 repaired fields;18 lost matching fields in already-failing cases;not a claim of universal field improvement",
+      "serial_buffer": "114/320 ->320/320",
+      "serial_boundary": "0/38 ->38/38;2 unstable excluded",
+      "cia_output": "584 matches/936 differences/752 excluded ->2015/0/257"
+    }
+  }
+}
