@@ -1,8 +1,8 @@
 {
   "experiment": "cia-review-mask-retrigger",
-  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\pr-810-review\\cia-mask-final-v3",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\pr-810-review\\merged-focus\\cia-review-mask-retrigger",
   "identity": {
-    "binary_sha256": "229b43dc1ab161a83ed41bfa9bd89b63c004ee9d6b7484b7fbe8b8da4538f911",
+    "binary_sha256": "c29723932fe57db3f9553bf0649bc30793db16ff5ecd26c40632c019afb7668f",
     "config_sha256": "aee17b6d288a921083f1c451ab7262333c2473eeb2f437383c593fb81194fb08",
     "rom_sha256": "4f5407b7227a4ec7440f296b6ae8dacf17fb0b23ae96894ead3e209170fa875a",
     "source_id": "309acabcb51d43fa0584cbc1c9f398ab14999146c2c8c210860b7fc540ed5a99"
@@ -22,7 +22,7 @@
     "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\references\\cia-review-mask-v1\\run2"
   ],
   "evidence_fingerprint": "efea1ffec6e1dc977c4bfd2c73a284ba42f3797cebf90b244f46b3134a9805c8",
-  "no_new_evidence": 1,
+  "no_new_evidence": 2,
   "validation": [
     {
       "name": "preflight",

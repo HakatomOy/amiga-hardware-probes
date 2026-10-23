@@ -2,7 +2,8 @@
   "status": "Corrections pushed and all15 comments answered; draft; CIA propagation/PB edges open",
   "pr": "https://github.com/CopperlineHQ/Copperline/pull/810",
   "copperline_branch": "fix/a500-hardware-timing",
-  "copperline_commits": ["4226b413", "0f20b644", "ae68ce90", "569af24e"],
+  "copperline_commits": ["4226b413", "0f20b644", "ae68ce90", "569af24e", "d19310f3"],
+  "upstream_main": "a444a636",
   "evidence_branch": "review/pr810-a500",
   "confirmed_facts": [
     "Both CIAs retain the request across mask clear until ICR acknowledgement; corrected probe32/32 matches.",
@@ -14,13 +15,14 @@
   ],
   "validation": {
     "library_without_window": "3679 passed,37 ignored,559 filtered",
-    "native_library": "4230 passed,43 ignored,two named window exclusions",
+    "native_library": "Merged main:4265 passed,43 ignored,two named window exclusions",
+    "native_total": "Merged main:45 binaries,4478 passed,131 ignored,2 filtered,0 failed",
     "window_limits": "Parallel keypad failure passes alone; GPU scaler differs3/255. Unfiltered suite is not claimed passing.",
     "integration": "Other enabled native binaries pass. Three sandbox-blocked copperhf tests pass in temporary portable mode; marker removed.",
     "goldens": "48 pass; both new images visually verified",
     "python": "388 pass; standalone CIA harness passes",
     "lint_docs": "strict Clippy,fmt,HTML/link-check and PDF pass;14 supplemental pages exported",
-    "hardware_replay": "17 baseline/final suites replayed; counts unchanged except kind56 CIA-A STOP. Existing mismatches/exclusions retained."
+    "hardware_replay": "17 baseline/final suites replayed before main merge; counts unchanged except kind56 CIA-A STOP. After merge, focused32+288+384 cases still match. Existing mismatches/exclusions retained."
   },
   "references": [
     "references/cia-review-mask-v1",

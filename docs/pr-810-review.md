@@ -99,6 +99,10 @@ state migration, two golden probes), `569af24e` (PDF appendices). All15 inline
 comments have evidence-backed replies. The PR remains a draft targeting `main`.
 Use [the short restart record](../investigations/pr810-review.json) next session.
 
+Upstream `main` advanced to `a444a636` during review. Merge `d19310f3` resolves
+three runtime-state conflicts by retaining both STOP poll phase and upstream JIT
+bank state, including save and restore. The pushed PR is conflict-free.
+
 | Comment | Evidence / change |
 |---|---|
 | CIA IR/pin desync | Both chips retain request after mask clear;32/32 new cases match corrected latch/pin behavior. |
@@ -130,6 +134,14 @@ writing the user's Documents directory. Those three pass when retried with
 temporary portable mode inside the workspace; the marker is removed afterward.
 The48 golden tests pass on the final executable. Strict Clippy/fmt, HTML/link
 checks and the PDF including all14 supplementary articles pass.
+
+After merging current `main`, the complete native run passes4478 tests across
+45 binaries (131 ignored,2 named window exclusions,0 failed); library4265
+passed,43 ignored. It uses temporary portable mode so all integration boot
+volumes stay inside the workspace, and removes that marker afterward. Both
+strict documentation builds and Clippy pass on the merge. The three new
+hardware-reference families still match32/32,288/288 and384/384 on the merged
+executable. Earlier17-suite replay numbers are preserved as pre-merge evidence.
 The complete17-suite baseline/candidate replay has identical counts except the
 open original kind56 CIA-A STOP timing family. Exclusions and historical raw
 differences remain explicit; these runs are not claimed as17 all-matching suites.
