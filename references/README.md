@@ -7,6 +7,10 @@ test ROM hash, source fingerprint, result hash, hardware configuration,
 capture method and repeatability evidence. Never replace an existing baseline;
 add a new reference ID when measurements change.
 
+The owner's reported current CIA markings and replacement history are recorded
+in [measurement hardware](../docs/a500-measurement-hardware.md). Link that record
+from future captures; historical applicability is not yet established.
+
 `cia-irq-kind51-review3-run1` and `run2` preserve independent A500 runs. Only 99
 descriptor pairs share both recorded start samples; all 99 observations match.
 Other start phases differ and must not be treated as equivalent timing evidence.
