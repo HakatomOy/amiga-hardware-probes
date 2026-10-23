@@ -9,7 +9,9 @@ add a new reference ID when measurements change.
 
 The owner's reported current CIA markings and replacement history are recorded
 in [measurement hardware](../docs/a500-measurement-hardware.md). Link that record
-from future captures; historical applicability is not yet established.
+from future captures. The owner confirmed that replacement and position swapping
+both predate all project measurements; the record supplements historical
+provenance without changing immutable reference manifests or packets.
 
 `cia-irq-kind51-review3-run1` and `run2` preserve independent A500 runs. Only 99
 descriptor pairs share both recorded start samples; all 99 observations match.
