@@ -1,0 +1,12 @@
+{
+  "hypothesis": "The residual stable phase1 inert-write difference comes from the custom-register write bus cycle or its following grant.",
+  "competitor": "Initial Copper request timing also delays equal-duration straight ROM execution, independently of the intervening write.",
+  "test": "Cross inert COLOR00 write versus four NOPs (both16 CPU clocks) with cold versus already-waiting Copper; master DMA pre-enabled, four phases/four repeats. Compare first post-actor read and a finite Copper activity witness.",
+  "outcomes": {
+    "NOP path agrees while custom write differs": "Trace the custom-write/following-read grant boundary.",
+    "NOP path differs with cold Copper only": "Investigate initial request/ROM synchronization rather than a write-specific delay.",
+    "warm controls also differ": "Revisit common CPU/DMA phase or the equivalence control."
+  },
+  "next_question": "Does the same one-CCK error remain when the custom write is replaced by equal-duration NOPs?",
+  "full_acceptance": false
+}

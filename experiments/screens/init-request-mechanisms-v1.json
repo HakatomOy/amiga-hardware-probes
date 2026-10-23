@@ -1,0 +1,52 @@
+{
+  "hypothesis": "Initial request sampling, in-flight WAIT-tail reuse and beam-read sample phase are separable mechanisms; test their explicit combinations against existing hardware controls.",
+  "competitor": "A timing offset merely improves one boundary while losing independently matched data or launch cohorts.",
+  "test": "Bit0 sample combined master/COPEN request at CPU transfer; bit1 reuse an in-flight WAIT instruction tail as the first CPU-strobe restart phase; bit2 sample VHPOSR at End instead of after the bus tail. Eight variants, exact baseline and all unchanged source/input contracts.",
+  "outcomes": {
+    "new boundary repairs without field/qualification regressions": "Retain the supported mechanism and broaden to the existing resource/handoff suite.",
+    "matches move but old controls regress": "Reject or narrow; no counter alignment or relaxed unstable budgets."
+  },
+  "variants": {
+    "0": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "0"
+    },
+    "1": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "1"
+    },
+    "2": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "2"
+    },
+    "3": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "3"
+    },
+    "4": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "4"
+    },
+    "5": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "5"
+    },
+    "6": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "6"
+    },
+    "7": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "7"
+    }
+  },
+  "scenarios": {
+    "master": "experiments/workflows/dma-master-boundary.json",
+    "cold": "experiments/workflows/dma-restart-boundary.json",
+    "warm": "experiments/workflows/dma-warm-restart.json",
+    "triplet": "experiments/workflows/dma-restart-readback.json",
+    "modes": "experiments/workflows/playfield-modes.json",
+    "poll": "experiments/workflows/collision-cpu-poll.json",
+    "three": "experiments/workflows/dma-three-plane.json",
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "master",
+    "packet": "captures/init-after-bmapen-20261022/integrated-screen-v1/combined-master/candidate/results.bin"
+  }
+}

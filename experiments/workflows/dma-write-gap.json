@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "id": "dma-write-gap",
+  "hypothesis": "Immediate custom-write/read handoff is one CCK too slow with cold Copper.",
+  "competitor": "The custom write shifts all subsequent execution, regardless of the following read gap.",
+  "test": "Cross0..3 trailing NOPs with write/NOP actor and cold/warm Copper, four phases and repeats; exact pre-enable beam and finite activity witness.",
+  "outcomes": {
+    "error disappears with gap": "Inspect immediate write/read turnaround.",
+    "error persists": "Inspect grant timing of the write or initial request.",
+    "controls change": "Keep raw evidence and narrow before patching."
+  },
+  "next_question": "Does adding a ROM gap remove the cold custom-write residual?",
+  "investigation": "investigations/dma-write-gap.json",
+  "binary": "captures/init-after-bmapen-20261022/cpu-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-write-gap-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-write-gap-v1/run1",
+    "references/dma-write-gap-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after COLOR00 write or four NOPs"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Master DMA pre-enabled; cold/warm finite Copper WAIT/INTREQ stream and bitplane contention active. No blitter or sprite DMA. Compare exact pre-enable cohorts; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "rom_sha256": "cfbc7d1a7d57e7433aeef7df0f438d8bcc19f0b888f92e3b4ce30c63efa7b551"
+}

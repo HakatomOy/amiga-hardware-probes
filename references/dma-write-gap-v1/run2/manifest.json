@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-write-gap-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\write-gap-hardware-v2\\hardware-2",
+  "test_rom_sha256": "cfbc7d1a7d57e7433aeef7df0f438d8bcc19f0b888f92e3b4ce30c63efa7b551",
+  "source_id": "5c0fef8543954f09b49967ee959bcf1b588c70127deafe845d8c3d1bfdcaaea4",
+  "results_sha256": "1ccf12b055f722dd057091595b8a85a76ef3b21e5d8ebf5aa5b7ae6bbe547bb3",
+  "record_count": 256,
+  "metadata": {
+    "version": 1,
+    "source_id": "5c0fef8543954f09b49967ee959bcf1b588c70127deafe845d8c3d1bfdcaaea4",
+    "record_count": 256,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "1ccf12b055f722dd057091595b8a85a76ef3b21e5d8ebf5aa5b7ae6bbe547bb3"
+  },
+  "restoration": {
+    "backup_sha256": "7ca3298abe01e230094b8715e433a8e2914450db9aeeaa4aa039c18aedb6c58d",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "7ca3298abe01e230094b8715e433a8e2914450db9aeeaa4aa039c18aedb6c58d",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\write-gap-hardware-v2\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 116,
+    "aligned": false,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "Pre-enable beam establishes exact recorded input cohort; post-actor reads are outputs. This integer marker does not prove identical sub-CCK CPU phase across ROMs.",
+    "limitations": "256 ROM-only cases; master DMA pre-enabled. 0..3 NOPs after actor, each4 CPU clocks. No RAM stores before post-gap sample; exact input cohorts.",
+    "variants": "bit1 four-NOP actor; bit2 warm Copper; bits3:4 trailing NOP count",
+    "fields": {
+      "12": "pre-enable beam",
+      "24": "post-gap beam",
+      "16": "INTREQR completion bit2"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": true,
+    "unstable_cases": 12,
+    "conflicting_cohorts": 3,
+    "reference_cohorts": 64,
+    "independently_repeated_cohorts": 64,
+    "candidate_cases_with_independent_repeats": 256,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Master DMA pre-enabled; cold/warm finite Copper WAIT/INTREQ stream and bitplane contention active. No blitter or sprite DMA. Compare exact pre-enable cohorts; no trace alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\write-gap-hardware-v2\\reference-2",
+  "metadata_correction": "Removed inherited IRQ-profile labels after source audit; raw packets and ROM/source hashes unchanged."
+}

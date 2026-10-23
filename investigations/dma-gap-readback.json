@@ -1,0 +1,34 @@
+{
+  "hypothesis": "The late beam belongs to readback sampling after a bitplane denial, not persistent CPU timing.",
+  "competitor": "A delayed grant shifts later CPU instructions and reads.",
+  "test": "Three consecutive beam reads before RAM stores, crossed with0..3 NOP gap, write/NOP actor and cold/warm Copper; retain exact input and all repeats.",
+  "outcomes": {
+    "first differs but later match": "Investigate readback sampling before changing instruction timing.",
+    "later reads also differ": "Investigate shared grant/return timing.",
+    "conflicting repeats": "Preserve unstable cohorts; do not fit them."
+  },
+  "next_question": "Can complete shared CPU-clock accounting explain persistent drift while satisfying both ROM-specific reference sets?",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\gap-readback-hardware-v1",
+  "smaller_reproducer": null,
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "c3dc2d6276c427b07f6a12a55decf335855a3829ec80ebde93ed22fd0905026c",
+  "decision": "validation failed",
+  "status": "captured; full acceptance blocked",
+  "results": {
+    "matches": 196,
+    "mismatches": 48,
+    "unstable": 12,
+    "excluded": 0,
+    "invalid": 0
+  },
+  "confirmed_facts": [
+    "Warm NOP gap3 phase2: HW426a/4270/4276 versus emulator426b/4271/4277, persistent1CCK drift.",
+    "Cold write gap1 phase1: first4266 matches, second/third6c/72 versus emulator6d/73.",
+    "Cold write gap0 phase1 hardware first4265 now matches; kind116 measured4264 with same recorded input and identical observer bytes through first read. Following prefetched instruction differs.",
+    "Integer input beam does not establish identical sub-CCK phase or complete input equivalence across ROMs. Do not merge these first-read outputs into one baseline.",
+    "12 cases remain unstable in3 cohorts; final ROM restoration and reset release verified."
+  ],
+  "references": [
+    "dma-gap-readback-v1"
+  ]
+}

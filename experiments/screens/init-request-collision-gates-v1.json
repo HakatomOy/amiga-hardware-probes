@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "0": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "0"
+    },
+    "1": {
+      "COPPERLINE_EXP_STARTUP_REQUEST": "1"
+    }
+  },
+  "scenarios": {
+    "pointer": "experiments/workflows/copper-transfer-collision-pointer.json",
+    "copper": "experiments/workflows/copper-transfer-collision-copper.json"
+  },
+  "baseline": {
+    "variant": "0",
+    "scenario": "pointer",
+    "packet": "captures/init-after-bmapen-20261022/integrated-screen-v1/combined-old-pointer/candidate/results.bin"
+  }
+}

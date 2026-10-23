@@ -1,0 +1,13 @@
+{
+  "status": "counterfactual; not accepted",
+  "base_commit": "6c06be2a",
+  "hypothesis": "The first phase model retained classic whole-CCK instruction reconciliation, which can add time after fractional bus accounting. A shared CPU-clock timeline must also credit every elapsed access/internal clock and charge only remaining instruction clocks.",
+  "competitor": "The remaining differences need a different Amiga grant/sampling rule; correct bookkeeping will still fail hardware.",
+  "test": "Compare baseline with shared classic bus/instruction clock accounting using1-clock versus2-clock waits. Retain fixed address/data/return1/2/1 clocks; use all new read controls and independently matched collision controls. No counter offsets or conditional beam correction.",
+  "outcomes": {
+    "repairs without independent regressions": "Broaden core and hardware qualification gates.",
+    "new fields or lost qualification": "Reject this implementation; retain captures and narrow the grant model."
+  },
+  "units": "2CPU clocks/CCK; explicit sub-CCK carry, no trace alignment",
+  "next_question": "Does complete shared instruction accounting change the rejected phase-model result?"
+}

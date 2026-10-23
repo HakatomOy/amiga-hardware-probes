@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "reference_id": "dma-nop-boundary-v1-run2",
+  "hardware": {
+    "machine": "PAL A500",
+    "cpu": "stock 68000",
+    "chip_ram_kib": 512,
+    "slow_ram_kib": 512,
+    "silicon_revisions": "unconfirmed",
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff"
+  },
+  "capture_method": "OneROM live substitution; checksum-protected RBCP; verified restoration",
+  "original_capture": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\nop-boundary-hardware-v1\\hardware-2",
+  "test_rom_sha256": "33d521b6054ca9d95cf524c283be75bbe905bf77c2547b20a80d0f8447b7fd9e",
+  "source_id": "1ecd5fe99ee5968502057bb1f680167401d5c8415cc1d6503b9782a99b8c3973",
+  "results_sha256": "a617eb1f435cd4d728ddfd7b164de02d5810a8c66bef0a14c980ef70ff00a0d9",
+  "record_count": 64,
+  "metadata": {
+    "version": 1,
+    "source_id": "1ecd5fe99ee5968502057bb1f680167401d5c8415cc1d6503b9782a99b8c3973",
+    "record_count": 64,
+    "agnus_vposr": "a000",
+    "denise_id_raw": "ffff",
+    "slow_ram": true,
+    "timeouts": 0,
+    "skipped": 0,
+    "sha256": "a617eb1f435cd4d728ddfd7b164de02d5810a8c66bef0a14c980ef70ff00a0d9"
+  },
+  "restoration": {
+    "backup_sha256": "4ee72138155b6adda8e1b74868f816816e2d273c5183199605810e78ffee746c",
+    "deferred": false,
+    "errors": [],
+    "reset_release_verified": true,
+    "restore_attempted": true,
+    "restore_readback_sha256": "4ee72138155b6adda8e1b74868f816816e2d273c5183199605810e78ffee746c",
+    "restored_verified": true,
+    "session_backup": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\nop-boundary-hardware-v1\\hardware-1\\live-before.bin",
+    "write_attempted": true,
+    "scope": "session"
+  },
+  "observation_profile": {
+    "kind": 115,
+    "aligned": false,
+    "phases": "NOP bit0 (+2 CCK), EXG bit1 (+3 CCK); conditional branch costs also apply; recorded brackets are authoritative",
+    "units": "raw VHPOSR words, register flags, absolute stacked PC; no alignment or packed-beam subtraction",
+    "launch": "Pre-enable beam establishes exact input cohort; post-actor beam is measured output.",
+    "limitations": "64 ROM-only cases; master DMA already high. Four NOPs and MOVE.W immediate,d16(An) each take16 uncontended68000 clocks. No stores before post-actor sample; no output alignment.",
+    "variants": "bit1 four NOPs instead of COLOR00 write; bit2 warm sleeping Copper",
+    "fields": {
+      "12": "pre-enable beam",
+      "24": "post-actor beam",
+      "16": "INTREQR completion bit2"
+    }
+  },
+  "repeatability": {
+    "runs": 2,
+    "packets_identical": false,
+    "unstable_cases": 0,
+    "conflicting_cohorts": 0,
+    "reference_cohorts": 16,
+    "independently_repeated_cohorts": 16,
+    "candidate_cases_with_independent_repeats": 64,
+    "note": "Zero conflicts does not establish cross-run repeatability when phase cohorts do not overlap."
+  },
+  "uncontrolled_state": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Master DMA pre-enabled; cold/warm finite Copper WAIT/INTREQ stream and bitplane contention active. No blitter or sprite DMA. Compare exact pre-enable cohorts; no trace alignment.",
+  "original_reference": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\nop-boundary-hardware-v1\\reference-2",
+  "metadata_correction": "Removed inherited IRQ-profile labels and corrected DMA description after auditing kind115 source; raw packet, ROM/source hashes and original capture are unchanged."
+}

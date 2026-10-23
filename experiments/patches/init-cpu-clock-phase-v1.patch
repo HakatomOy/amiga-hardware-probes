@@ -1,0 +1,117 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index c1563a5f..2225c230 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -1488,6 +1488,16 @@ pub enum BeamWriteSource {
+     Copper,
+ }
+ 
++fn exp_classic_bus_phase() -> u32 {
++    use std::sync::OnceLock;
++    static MODE: OnceLock<u32> = OnceLock::new();
++    *MODE.get_or_init(|| {
++        crate::envcfg::var("COPPERLINE_EXP_CLASSIC_BUS_PHASE")
++            .and_then(|value| value.parse().ok())
++            .unwrap_or(0)
++    })
++}
++
+ /// One-shot env flag for the CPU write-landing trace
+ /// (`COPPERLINE_DIAG_CPU_WRITES=1`); see [`Bus::diag_cpu_write`].
+ fn diag_cpu_writes_on() -> bool {
+@@ -6953,6 +6963,13 @@ impl Bus {
+         if !self.cpu_bus_arbitration_enabled {
+             return;
+         }
++        if !self.cpu_short_bus_cycle
++            && self.cpu_clocks_per_cck == 2
++            && exp_classic_bus_phase() & 1 != 0
++        {
++            self.bill_cpu_bus_clocks(cpu_clocks);
++            return;
++        }
+         let total = cpu_clocks + std::mem::take(&mut self.cpu_clock_carry);
+         let cck = total / self.cpu_clocks_per_cck;
+         self.cpu_clock_carry = total % self.cpu_clocks_per_cck;
+@@ -6973,6 +6990,14 @@ impl Bus {
+         if !self.cpu_bus_arbitration_enabled || words == 0 {
+             return;
+         }
++        if !self.cpu_short_bus_cycle
++            && self.cpu_clocks_per_cck == 2
++            && self.dbg_ext_cck_x100 == 200
++            && exp_classic_bus_phase() & 1 != 0
++        {
++            self.bill_cpu_bus_clocks(words * 4);
++            return;
++        }
+         // dbg_ext_cck_x100 expresses the stock-ratio cost in hundredths of a
+         // cck per word (default 200 = 4 CPU clocks/word); 2x converts it to
+         // hundredths of a CPU clock.
+@@ -7277,7 +7302,13 @@ impl Bus {
+         }
+         let bus_clocks_start = self.cpu_bus_clock_position();
+         let trace_cpu_bus = diag_cpu_bus_on() && diag_cpu_bus_addr_matches(addr, size);
++        let classic_phases = !self.cpu_short_bus_cycle
++            && self.cpu_clocks_per_cck == 2
++            && exp_classic_bus_phase() & 1 != 0;
+         for slot in 0..slots {
++            if classic_phases {
++                self.bill_cpu_bus_clocks(1);
++            }
+             self.flush_audio_before_audio_dma_slot();
+             let request_slot = (self.agnus.vpos, self.agnus.hpos);
+             if matches!(kind, CpuBusAccessKind::Custom) {
+@@ -7299,10 +7330,20 @@ impl Bus {
+                 if self.frame_analyzer_enabled {
+                     self.cpu_bus_wait = Some(self.cpu_bus_wait_sample(kind, true));
+                 }
+-                let (cck, tick) = self.advance_one_chip_bus_quantum(None);
+-                wait_cck += cck;
+-                self.note_cpu_missed_chip_bus_cycle(cck);
+-                self.record_slice_bus_advance(cck, tick);
++                if classic_phases {
++                    let before = self.emulated_cck;
++                    self.bill_cpu_bus_clocks(1);
++                    let advanced = (self.emulated_cck - before) as u32;
++                    wait_cck += advanced;
++                    if advanced != 0 {
++                        self.note_cpu_missed_chip_bus_cycle(advanced);
++                    }
++                } else {
++                    let (cck, tick) = self.advance_one_chip_bus_quantum(None);
++                    wait_cck += cck;
++                    self.note_cpu_missed_chip_bus_cycle(cck);
++                    self.record_slice_bus_advance(cck, tick);
++                }
+                 self.flush_audio_before_audio_dma_slot();
+             }
+             self.cpu_bus_wait = None;
+@@ -7341,8 +7382,12 @@ impl Bus {
+             // inside that clock is carried by `cpu_chip_clock_phase`.
+             if !self.cpu_short_bus_cycle {
+                 sample(self, slot, slot_stride, CpuBusSamplePhase::End);
+-                let (cck, tick) = self.advance_one_chip_bus_quantum(None);
+-                self.record_slice_bus_advance(cck, tick);
++                if classic_phases {
++                    self.bill_cpu_bus_clocks(1);
++                } else {
++                    let (cck, tick) = self.advance_one_chip_bus_quantum(None);
++                    self.record_slice_bus_advance(cck, tick);
++                }
+             }
+             if trace_cpu_bus {
+                 self.diag_cpu_bus_access(
+@@ -9731,7 +9776,11 @@ impl Bus {
+                 } else {
+                     CpuBusSamplePhase::End
+                 };
+-                if matches!(word_off, 0x00E | 0x01E) && phase == sample_phase {
++                let early_beam = word_off == 0x006
++                    && !bus.cpu_short_bus_cycle
++                    && !bus.aga_enabled()
++                    && exp_classic_bus_phase() & 2 != 0;
++                if (matches!(word_off, 0x00E | 0x01E) || early_beam) && phase == sample_phase {
+                     // CLXDAT samples/clears before the word's trailing
+                     // clocks; INTREQR retains its end-of-slot sampling.
+                     bus.flush_timed_devices();

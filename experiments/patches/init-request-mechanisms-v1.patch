@@ -1,0 +1,147 @@
+diff --git a/src/bus.rs b/src/bus.rs
+index e76680e5..d710c035 100644
+--- a/src/bus.rs
++++ b/src/bus.rs
+@@ -775,6 +775,8 @@ pub struct Bus {
+     copper_restart_gap_reserved: bool,
+     #[serde(default)]
+     copper_frame_restart_pending: bool,
++    #[serde(skip)]
++    cpu_copper_dma_override: Option<bool>,
+     pub denise: Denise,
+     denise_revision: DeniseRevision,
+     /// Effective chip-bus DMA address mask: installed chip RAM capped by the
+@@ -1484,6 +1486,16 @@ pub enum BeamWriteSource {
+     Copper,
+ }
+ 
++pub(crate) fn exp_startup_request_mode() -> u32 {
++    use std::sync::OnceLock;
++    static MODE: OnceLock<u32> = OnceLock::new();
++    *MODE.get_or_init(|| {
++        crate::envcfg::var("COPPERLINE_EXP_STARTUP_REQUEST")
++            .and_then(|value| value.parse().ok())
++            .unwrap_or(0)
++    })
++}
++
+ /// One-shot env flag for the CPU write-landing trace
+ /// (`COPPERLINE_DIAG_CPU_WRITES=1`); see [`Bus::diag_cpu_write`].
+ fn diag_cpu_writes_on() -> bool {
+@@ -3756,6 +3768,7 @@ impl Bus {
+             copper_restart_ready_at: 0,
+             copper_restart_gap_reserved: false,
+             copper_frame_restart_pending: false,
++            cpu_copper_dma_override: None,
+             denise: Denise::new(),
+             denise_revision: DeniseRevision::Ocs,
+             chip_dma_mask: 0x0007_FFFF,
+@@ -5425,6 +5438,7 @@ impl Bus {
+         self.copper_restart_ready_at = 0;
+         self.copper_restart_gap_reserved = false;
+         self.copper_frame_restart_pending = false;
++        self.cpu_copper_dma_override = None;
+         self.copper_wake_bound = CopperWakeBound::Unknown;
+         self.denise = Denise::new();
+         self.blitter = Blitter::new();
+@@ -9725,7 +9739,11 @@ impl Bus {
+                 } else {
+                     CpuBusSamplePhase::End
+                 };
+-                if matches!(word_off, 0x00E | 0x01E) && phase == sample_phase {
++                let early_beam = word_off == 0x006
++                    && !bus.cpu_short_bus_cycle
++                    && !bus.aga_enabled()
++                    && exp_startup_request_mode() & 4 != 0;
++                if (matches!(word_off, 0x00E | 0x01E) || early_beam) && phase == sample_phase {
+                     // CLXDAT samples/clears before the word's trailing
+                     // clocks; INTREQR retains its end-of-slot sampling.
+                     bus.flush_timed_devices();
+diff --git a/src/bus/custom_regs.rs b/src/bus/custom_regs.rs
+index 33f61748..0db6c15c 100644
+--- a/src/bus/custom_regs.rs
++++ b/src/bus/custom_regs.rs
+@@ -169,7 +169,8 @@ impl Bus {
+         self.invalidate_copper_wake_bound();
+         self.pending_copper_frame_start = None;
+         self.copper_current_list = list;
+-        self.copper.start_jump_tail(list != 1);
++        self.copper
++            .start_cpu_jump_tail(list != 1, self.agnus.vpos, self.agnus.hpos);
+     }
+ 
+     /// Copper's request gate samples COPEN before the CPU tail. Do not move
+@@ -177,6 +178,15 @@ impl Bus {
+     pub(super) fn sample_cpu_copper_dma_gate(&mut self, value: u16) {
+         let enabled_before = self.copper_dma_enabled();
+         let copen_before = self.agnus.dmacon & crate::chipset::copper::DMACON_COPEN != 0;
++        if exp_startup_request_mode() & 1 != 0 {
++            let gate = DMACON_DMAEN | crate::chipset::copper::DMACON_COPEN;
++            let requested = if value & 0x8000 != 0 {
++                self.agnus.dmacon | (value & gate)
++            } else {
++                self.agnus.dmacon & !(value & gate)
++            };
++            self.cpu_copper_dma_override = Some(requested & gate == gate);
++        }
+         self.agnus.write_dmacon(value & 0x8080);
+         if self.copper_dma_enabled() != enabled_before {
+             self.invalidate_copper_wake_bound();
+@@ -610,6 +620,7 @@ impl Bus {
+                 false
+             }
+             0x096 => {
++                self.cpu_copper_dma_override = None;
+                 let previous = self.effective_bitplane_dmacon();
+                 let old_dmacon = self.agnus.dmacon;
+                 let copen_before = self.agnus.dmacon & crate::chipset::copper::DMACON_COPEN != 0;
+diff --git a/src/bus/dma_slots.rs b/src/bus/dma_slots.rs
+index 811b04ff..6276a548 100644
+--- a/src/bus/dma_slots.rs
++++ b/src/bus/dma_slots.rs
+@@ -811,7 +811,9 @@ impl Bus {
+     }
+ 
+     pub(super) fn copper_dma_enabled(&self) -> bool {
+-        self.agnus.dmacon & (DMACON_DMAEN | DMACON_COPEN) == (DMACON_DMAEN | DMACON_COPEN)
++        self.cpu_copper_dma_override.unwrap_or_else(|| {
++            self.agnus.dmacon & (DMACON_DMAEN | DMACON_COPEN) == (DMACON_DMAEN | DMACON_COPEN)
++        })
+     }
+ 
+     pub(super) fn copper_can_write_custom(&self, off: u16) -> bool {
+diff --git a/src/chipset/copper.rs b/src/chipset/copper.rs
+index 7c8a618f..a4de8232 100644
+--- a/src/chipset/copper.rs
++++ b/src/chipset/copper.rs
+@@ -431,6 +431,30 @@ impl Copper {
+         };
+     }
+ 
++    pub(crate) fn start_cpu_jump_tail(&mut self, second_list: bool, vpos: u32, hpos: u32) {
++        let reuse = crate::bus::exp_startup_request_mode() & 2 != 0
++            && matches!(
++                self.state,
++                CopperState::Waiting {
++                    phase: CopperWaitPhase::InstructionTail,
++                    ..
++                }
++            );
++        if crate::envcfg::flag("COPPERLINE_DIAG_COP_STROBES") {
++            eprintln!(
++                "COPSTROBE v={vpos:03x} h={hpos:02x} state={:?} pending={:?} reuse={reuse}",
++                self.state, self.pending_first
++            );
++        }
++        self.start_jump_tail(second_list);
++        if reuse {
++            self.state = CopperState::Jumping {
++                second_list,
++                phase: CopperJumpPhase::Second,
++            };
++        }
++    }
++
+     /// Advance a COPJMP strobe's tail: each phase elapses on an access-parity
+     /// color clock, and the second one performs the jump.
+     fn advance_jump_free_cycle(&mut self, hpos: u32, cop1lc: u32, cop2lc: u32) {

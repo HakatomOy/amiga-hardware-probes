@@ -1,0 +1,43 @@
+{
+  "status": "rejected: broad regressions; source restored to6c06be2a",
+  "base_commit": "6c06be2a",
+  "hypothesis": "A classic CPU word cycle needs a shared processor-clock phase: one clock address setup, two clocks data slot and one clock return; wait sampling may add a single CPU clock rather than a whole CCK.",
+  "competitor": "Whole-CCK scheduling is sufficient and the residual is an Amiga RGA request/release rule, not CPU wait quantization.",
+  "test": "Compare unchanged versus explicit four-clock CPU word phases and common internal/ROM/chip fractional carry, with and without end-phase VHPOSR sampling. Require exact baseline packet and preserve old paired-collision, two/three/four-plane and startup data. Reject a local repair with new fields or lost qualification.",
+  "outcomes": {
+    "new NOP/write control repairs without independent regressions": "Broaden to source/resource, CIA/IRQ and original collision gates.",
+    "major independent regressions": "Reject the model; do not insert a one-CCK exception or alter beam values."
+  },
+  "units": "Stock68000:2 CPU clocks perCCK; address/data/return1/2/1 CPU clocks; waits1 CPU clock; no trace alignment.",
+  "source_reference": "https://www.nxp.com/docs/en/reference-manual/MC68000UM.pdf#page=50",
+  "limitation": "MC68000 wait granularity does not by itself establish Gary/Agnus DTACK timing. Rejection applies to this implementation, not every possible sub-CCK model.",
+  "next_question": "Does the cold custom-write error persist after inserting ROM NOPs before the next read?",
+  "details": "docs/collision-cpu-ordering-2026-10-22.md",
+  "evidence": "captures/init-after-bmapen-20261022/cpu-phase-screen-v1/results.json",
+  "results": {
+    "baseline": {
+      "matched": 2024,
+      "mismatched": 40,
+      "excluded": 0,
+      "unstable": 16
+    },
+    "explicit_cpu_phase": {
+      "matched": 736,
+      "mismatched": 560,
+      "excluded": 768,
+      "unstable": 16
+    },
+    "early_beam": {
+      "matched": 776,
+      "mismatched": 520,
+      "excluded": 768,
+      "unstable": 16
+    },
+    "both": {
+      "matched": 736,
+      "mismatched": 560,
+      "excluded": 768,
+      "unstable": 16
+    }
+  }
+}

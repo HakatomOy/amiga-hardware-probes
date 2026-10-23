@@ -1,0 +1,38 @@
+{
+  "hypothesis": "Immediate custom-write/read handoff is one CCK too slow with cold Copper.",
+  "competitor": "The custom write shifts all subsequent execution, regardless of the following read gap.",
+  "test": "Cross0..3 trailing NOPs with write/NOP actor and cold/warm Copper, four phases and repeats; exact pre-enable beam and finite activity witness.",
+  "outcomes": {
+    "error disappears with gap": "Inspect immediate write/read turnaround.",
+    "error persists": "Inspect grant timing of the write or initial request.",
+    "controls change": "Keep raw evidence and narrow before patching."
+  },
+  "next_question": "Does the difference affect only sampled read data or also subsequent CPU recognition/read timing?",
+  "run": "C:\\Users\\seppo\\amiga\\amiga-hardware-probes\\captures\\init-after-bmapen-20261022\\write-gap-hardware-v2",
+  "smaller_reproducer": null,
+  "no_new_evidence": 0,
+  "evidence_fingerprint": "4fdeba63ddaa5830e42278549936e9f0eb130d0ba85f1c1a91a2bd9b8351ad8f",
+  "decision": "validation failed",
+  "status": "measurement complete; instability prevents acceptance",
+  "results": {
+    "matches": 228,
+    "mismatches": 16,
+    "unstable": 12,
+    "excluded": 0,
+    "invalid": 0
+  },
+  "confirmed_facts": [
+    "Gap1 all64 match; gap0 reproduces original cold/write phase1 residual.",
+    "Gap2 cold/write phase3 and gap3 cold/warm NOP phase2 are oneCCK late, showing write-specific cause is insufficient.",
+    "12 observations in3 cohorts conflict between beam4268/4269; remain unqualified.",
+    "All completion witnesses pass; final original-ROM restoration and reset release verified."
+  ],
+  "references": [
+    "dma-write-gap-v1"
+  ],
+  "profiles": [
+    "profile-gap-cold0",
+    "profile-gap-cold1",
+    "profile-gap-warm3"
+  ]
+}

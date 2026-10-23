@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "id": "dma-gap-readback",
+  "hypothesis": "The late beam belongs to readback sampling after a bitplane denial, not persistent CPU timing.",
+  "competitor": "A delayed grant shifts later CPU instructions and reads.",
+  "test": "Three consecutive beam reads before RAM stores, crossed with0..3 NOP gap, write/NOP actor and cold/warm Copper; retain exact input and all repeats.",
+  "outcomes": {
+    "first differs but later match": "Investigate readback sampling before changing instruction timing.",
+    "later reads also differ": "Investigate shared grant/return timing.",
+    "conflicting repeats": "Preserve unstable cohorts; do not fit them."
+  },
+  "next_question": "Do stable delayed-read cases stay shifted at the next two reads?",
+  "investigation": "investigations/dma-gap-readback.json",
+  "binary": "captures/init-after-bmapen-20261022/cpu-phase-screen-v1/emulator.exe",
+  "romdir": "build/dma-gap-readback-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 256,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-phase-baseline.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-gap-readback-v1/run1",
+    "references/dma-gap-readback-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after COLOR00 write or four NOPs"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      },
+      {
+        "name": "second_read",
+        "field": "launch_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Second consecutive beam read"
+      },
+      {
+        "name": "third_read",
+        "field": "end_ref",
+        "unit": "packed VHPOSR",
+        "meaning": "Third consecutive beam read"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Master DMA pre-enabled; cold/warm finite Copper WAIT/INTREQ stream and bitplane contention active. No blitter or sprite DMA. Compare exact pre-enable cohorts; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false,
+  "rom_sha256": "f3bf4b9e5ca836783ae7c1f30fd0cc64ca9c2f0d6b3008abb4fe604eb03eb80d"
+}

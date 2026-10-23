@@ -1,0 +1,39 @@
+{
+  "variants": {
+    "combined": {}
+  },
+  "scenarios": {
+    "modes": "experiments/workflows/playfield-modes.json",
+    "poll": "experiments/workflows/collision-cpu-poll.json",
+    "phase": "experiments/workflows/dma-enable-phase.json",
+    "three": "experiments/workflows/dma-three-plane.json",
+    "early": "experiments/workflows/playfield-early-clear.json",
+    "gate": "experiments/workflows/playfield-gate.json",
+    "word": "experiments/workflows/playfield-word-gate.json",
+    "quiet": "experiments/workflows/copper-transfer-acceptance.json",
+    "pressure": "experiments/workflows/copper-transfer-pressure.json",
+    "steady": "experiments/workflows/copper-transfer-steady.json",
+    "opcode": "experiments/workflows/copper-transfer-opcode.json",
+    "access": "experiments/workflows/copper-transfer-handoff-access.json",
+    "witness": "experiments/workflows/copper-transfer-handoff-witness.json",
+    "onset": "experiments/workflows/handoff-busy-onset.json",
+    "resource": "experiments/workflows/init-resource-race.json",
+    "resource-sweep": "experiments/workflows/init-resource-launch-sweep.json",
+    "source": "experiments/workflows/copper-transfer-source-race.json",
+    "fetch": "experiments/workflows/copper-restart-fetch.json",
+    "enable": "experiments/workflows/copper-enable-boundary.json",
+    "tail": "experiments/workflows/copper-enable-tail.json",
+    "handoff": "experiments/workflows/regression-handoff-neighbor.json",
+    "cold": "experiments/workflows/dma-restart-boundary.json",
+    "warm": "experiments/workflows/dma-warm-restart.json",
+    "master": "experiments/workflows/dma-master-boundary.json",
+    "triplet": "experiments/workflows/dma-restart-readback.json",
+    "old-pointer": "experiments/workflows/copper-transfer-collision-pointer.json",
+    "old-copper": "experiments/workflows/copper-transfer-collision-copper.json"
+  },
+  "baseline": {
+    "variant": "combined",
+    "scenario": "modes",
+    "packet": "captures/collision-cpu-20261022/enable-even-acceptance-v1/original-late-clear/candidate/results.bin"
+  }
+}

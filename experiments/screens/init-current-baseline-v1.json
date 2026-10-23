@@ -1,0 +1,17 @@
+{
+  "variants": {
+    "before-init": {}
+  },
+  "scenarios": {
+    "cold": "experiments/workflows/dma-restart-boundary.json",
+    "warm": "experiments/workflows/dma-warm-restart.json",
+    "master": "experiments/workflows/dma-master-boundary.json",
+    "triplet": "experiments/workflows/dma-restart-readback.json",
+    "startup": "experiments/workflows/collision-startup.json"
+  },
+  "baseline": {
+    "variant": "before-init",
+    "scenario": "cold",
+    "packet": "captures/collision-cpu-20261022/enable-phase-screen-v1/tail-even-restart/candidate/results.bin"
+  }
+}

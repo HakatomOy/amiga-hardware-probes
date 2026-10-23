@@ -1,0 +1,936 @@
+{
+  "version": 1,
+  "id": "init-after-bmapen",
+  "purpose": "regression",
+  "hypothesis": "The isolated CPU-transfer, Copper reload/frame-origin and blitter RGA model generalizes when combined with the independently measured even-step BMAPEN correction.",
+  "competitor": "The old model overfits earlier launch cohorts and still violates newly isolated cold/warm/master or straight-line read boundaries.",
+  "test": "Apply the isolated Init prototype onto b40122d4 while preserving v1 CPU/JIT changes. Replay original source/access/resource/startup suites, 4352 collision/enable controls and new COPEN/master/readback controls; retain every original qualification gate and unstable cohort.",
+  "outcomes": {
+    "focused and held-out source/enable/control cases pass": "Proceed through original neighbor and broad acceptance without waiving gates.",
+    "new boundary controls still fail": "Use the first divergent read and slot profile to refine request/reload ownership.",
+    "old qualification still blocks": "Improve controlled evidence; do not count exclusions as hardware matches."
+  },
+  "next_question": "Which new boundary remains after integrating the prior Init source model with the validated bitplane-enable correction?",
+  "investigation": "investigations/init-after-bmapen.json",
+  "binary": "../Copperline/target/ci/copperline.exe",
+  "romdir": "build/copper-cpu-quiet-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "bff64216c98e6d86ea517dc01227c60293331ee76f42e5f2d0cc1a0f4ec940f1",
+  "capture": {
+    "minimum_seconds": 140,
+    "expected_cases": 512,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "aux",
+        "unit": "word",
+        "meaning": "CPU wrote8004 at selected Copper data word",
+        "require_values": [
+          32772
+        ],
+        "allowed_values": [
+          32772
+        ]
+      },
+      {
+        "field": "end_beam",
+        "unit": "word",
+        "meaning": "CPU wrote8004 at selected Copper data word",
+        "require_values": [
+          32772
+        ],
+        "allowed_values": [
+          32772
+        ]
+      },
+      {
+        "field": "irq_beam",
+        "unit": "word",
+        "meaning": "No active blitter in any case",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          16
+        ],
+        "allowed_values": [
+          16
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "COPER bit",
+        "meaning": "Finite Copper completed iff explicitly enabled",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 6
+          }
+        },
+        "unit": "INTREQ bits",
+        "meaning": "Exactly old DSKBLK or new SOFT when Copper enabled;neither otherwise",
+        "require_values": [
+          2,
+          4
+        ],
+        "allowed_values": [
+          2,
+          4
+        ]
+      },
+      {
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "where": {
+          "variant": {
+            "mask": 6,
+            "equals": 4
+          }
+        },
+        "unit": "INTREQ bits",
+        "meaning": "Exactly old DSKBLK or new SOFT when Copper enabled;neither otherwise",
+        "require_values": [
+          0
+        ],
+        "allowed_values": [
+          0
+        ]
+      }
+    ]
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/copper-cpu-quiet-v1/run1",
+    "references/copper-cpu-quiet-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "launch",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Exact pre-start beam"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "status0_post_beam",
+        "field": "launch_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the first status read"
+      },
+      {
+        "name": "status1_post_beam",
+        "field": "end_ref",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Beam after the second status read"
+      },
+      {
+        "name": "request_post",
+        "field": "icr",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "packed beam",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_read_word",
+        "field": "end_beam",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Fixed5555 CPU overwrite value, not a register read"
+      },
+      {
+        "name": "BLIT_request",
+        "field": "counter",
+        "mask": 64,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "first_D",
+        "field": "irq_beam",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "last_D",
+        "field": "irq_level",
+        "mask": 65535,
+        "shift": 0,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "settled_request",
+        "field": "saved_pc_offset",
+        "mask": 64,
+        "shift": 16,
+        "unit": "register/data bits",
+        "meaning": "Single-read observation; no alignment"
+      },
+      {
+        "name": "written_word",
+        "field": "aux",
+        "mask": 65535,
+        "unit": "word",
+        "meaning": "Selected CPU-written source/neighbor word after settling"
+      },
+      {
+        "name": "Copper_completed",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 16,
+        "unit": "COPER bit",
+        "meaning": "Finite Copper activity witness"
+      },
+      {
+        "name": "Copper_order",
+        "field": "saved_pc_offset",
+        "shift": 16,
+        "mask": 6,
+        "unit": "INTREQ bits",
+        "meaning": "2=old Copper fetch;4=new Copper fetch;0=disabled"
+      }
+    ],
+    "required_field_repairs": {
+      "Copper_order": 1
+    },
+    "min_matches": 512
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 360,
+    "limitations": "PAL A500 stock68000 512KiB chip/512KiB slow; silicon revisions unconfirmed; two repeats with verified restoration. Fixed software observations, not pin edges; no event alignment."
+  },
+  "build": [],
+  "validation": [
+    {
+      "name": "pressure",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-pressure.json",
+        "--out",
+        "{out}/pressure",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "focused"
+    },
+    {
+      "name": "steady",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-steady.json",
+        "--out",
+        "{out}/steady",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "focused"
+    },
+    {
+      "name": "opcode",
+      "tier": "focused",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-opcode.json",
+        "--out",
+        "{out}/opcode",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "focused"
+    },
+    {
+      "name": "paired-playfield-modes",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/playfield-modes.json",
+        "--out",
+        "{out}/paired-playfield-modes",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "handoff-race",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-handoff-race.json",
+        "--out",
+        "{out}/handoff-race",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "handoff-access",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-handoff-access.json",
+        "--out",
+        "{out}/handoff-access",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "handoff-witness",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-handoff-witness.json",
+        "--out",
+        "{out}/handoff-witness",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "busy-onset",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/handoff-busy-onset.json",
+        "--out",
+        "{out}/busy-onset",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "init-resource",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/init-resource-race.json",
+        "--out",
+        "{out}/init-resource",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "init-launch-sweep",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/init-resource-launch-sweep.json",
+        "--out",
+        "{out}/init-launch-sweep",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "source-race",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-source-race.json",
+        "--out",
+        "{out}/source-race",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "restart-prefix",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-restart-prefix.json",
+        "--out",
+        "{out}/restart-prefix",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "marker-copy",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-marker-copy.json",
+        "--out",
+        "{out}/marker-copy",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "restart-fetch",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-restart-fetch.json",
+        "--out",
+        "{out}/restart-fetch",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "enable-boundary",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-enable-boundary.json",
+        "--out",
+        "{out}/enable-boundary",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "enable-tail",
+      "tier": "neighbor",
+      "parallel_group": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-enable-tail.json",
+        "--out",
+        "{out}/enable-tail",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ]
+    },
+    {
+      "name": "collision-pointer",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-collision-pointer.json",
+        "--out",
+        "{out}/collision-pointer",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "collision-copper",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-collision-copper.json",
+        "--out",
+        "{out}/collision-copper",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "native-blit-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/native-blit-regression.json",
+        "--out",
+        "{out}/native-blit-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "operand-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/cpu-operand-regression.json",
+        "--out",
+        "{out}/operand-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "cpu-dma-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/cpu-dma-regression.json",
+        "--out",
+        "{out}/cpu-dma",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "bus-onset",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-onset.json",
+        "--out",
+        "{out}/bus-onset",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "bus-completion",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-completion.json",
+        "--out",
+        "{out}/bus-completion",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "bus-pressure",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-bus-pressure.json",
+        "--out",
+        "{out}/bus-pressure",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "handoff-focus",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-focus.json",
+        "--out",
+        "{out}/handoff-focus",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "handoff-read",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-read.json",
+        "--out",
+        "{out}/handoff-read",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "handoff-neighbor",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/regression-handoff-neighbor.json",
+        "--out",
+        "{out}/handoff-neighbor",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "legacy-packets",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/replay_accuracy.py",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--out",
+        "{out}/legacy",
+        "--suite",
+        "bzero-edges",
+        "--suite",
+        "copper-busy"
+      ]
+    },
+    {
+      "name": "legacy-preservation",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "packets",
+        "--before",
+        "captures/accuracy-round-20261020/blit-request-candidate-v1/legacy",
+        "--after",
+        "{out}/legacy",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--suite",
+        "bzero-edges",
+        "--suite",
+        "copper-busy"
+      ]
+    },
+    {
+      "name": "cia-aperture",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-cia-aperture.json",
+        "--out",
+        "{out}/cia-aperture",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "cia-clear",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-cia-clear.json",
+        "--out",
+        "{out}/cia-clear",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "serial",
+      "tier": "neighbor",
+      "argv": [
+        "{python}",
+        "tools/experiment.py",
+        "run",
+        "experiments/workflows/copper-transfer-serial.json",
+        "--out",
+        "{out}/serial",
+        "--binary",
+        "{binary}",
+        "--config",
+        "{config}",
+        "--through",
+        "comparison"
+      ],
+      "parallel_group": "neighbor"
+    },
+    {
+      "name": "core-tests",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-core-tests",
+        "--",
+        "test",
+        "--locked",
+        "--profile",
+        "ci",
+        "--lib",
+        "--",
+        "--skip",
+        "video::window::"
+      ]
+    },
+    {
+      "name": "strict-clippy",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-strict-clippy",
+        "--",
+        "clippy",
+        "--all-targets",
+        "--all-features",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "name": "rust-format",
+      "tier": "broad",
+      "cwd": "../Copperline",
+      "argv": [
+        "{python}",
+        "tools/cargo_report.py",
+        "--log-dir",
+        "{out}/cargo-rust-format",
+        "--",
+        "fmt",
+        "--",
+        "--check"
+      ]
+    },
+    {
+      "name": "probe-tests",
+      "tier": "broad",
+      "argv": [
+        "{python}",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ]
+    }
+  ],
+  "baseline": "captures/copper-race-20261020/quiet-hardware-v1/candidate"
+}

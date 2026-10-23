@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "id": "dma-nop-boundary",
+  "hypothesis": "The residual stable phase1 inert-write difference comes from the custom-register write bus cycle or its following grant.",
+  "competitor": "Initial Copper request timing also delays equal-duration straight ROM execution, independently of the intervening write.",
+  "test": "Cross inert COLOR00 write versus four NOPs (both16 CPU clocks) with cold versus already-waiting Copper; master DMA pre-enabled, four phases/four repeats. Compare first post-actor read and a finite Copper activity witness.",
+  "outcomes": {
+    "NOP path agrees while custom write differs": "Trace the custom-write/following-read grant boundary.",
+    "NOP path differs with cold Copper only": "Investigate initial request/ROM synchronization rather than a write-specific delay.",
+    "warm controls also differ": "Revisit common CPU/DMA phase or the equivalence control."
+  },
+  "next_question": "Does the same one-CCK error remain when the custom write is replaced by equal-duration NOPs?",
+  "investigation": "investigations/dma-nop-boundary.json",
+  "binary": "captures/init-after-bmapen-20261022/mechanisms-screen-v1/emulator.exe",
+  "romdir": "build/dma-nop-boundary-v1",
+  "config": "../Copperline/tmp/golden-a500-ecs.toml",
+  "rom_sha256": "33d521b6054ca9d95cf524c283be75bbe905bf77c2547b20a80d0f8447b7fd9e",
+  "capture": {
+    "minimum_seconds": 45,
+    "expected_cases": 64,
+    "valid_statuses": [
+      0
+    ],
+    "coverage": [
+      {
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper completion when enabled",
+        "where": {
+          "variant": {
+            "mask": 1,
+            "equals": 1
+          }
+        },
+        "require_values": [
+          4
+        ],
+        "allowed_values": [
+          4
+        ]
+      }
+    ],
+    "environment_json": "experiments/environments/init-master-request.json"
+  },
+  "reuse_preflight": true,
+  "replay_inputs": [],
+  "references": [
+    "references/dma-nop-boundary-v1/run1",
+    "references/dma-nop-boundary-v1/run2"
+  ],
+  "comparison": {
+    "alignment": "exact",
+    "max_excluded": 0,
+    "max_unstable": 0,
+    "qualification": [
+      {
+        "name": "input",
+        "field": "launch_beam",
+        "unit": "packed beam",
+        "meaning": "Pre-enable common input"
+      }
+    ],
+    "measurements": [
+      {
+        "name": "post_write",
+        "field": "irq_beam",
+        "unit": "packed VHPOSR",
+        "meaning": "First beam after COLOR00 write or four NOPs"
+      },
+      {
+        "name": "completion",
+        "field": "end_beam",
+        "mask": 4,
+        "unit": "INTREQR bit2",
+        "meaning": "Finite Copper stream witness"
+      }
+    ]
+  },
+  "hardware": {
+    "onerom": "../OneROM/onerom.exe",
+    "repeats": 2,
+    "timeout_seconds": 600,
+    "limitations": "PAL A500 stock68000,512KiB chip/512KiB slow; silicon revisions unconfirmed. Master DMA pre-enabled; cold/warm finite Copper WAIT/INTREQ stream and bitplane contention active. No blitter or sprite DMA. Compare exact pre-enable cohorts; no trace alignment."
+  },
+  "build": [],
+  "validation": [],
+  "purpose": "investigation",
+  "full_acceptance": false
+}
